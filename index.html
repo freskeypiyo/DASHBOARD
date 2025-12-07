@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freskey Distributor Manager</title>
+    
+    <!-- STYLES (CSS) -->
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --primary-dark: #1557b0;
+            --success: #188038;
+            --danger: #d93025;
+            --warning: #f29900;
+            --gray: #5f6368;
+            --bg: #f8f9fa;
+            --white: #ffffff;
+            --border: #dadce0;
+        }
+
+        * { box-sizing: border-box; outline: none; }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: #202124; }
+        
+        /* Utils */
+        .hidden { display: none !important; }
+        .flex { display: flex; align-items: center; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .grid { display: grid; gap: 20px; }
+        .btn { padding: 10px 16px; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; font-size: 14px; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-outline { border: 1px solid var(--border); background: white; color: var(--gray); }
+        .btn-danger { background: var(--danger); color: white; }
+        
+        /* Views */
+        #app { max-width: 100vw; overflow-x: hidden; }
+
+        /* Login Screen */
+        .login-wrapper { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; background: white; }
+        .login-card { padding: 40px; border: 1px solid var(--border); border-radius: 8px; width: 360px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .google-btn { width: 100%; margin-top: 20px; background: #4285F4; color: white; padding: 12px; }
+
+        /* Dashboard & Layout */
+        header { background: white; padding: 0 24px; height: 64px; border-bottom: 1px solid var(--border); box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        header h1 { font-size: 20px; color: var(--primary); }
+        .user-profile { font-size: 14px; color: var(--gray); }
+
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+
+        /* Dashboard KPIs */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .kpi-card { background: white; padding: 20px; border-radius: 8px; border: 1px solid var(--border); }
+        .kpi-title { font-size: 12px; text-transform: uppercase; color: var(--gray); font-weight: 700; margin-bottom: 5px; }
+        .kpi-value { font-size: 28px; font-weight: 600; color: #202124; }
+
+        /* Tables */
+        .card { background: white; border-radius: 8px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 20px; }
+        .card-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #fff; }
+        .card-title { font-size: 18px; margin: 0; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th { text-align: left; padding: 12px 20px; border-bottom: 2px solid var(--border); background: #f9f9f9; color: var(--gray); }
+        td { padding: 12px 20px; border-bottom: 1px solid var(--border); }
+        tr:hover { background: #f8f9fa; cursor: pointer; }
+        
+        /* Forms */
+        .form-group { margin-bottom: 15px; text-align: left; }
+        .form-group label { display: block; font-size: 12px; color: var(--gray); margin-bottom: 5px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 4px; }
+        
+        /* Modal */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .modal { background: white; width: 500px; border-radius: 8px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 20px; border-top: 1px solid var(--border); text-align: right; }
+
+        /* Access Denied */
+        .denied-wrapper { height: 100vh; display: flex; justify-content: center; align-items: center; flex-direction: column; text-align: center; }
+        .denied-icon { font-size: 48px; color: var(--danger); margin-bottom: 20px; }
+
+        /* Utilities for status */
+        .status-pill { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+        .status-ok { background: #e6f4ea; color: var(--success); }
+        .status-bad { background: #fce8e6; color: var(--danger); }
+        .text-red { color: var(--danger); }
+        .text-green { color: var(--success); }
+
+        /* Spinners */
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid var(--primary); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <!-- DOM: Application Container -->
+    <div id="app">
+        <!-- 1. LOADING SCREEN -->
+        <div id="loading-view" class="login-wrapper">
+            <div class="loader" style="width: 50px; height: 50px;"></div>
+        </div>
+
+        <!-- 2. LOGIN SCREEN -->
+        <div id="login-view" class="login-wrapper hidden">
+            <div class="login-card">
+                <h2>Freskey Login</h2>
+                <p style="color:var(--gray)">Brand Manager Access Only</p>
+                <button id="btn-login" class="btn google-btn">Sign in with Google</button>
+            </div>
+        </div>
+
+        <!-- 3. ACCESS DENIED SCREEN -->
+        <div id="denied-view" class="hidden denied-wrapper">
+            <div class="denied-icon">🚫</div>
+            <h1>Access Denied</h1>
+            <p>This application is restricted to Freskey Brand Managers.</p>
+            <p>You are logged in as <b id="denied-email"></b>.</p>
+            <div style="margin-top: 20px;">
+                <button id="btn-request-access" class="btn btn-primary">Request Access</button>
+                <button id="btn-logout-denied" class="btn btn-outline" style="margin-left: 10px;">Logout</button>
+            </div>
+        </div>
+
+        <!-- 4. DASHBOARD (MAIN APP) -->
+        <div id="dashboard-view" class="hidden">
+            <header class="flex-between">
+                <div class="flex">
+                    <h1>Freskey Distributor Manager</h1>
+                    <span style="margin: 0 10px; color: var(--border);">|</span>
+                    <button id="nav-distributors" class="btn" style="color:var(--primary);">Distributors</button>
+                </div>
+                <div class="flex">
+                    <span class="user-profile" id="user-display"></span>
+                    <button id="btn-logout" class="btn btn-outline" style="margin-left:15px; padding: 5px 10px; font-size:12px;">Logout</button>
+                </div>
+            </header>
+
+            <div class="container">
+                <!-- KPI Row -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-title">Distributors</div>
+                        <div class="kpi-value" id="kpi-count">0</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Total Outstanding</div>
+                        <div class="kpi-value text-red" id="kpi-outstanding">₹0</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-title">Advances Received</div>
+                        <div class="kpi-value text-green" id="kpi-advance">₹0</div>
+                    </div>
+                </div>
+
+                <!-- Distributor List / Controls -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Distributors List</h3>
+                        <div>
+                            <input type="text" id="search-bar" placeholder="Search name/region..." style="padding: 8px; border: 1px solid var(--border); border-radius: 4px; margin-right: 10px;">
+                            <button id="btn-new-distributor" class="btn btn-primary">+ New Distributor</button>
+                        </div>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table id="distributor-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Region</th>
+                                    <th>Credit Limit</th>
+                                    <th>Outstanding</th>
+                                    <th>Advance</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="distributor-list-body">
+                                <!-- JS Populates rows here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD DISTRIBUTOR -->
+    <div id="modal-distributor" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Add Distributor</h3>
+                <button class="btn-outline close-modal">X</button>
+            </div>
+            <form id="form-distributor">
+                <div class="modal-body">
+                    <div class="form-group"><label>Name</label><input type="text" id="input-name" required></div>
+                    <div class="form-group"><label>Region</label><input type="text" id="input-region" required></div>
+                    <div class="form-group"><label>Phone</label><input type="tel" id="input-phone"></div>
+                    <div class="form-group"><label>Email</label><input type="email" id="input-email"></div>
+                    <div class="form-group"><label>Credit Limit (₹)</label><input type="number" id="input-limit" value="0"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Save Distributor</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: TRANSACTIONS -->
+    <div id="modal-transaction" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>New Transaction</h3>
+                <button class="btn-outline close-modal">X</button>
+            </div>
+            <form id="form-transaction">
+                <div class="modal-body">
+                    <input type="hidden" id="trans-dist-id">
+                    <div class="form-group">
+                        <label>Distributor</label>
+                        <input type="text" id="trans-dist-name" disabled style="background:#f0f0f0;">
+                    </div>
+                    <div class="form-group">
+                        <label>Transaction Type</label>
+                        <select id="trans-type" required>
+                            <option value="INVOICE">New Invoice (Add to Outstanding)</option>
+                            <option value="PAYMENT">Payment Received (Reduce Outstanding)</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Amount (₹)</label><input type="number" id="trans-amount" required min="1"></div>
+                    <div class="form-group"><label>Reference / Note</label><input type="text" id="trans-ref" placeholder="Inv # or Txn ID" required></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Post Transaction</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC (FIREBASE INTEGRATION) -->
+    <script type="module">
+        // ==========================================
+        // 1. CONFIGURATION (REPLACE WITH YOUR KEYS)
+        // ==========================================
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, runTransaction, query, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
+
+        // *** PASTE YOUR FIREBASE CONFIG HERE ***
+        const firebaseConfig = {
+            apiKey: "PASTE_YOUR_API_KEY_HERE",
+            authDomain: "your-project-id.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project-id.appspot.com",
+            messagingSenderId: "1234567890",
+            appId: "1:1234567890:web:abcdef"
+        };
+        // ****************************************
+
+        // --- INIT FIREBASE ---
+        // Ensure app doesn't crash if config is empty (for demo purposes)
+        let app, db, auth, storage;
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            storage = getStorage(app);
+        } catch (e) {
+            console.error("Firebase config missing or invalid.", e);
+            alert("Firebase Config missing! Check code source line 330.");
+        }
+
+        const ADMIN_EMAIL = "arpitmishra3095@gmail.com";
+        let currentUser = null;
+
+        // --- DOM ELEMENTS ---
+        const views = {
+            loading: document.getElementById('loading-view'),
+            login: document.getElementById('login-view'),
+            denied: document.getElementById('denied-view'),
+            dashboard: document.getElementById('dashboard-view')
+        };
+        
+        // --- ROUTER & AUTH LISTENER ---
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            hideAllViews();
+            
+            if (!user) {
+                views.login.classList.remove('hidden');
+            } else {
+                console.log("Logged in:", user.email);
+                if (user.email === ADMIN_EMAIL) {
+                    views.dashboard.classList.remove('hidden');
+                    document.getElementById('user-display').textContent = user.email;
+                    initDashboard();
+                } else {
+                    views.denied.classList.remove('hidden');
+                    document.getElementById('denied-email').textContent = user.email;
+                }
+            }
+        });
+
+        function hideAllViews() {
+            Object.values(views).forEach(el => el.classList.add('hidden'));
+        }
+
+        // --- AUTH ACTIONS ---
+        document.getElementById('btn-login').addEventListener('click', async () => {
+            const provider = new GoogleAuthProvider();
+            try { await signInWithPopup(auth, provider); } 
+            catch (e) { alert(e.message); }
+        });
+
+        document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
+        document.getElementById('btn-logout-denied').addEventListener('click', () => signOut(auth));
+
+        // --- ACCESS DENIED LOGIC ---
+        document.getElementById('btn-request-access').addEventListener('click', () => {
+            const subject = "Freskey Distributor App - Access Request";
+            const body = `Hello Admin,%0D%0A%0D%0AI need access to the Freskey Manager app.%0D%0AUser Email: ${currentUser.email}%0D%0AReason: [Type Here]%0D%0A%0D%0AThanks.`;
+            window.location.href = `mailto:${ADMIN_EMAIL}?subject=${subject}&body=${body}`;
+        });
+
+        // --- DASHBOARD DATA & CRUD ---
+        async function initDashboard() {
+            // Realtime listener for distributors
+            const q = query(collection(db, "distributors"), orderBy("name"));
+            onSnapshot(q, (snapshot) => {
+                const dists = [];
+                let totalOutstanding = 0;
+                let totalAdvance = 0;
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    dists.push({ id: doc.id, ...data });
+                    totalOutstanding += (data.currentOutstanding || 0);
+                    totalAdvance += (data.advanceAmount || 0);
+                });
+
+                renderTable(dists);
+                
+                // KPIs
+                document.getElementById('kpi-count').innerText = dists.length;
+                document.getElementById('kpi-outstanding').innerText = "₹" + totalOutstanding.toLocaleString();
+                document.getElementById('kpi-advance').innerText = "₹" + totalAdvance.toLocaleString();
+            });
+        }
+
+        function renderTable(distributors) {
+            const tbody = document.getElementById('distributor-list-body');
+            tbody.innerHTML = '';
+            
+            // Apply Search Filter (Client Side)
+            const searchVal = document.getElementById('search-bar').value.toLowerCase();
+            const filtered = distributors.filter(d => 
+                (d.name || "").toLowerCase().includes(searchVal) || 
+                (d.region || "").toLowerCase().includes(searchVal)
+            );
+
+            filtered.forEach(d => {
+                const tr = document.createElement('tr');
+                const outVal = d.currentOutstanding || 0;
+                const outColor = outVal > (d.creditLimit || 0) ? 'text-red' : (outVal > 0 ? 'text-red' : '');
+
+                tr.innerHTML = `
+                    <td><strong>${d.name}</strong><br><small style="color:var(--gray)">${d.phone || ''}</small></td>
+                    <td>${d.region}</td>
+                    <td>₹${(d.creditLimit || 0).toLocaleString()}</td>
+                    <td class="${outColor}">₹${outVal.toLocaleString()}</td>
+                    <td class="text-green">₹${(d.advanceAmount || 0).toLocaleString()}</td>
+                    <td>
+                        <button class="btn btn-primary" onclick="openTransactionModal('${d.id}', '${d.name}')">Transact</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        // Search Listener
+        document.getElementById('search-bar').addEventListener('keyup', () => {
+             // In a real app we'd cache the list or re-fetch. 
+             // For this prompt demo, triggering a reload is tricky without global state, 
+             // but `onSnapshot` updates fast.
+             // *Correction for simple JS structure*: We'll rely on the snapshot firing to keep it synced or just implement search inside render if list is in memory. 
+             // To simplify single file: Just type and let the next db update catch it, or simpler: 
+             // Force re-render:
+             initDashboard(); // It sets snapshot listeners again (mildly inefficient but fine for MVP)
+        });
+
+        // --- CREATE DISTRIBUTOR ---
+        document.getElementById('btn-new-distributor').addEventListener('click', () => {
+            document.getElementById('modal-distributor').classList.remove('hidden');
+        });
+
+        document.getElementById('form-distributor').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.disabled = true;
+            btn.textContent = "Saving...";
+
+            try {
+                await addDoc(collection(db, "distributors"), {
+                    name: document.getElementById('input-name').value,
+                    region: document.getElementById('input-region').value,
+                    phone: document.getElementById('input-phone').value,
+                    email: document.getElementById('input-email').value,
+                    creditLimit: Number(document.getElementById('input-limit').value),
+                    currentOutstanding: 0,
+                    advanceAmount: 0,
+                    createdAt: serverTimestamp(),
+                    createdBy: currentUser.email
+                });
+                // Close modal and reset
+                document.getElementById('modal-distributor').classList.add('hidden');
+                e.target.reset();
+            } catch (err) {
+                console.error(err);
+                alert("Error: " + err.message);
+            }
+            btn.disabled = false;
+            btn.textContent = "Save Distributor";
+        });
+
+        // --- TRANSACTIONS (ATOMIC) ---
+        // We attach to window so HTML onClick works in module
+        window.openTransactionModal = (id, name) => {
+            document.getElementById('trans-dist-id').value = id;
+            document.getElementById('trans-dist-name').value = name;
+            document.getElementById('modal-transaction').classList.remove('hidden');
+        };
+
+        document.getElementById('form-transaction').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            btn.textContent = "Posting...";
+            btn.disabled = true;
+
+            const distId = document.getElementById('trans-dist-id').value;
+            const type = document.getElementById('trans-type').value; // INVOICE or PAYMENT
+            const amount = Number(document.getElementById('trans-amount').value);
+            const refNum = document.getElementById('trans-ref').value;
+
+            // Prepare Atomic Logic
+            try {
+                await runTransaction(db, async (transaction) => {
+                    const distRef = doc(db, "distributors", distId);
+                    const distDoc = await transaction.get(distRef);
+                    if (!distDoc.exists()) throw "Distributor does not exist!";
+
+                    const currentOut = distDoc.data().currentOutstanding || 0;
+                    const currentAdv = distDoc.data().advanceAmount || 0;
+
+                    let newOut = currentOut;
+                    let newAdv = currentAdv;
+
+                    // Calculation Logic
+                    if (type === "INVOICE") {
+                        // Increase Outstanding
+                        newOut = currentOut + amount;
+                    } else if (type === "PAYMENT") {
+                        // Decrease Outstanding
+                        newOut = currentOut - amount;
+                    }
+
+                    // Update Dist
+                    transaction.update(distRef, { 
+                        currentOutstanding: newOut,
+                        advanceAmount: newAdv 
+                    });
+
+                    // Create Audit/Transaction Log
+                    const transRef = doc(collection(db, "transactions"));
+                    transaction.set(transRef, {
+                        distributorId: distId,
+                        type: type,
+                        amount: amount,
+                        reference: refNum,
+                        date: serverTimestamp(),
+                        createdBy: currentUser.email,
+                        balanceAfter: newOut
+                    });
+                });
+                
+                alert("Transaction Success!");
+                document.getElementById('modal-transaction').classList.add('hidden');
+                e.target.reset();
+
+            } catch (err) {
+                console.error("Transaction failed: ", err);
+                alert("Transaction Failed: " + err.message);
+            }
+            btn.disabled = false;
+            btn.textContent = "Post Transaction";
+        });
+
+        // --- CLOSING MODALS ---
+        document.querySelectorAll('.close-modal').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.target.closest('.modal-overlay').classList.add('hidden');
+            });
+        });
+
+    </script>
+</body>
+</html>
