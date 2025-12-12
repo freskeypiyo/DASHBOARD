@@ -2,11 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Himalayan Beverages | Cloud ERP</title>
+    <title>Himalayan Beverages | Freskey Enterprise Operations</title>
     
     <!-- 
-      LIBRARIES 
+      =============================================================================
+      EXTERNAL DEPENDENCIES 
+      1. Google Identity Services (GSI) - Authentication
+      2. Google API Client (GAPI) - Drive REST Interaction
+      3. JSPDF - Professional PDF Generator
+      4. JSPDF AutoTable - Advanced PDF Tables
+      =============================================================================
     -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://apis.google.com/js/api.js"></script>
@@ -14,770 +21,1655 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
     <!-- 
-      STYLES & RESPONSIVE DESIGN
+      =============================================================================
+      PART 1: THE CSS FRAMEWORK (STYLES)
+      A complete custom design system to ensure responsive, high-DPI rendering.
+      =============================================================================
     -->
     <style>
+        /* ------------------------------------------------------------
+           1.1 VARIABLES & RESET
+           ------------------------------------------------------------ */
         :root {
-            /* Theme Variables */
-            --primary: #1e3a8a;       /* Blue 900 */
-            --primary-light: #3b82f6; /* Blue 500 */
-            --accent: #0ea5e9;        /* Sky 500 */
-            --accent-glow: rgba(14, 165, 233, 0.2);
-            
-            --success: #16a34a; 
-            --warning: #d97706; 
-            --danger: #dc2626;
-            
-            --bg-body: #f8fafc;
-            --bg-sidebar: #0f172a;    /* Slate 900 */
-            --bg-card: #ffffff;
-            
-            --text-head: #1e293b;
-            --text-body: #64748b;
-            --text-inv: #f1f5f9;
+            /* Branding Palette - Himalayan Deep Blue & Fresh Ice */
+            --color-brand-50:  #f0f9ff;
+            --color-brand-100: #e0f2fe;
+            --color-brand-500: #0ea5e9;
+            --color-brand-600: #0284c7;
+            --color-brand-800: #075985;
+            --color-brand-900: #0c4a6e;
 
-            --sidebar-w: 260px;
-            --header-h: 60px;
+            /* Functional Status Colors */
+            --color-success-bg: #dcfce7;
+            --color-success-fg: #15803d;
+            --color-warning-bg: #fef9c3;
+            --color-warning-fg: #a16207;
+            --color-danger-bg:  #fee2e2;
+            --color-danger-fg:  #b91c1c;
+
+            /* Surface Colors */
+            --color-bg-app:    #f8fafc;
+            --color-bg-card:   #ffffff;
+            --color-bg-sidebar:#0f172a;
+            
+            /* Text Colors */
+            --color-text-main:  #1e293b;
+            --color-text-muted: #64748b;
+            --color-text-light: #94a3b8;
+            --color-text-inv:   #ffffff;
+
+            /* Borders & Shadows */
+            --border-light: 1px solid #e2e8f0;
+            --border-dark:  1px solid rgba(255,255,255,0.1);
+            --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+
+            /* Metrics */
+            --sidebar-width: 280px;
+            --header-height: 64px;
+            --border-radius: 8px;
         }
 
-        /* --- BASE RESET --- */
-        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
-        body { 
-            margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: var(--bg-body); color: var(--text-body); font-size: 14px;
-            height: 100vh; overflow: hidden; display: flex;
+        /* Standard Reset */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
         }
-        
-        /* --- UTILS --- */
-        .text-bold { font-weight: 700; }
-        .text-right { text-align: right; }
-        .flex { display: flex; align-items: center; }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--color-bg-app);
+            color: var(--color-text-main);
+            font-size: 14px;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden; /* We handle scrolling in specific regions */
+        }
+
+        button, input, select, textarea {
+            font-family: inherit;
+        }
+
+        /* ------------------------------------------------------------
+           1.2 UTILITY CLASSES (Grid, Flex, Text)
+           ------------------------------------------------------------ */
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
         .justify-between { justify-content: space-between; }
-        .hidden { display: none !important; }
-        
-        .badge { 
-            padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-        .bg-paid { background: #dcfce7; color: #15803d; }
-        .bg-pending { background: #fee2e2; color: #991b1b; }
-        .bg-part { background: #fef9c3; color: #854d0e; }
-        .bg-info { background: #e0f2fe; color: #075985; }
-
-        /* --- RESPONSIVE SIDEBAR --- */
-        #sidebar {
-            width: var(--sidebar-w);
-            background: var(--bg-sidebar);
-            color: var(--text-inv);
-            display: flex; flex-direction: column;
-            z-index: 50; transition: transform 0.3s ease;
-            height: 100%; border-right: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .brand-area {
-            height: var(--header-h);
-            display: flex; align-items: center; padding: 0 20px;
-            font-size: 1.1rem; font-weight: 800; color: white;
-            background: rgba(0,0,0,0.2); border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .nav-scroller { flex: 1; overflow-y: auto; padding: 20px 10px; }
-        .nav-item {
-            padding: 12px 15px; margin-bottom: 5px; border-radius: 6px;
-            cursor: pointer; transition: 0.2s; color: #94a3b8; font-weight: 500;
-            display: flex; align-items: center; gap: 12px;
-        }
-        .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
-        .nav-item.active { background: var(--primary-light); color: white; box-shadow: 0 4px 12px var(--accent-glow); }
-        .nav-item svg { width: 18px; height: 18px; }
-
-        .cloud-widget {
-            padding: 20px; border-top: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.15);
-        }
-
-        /* --- MAIN LAYOUT --- */
-        #main {
-            flex: 1; display: flex; flex-direction: column; 
-            height: 100%; overflow: hidden; position: relative;
-        }
-        
-        #topbar {
-            height: var(--header-h); background: var(--bg-card);
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 20px; border-bottom: 1px solid #e2e8f0;
-            z-index: 40;
-        }
-        
-        #mobile-toggle { display: none; background:none; border:none; font-size: 1.5rem; color: #333; cursor:pointer; margin-right: 15px; }
-
-        .page-content { flex: 1; overflow-y: auto; padding: 25px; position: relative; }
-
-        /* --- RESPONSIVE MEDIA QUERIES --- */
-        @media (max-width: 768px) {
-            #sidebar {
-                position: fixed; left: -100%; top:0; bottom:0; width: 80%; max-width: 300px;
-                box-shadow: 10px 0 20px rgba(0,0,0,0.5);
-            }
-            #sidebar.open { transform: translateX(100%); left: -80%; /* Fix logic based on transform */ left:0; transform:none; }
-            
-            #mobile-toggle { display: block; }
-            .desktop-user { display: none; }
-            .page-content { padding: 15px; }
-            
-            /* Responsive Grid */
-            .grid-kpi { grid-template-columns: 1fr !important; }
-            .grid-cols-2 { grid-template-columns: 1fr !important; }
-        }
-
-        /* --- CARDS & GRIDS --- */
-        .card {
-            background: white; border-radius: 8px; border: 1px solid #e2e8f0;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 20px; overflow: hidden;
-        }
-        .card-header {
-            padding: 15px 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;
-        }
-        .card-header h3 { margin: 0; font-size: 1rem; color: var(--text-head); }
-        .card-body { padding: 20px; }
-
-        .grid-kpi {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 25px;
-        }
-        .kpi-card {
-            background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; position: relative;
-        }
-        .kpi-val { font-size: 1.6rem; font-weight: 700; color: var(--text-head); margin-top: 5px; }
-        .kpi-lbl { font-size: 0.8rem; text-transform: uppercase; color: #94a3b8; font-weight: 600; }
-
-        .grid-cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-
-        /* --- BUTTONS --- */
-        .btn {
-            display: inline-flex; align-items: center; gap: 8px; justify-content: center;
-            padding: 9px 18px; border-radius: 6px; font-weight: 600; font-size: 0.9rem;
-            border: 1px solid transparent; cursor: pointer; transition: 0.2s;
-        }
-        .btn:active { transform: scale(0.98); }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-sec { background: white; border: 1px solid #cbd5e1; color: var(--text-head); }
-        .btn-success { background: var(--success); color: white; }
-        .btn-sm { padding: 5px 12px; font-size: 0.8rem; }
+        .justify-end { justify-content: flex-end; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-4 { gap: 1rem; }
         .w-full { width: 100%; }
+        .h-full { height: 100%; }
 
-        /* --- TABLES --- */
-        .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; min-width: 600px; } /* Ensure horizontal scroll on mobile */
-        th { text-align: left; padding: 12px 15px; background: #f8fafc; font-size: 0.75rem; color: #64748b; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
-        td { padding: 14px 15px; border-bottom: 1px solid #f1f5f9; color: #334155; }
-        tr:hover { background: #fdfdfd; }
-
-        /* --- MODALS --- */
-        .modal-mask {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100;
-            display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s;
-            padding: 20px;
-        }
-        .modal-mask.active { opacity: 1; pointer-events: all; }
-        .modal-box {
-            background: white; width: 100%; max-width: 600px; max-height: 90vh; 
-            border-radius: 12px; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
-        }
-        .modal-body { overflow-y: auto; padding: 25px; }
-        .modal-foot { padding: 15px 25px; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 10px; background: #f8fafc; border-radius: 0 0 12px 12px; }
+        .text-xs { font-size: 0.75rem; }
+        .text-sm { font-size: 0.875rem; }
+        .text-base { font-size: 1rem; }
+        .text-lg { font-size: 1.125rem; }
+        .text-xl { font-size: 1.25rem; }
+        .font-bold { font-weight: 700; }
+        .font-semibold { font-weight: 600; }
         
-        .inp { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; margin-bottom: 15px; display: block; font-size: 0.95rem; }
-        .inp:focus { border-color: var(--primary-light); box-shadow: 0 0 0 3px var(--accent-glow); }
-        label { display: block; margin-bottom: 5px; font-weight: 500; font-size: 0.9rem; }
+        .text-brand { color: var(--color-brand-600); }
+        .text-muted { color: var(--color-text-muted); }
+        .text-danger { color: var(--color-danger-fg); }
+        .text-success { color: var(--color-success-fg); }
 
-        /* TOAST */
-        #toast { position: fixed; bottom: 20px; right: 20px; background: #0f172a; color: white; padding: 15px 20px; border-radius: 6px; box-shadow: 0 10px 15px rgba(0,0,0,0.2); z-index: 200; transform: translateY(100px); transition: 0.3s; }
-        #toast.show { transform: translateY(0); }
+        .mt-2 { margin-top: 0.5rem; }
+        .mb-4 { margin-bottom: 1rem; }
+        .p-4 { padding: 1rem; }
+        .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+
+        .hidden { display: none !important; }
+
+        /* ------------------------------------------------------------
+           1.3 COMPONENT: BUTTONS
+           ------------------------------------------------------------ */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background-color: var(--color-brand-800);
+            color: white;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .btn-primary:hover {
+            background-color: var(--color-brand-900);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        }
+
+        .btn-secondary {
+            background-color: #fff;
+            color: var(--color-text-main);
+            border-color: #cbd5e1;
+        }
+        .btn-secondary:hover {
+            background-color: #f1f5f9;
+            border-color: #94a3b8;
+        }
+
+        .btn-danger {
+            background-color: var(--color-danger-bg);
+            color: var(--color-danger-fg);
+            border-color: transparent;
+        }
+        .btn-danger:hover {
+            background-color: #fee2e2;
+            border-color: #fecaca;
+        }
         
+        .btn-icon {
+            padding: 0.5rem;
+        }
+
+        /* ------------------------------------------------------------
+           1.4 COMPONENT: CARDS & STATS
+           ------------------------------------------------------------ */
+        .card {
+            background: var(--color-bg-card);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            border: var(--border-light);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-header {
+            padding: 1.25rem;
+            border-bottom: var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--color-text-main);
+        }
+
+        .card-body {
+            padding: 1.25rem;
+            flex: 1;
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: var(--color-bg-card);
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            border: var(--border-light);
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::after {
+            content: '';
+            position: absolute;
+            left: 0; top: 10%; bottom: 10%;
+            width: 4px;
+            background: var(--color-brand-500);
+            border-radius: 0 4px 4px 0;
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--color-text-muted);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .metric-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--color-text-main);
+        }
+
+        /* ------------------------------------------------------------
+           1.5 COMPONENT: TABLES
+           ------------------------------------------------------------ */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: var(--border-radius);
+            border: var(--border-light);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: var(--color-text-muted);
+            font-weight: 600;
+            text-align: left;
+            padding: 0.75rem 1.25rem;
+            border-bottom: var(--border-light);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+        }
+
+        td {
+            padding: 1rem 1.25rem;
+            border-bottom: var(--border-light);
+            color: var(--color-text-main);
+        }
+
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background-color: #f8fafc; }
+
+        /* Status Badges in Table */
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.625rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .badge-paid { background: var(--color-success-bg); color: var(--color-success-fg); }
+        .badge-unpaid { background: var(--color-danger-bg); color: var(--color-danger-fg); }
+        .badge-partial { background: var(--color-warning-bg); color: var(--color-warning-fg); }
+
+        /* ------------------------------------------------------------
+           1.6 COMPONENT: FORMS & INPUTS
+           ------------------------------------------------------------ */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--color-text-main);
+        }
+
+        .form-input, .form-select {
+            display: block;
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            color: var(--color-text-main);
+            background-color: #fff;
+            background-clip: padding-box;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+        }
+
+        .form-input:focus, .form-select:focus {
+            border-color: var(--color-brand-500);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+            outline: 0;
+        }
+        
+        .input-error {
+            border-color: var(--color-danger-fg);
+        }
+        
+        .help-text {
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+            margin-top: 0.25rem;
+        }
+
+        /* ------------------------------------------------------------
+           1.7 LAYOUT: SIDEBAR & MAIN AREA
+           ------------------------------------------------------------ */
+        #app-shell {
+            display: flex;
+            height: 100%;
+            position: relative;
+        }
+
+        /* Sidebar Styling */
+        #sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--color-bg-sidebar);
+            display: flex;
+            flex-direction: column;
+            border-right: var(--border-dark);
+            z-index: 100;
+            transition: transform 0.3s ease;
+        }
+
+        .logo-area {
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+            padding: 0 1.5rem;
+            border-bottom: var(--border-dark);
+            background-color: rgba(0,0,0,0.15);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--color-text-inv);
+        }
+
+        .logo-icon {
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, var(--color-brand-500), var(--color-brand-800));
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            margin-right: 0.75rem;
+            box-shadow: 0 0 10px rgba(14,165,233,0.3);
+        }
+
+        .nav-links {
+            flex: 1;
+            padding: 1.5rem 0.75rem;
+            overflow-y: auto;
+        }
+
+        .nav-group-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #64748b;
+            margin-bottom: 0.5rem;
+            padding-left: 0.75rem;
+            font-weight: 700;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            color: #94a3b8;
+            font-weight: 500;
+            cursor: pointer;
+            margin-bottom: 0.25rem;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+            background-color: rgba(255,255,255,0.05);
+            color: #fff;
+        }
+
+        .nav-item.active {
+            background-color: var(--color-brand-600);
+            color: #fff;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
+        }
+
+        /* Sidebar Sync Widget */
+        .sync-footer {
+            padding: 1rem;
+            background-color: rgba(0,0,0,0.2);
+            border-top: var(--border-dark);
+        }
+
+        /* Main Content Styling */
+        #main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-color: var(--color-bg-app);
+        }
+
+        .header {
+            height: var(--header-height);
+            background-color: var(--color-bg-card);
+            border-bottom: var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+            z-index: 50;
+        }
+
+        .page-content-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            scroll-behavior: smooth;
+        }
+        
+        .hamburger-btn {
+            display: none; /* Desktop hidden */
+            font-size: 1.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--color-text-main);
+        }
+
+        .overlay-mask {
+            display: none;
+            position: fixed; inset: 0; 
+            background: rgba(0,0,0,0.5); 
+            z-index: 90;
+            backdrop-filter: blur(2px);
+        }
+
+        /* ------------------------------------------------------------
+           1.8 LAYOUT: RESPONSIVE / MOBILE 
+           ------------------------------------------------------------ */
+        @media (max-width: 1024px) {
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            /* Transform Sidebar into Drawer */
+            #sidebar {
+                position: fixed;
+                left: -100%;
+                top: 0; bottom: 0;
+                width: 280px;
+                box-shadow: 10px 0 20px rgba(0,0,0,0.15);
+            }
+            #sidebar.open {
+                left: 0;
+                transform: translateX(0);
+            }
+            
+            .overlay-mask.active {
+                display: block;
+            }
+
+            .hamburger-btn {
+                display: block;
+                margin-right: 1rem;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .page-content-scroll {
+                padding: 1rem;
+            }
+
+            .table-responsive table {
+                min-width: 600px; /* Force scroll on small screens */
+            }
+        }
+
+        /* ------------------------------------------------------------
+           1.9 COMPONENT: MODALS
+           ------------------------------------------------------------ */
+        .modal-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: rgba(15, 23, 42, 0.65);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-container.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-panel {
+            background-color: #fff;
+            width: 100%;
+            max-width: 700px; /* Wide default */
+            max-height: 90vh;
+            border-radius: 12px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            display: flex;
+            flex-direction: column;
+            transform: translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        .modal-sm { max-width: 450px; }
+
+        .modal-container.visible .modal-panel {
+            transform: translateY(0);
+        }
+
+        .modal-head {
+            padding: 1.5rem;
+            border-bottom: var(--border-light);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-title { font-size: 1.25rem; font-weight: 700; color: var(--color-text-main); margin: 0; }
+        .modal-close { font-size: 1.5rem; color: #94a3b8; cursor: pointer; transition: 0.2s; border:none; background:transparent;}
+        .modal-close:hover { color: #475569; }
+
+        .modal-body {
+            padding: 1.5rem;
+            overflow-y: auto;
+            max-height: 60vh;
+        }
+        
+        .modal-foot {
+            padding: 1rem 1.5rem;
+            border-top: var(--border-light);
+            background-color: #f8fafc;
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            border-radius: 0 0 12px 12px;
+        }
+
+        /* ------------------------------------------------------------
+           1.10 COMPONENT: TOAST NOTIFICATIONS
+           ------------------------------------------------------------ */
+        #toast-zone {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 2000;
+        }
+
+        .toast-msg {
+            background-color: var(--color-brand-900);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-lg);
+            min-width: 300px;
+            border-left: 4px solid var(--color-brand-500);
+            animation: slideLeft 0.3s ease-out forwards;
+            font-size: 0.9rem;
+        }
+        
+        @keyframes slideLeft {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
     </style>
 </head>
+
 <body>
 
-    <!-- OVERLAY FOR MOBILE MENU -->
-    <div id="sidebar-overlay" onclick="toggleMenu()" style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:49;display:none;"></div>
+    <!-- MOBILE OVERLAY BACKDROP -->
+    <div id="sidebar-overlay" class="overlay-mask" onclick="UI.Nav.toggleSidebar(false)"></div>
 
-    <div id="sidebar">
-        <div class="brand-area">
-            <span>HIMALAYAN<span style="color:var(--accent);">ERP</span></span>
-        </div>
-        <div class="nav-scroller">
-            <div class="nav-item active" onclick="Nav('dashboard')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17l-6-11-6 8"/></svg>
-                Dashboard
-            </div>
-            <div class="nav-item" onclick="Nav('orders')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
-                Sales & Invoice
-            </div>
-            <div class="nav-item" onclick="Nav('inventory')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/></svg>
-                Stock Management
-            </div>
-            <div class="nav-item" onclick="Nav('crm')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-                Customers
-            </div>
-            <div class="nav-item" onclick="Nav('finance')">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-                Payments & Ledger
-            </div>
-        </div>
+    <div id="app-shell">
         
-        <div class="cloud-widget">
-            <div style="font-size:0.75rem; color:#64748b; margin-bottom:10px;">SYSTEM STATUS</div>
-            <div id="drive-stat" style="color:white; font-size:0.85rem; display:flex; align-items:center; gap:5px; margin-bottom:10px;">
-                <span style="width:8px; height:8px; border-radius:50%; background:grey; display:block;" id="stat-dot"></span> 
-                Disconnected
+        <!-- SIDEBAR NAV -->
+        <aside id="sidebar">
+            <div class="logo-area">
+                <div class="logo-icon">H</div>
+                <span>HimalayanERP <span style="font-weight:400; opacity:0.7">v2.0</span></span>
             </div>
-            <button onclick="Drive.auth()" class="btn btn-primary w-full btn-sm">Google Drive Sync</button>
-        </div>
-    </div>
 
-    <div id="main">
-        <header id="topbar">
-            <div class="flex">
-                <button id="mobile-toggle" onclick="toggleMenu()">&#9776;</button>
-                <h2 style="font-size:1.1rem; margin:0;" id="page-title">Operations Dashboard</h2>
+            <nav class="nav-links">
+                
+                <div class="nav-group-label">OPERATIONS</div>
+                <div class="nav-item active" onclick="Router.nav('dashboard')">
+                    <!-- Icon Dashboard -->
+                    <svg style="width:20px;margin-right:10px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    Dashboard
+                </div>
+                
+                <div class="nav-item" onclick="Router.nav('orders')">
+                    <svg style="width:20px;margin-right:10px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Sales Invoicing
+                </div>
+
+                <div class="nav-item" onclick="Router.nav('inventory')">
+                    <svg style="width:20px;margin-right:10px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+                    Stock Manager
+                </div>
+                
+                <div class="nav-group-label">COMMERCIAL</div>
+                <div class="nav-item" onclick="Router.nav('finance')">
+                    <svg style="width:20px;margin-right:10px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Payments & Ledger
+                </div>
+
+                <div class="nav-item" onclick="Router.nav('crm')">
+                    <svg style="width:20px;margin-right:10px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    Customer Database
+                </div>
+                
+                <div class="nav-group-label">SYSTEM</div>
+                 <div class="nav-item" onclick="Router.nav('settings')">
+                    <svg style="width:20px;margin-right:10px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    Settings
+                </div>
+            </nav>
+            
+            <div class="sync-footer">
+                <div style="font-size:0.75rem; color:#64748b; margin-bottom:5px; font-weight:700">GOOGLE DRIVE</div>
+                <div class="flex items-center gap-2 mb-4">
+                    <span id="sync-dot" style="width:10px; height:10px; border-radius:50%; background:#94a3b8"></span>
+                    <span id="sync-text" style="font-size:0.8rem; color:#f1f5f9;">Disconnected</span>
+                </div>
+                <button id="btn-sync-action" onclick="Services.Drive.connect()" class="btn btn-primary w-full text-xs">Initialize Connection</button>
             </div>
-            <div class="flex desktop-user">
-                <span style="font-size:0.85rem; color:#64748b;">Logged in as: <b>Freskey Admin</b></span>
-                <div style="width:32px; height:32px; background:var(--primary); color:white; border-radius:50%; display:grid; place-items:center; margin-left:10px; font-weight:700;">A</div>
-            </div>
-        </header>
+        </aside>
 
-        <div id="content" class="page-content">
-            <!-- View injection container -->
-        </div>
-    </div>
-
-    <!-- TOAST MSG -->
-    <div id="toast">Operation Successful</div>
-
-
-    <!-- =========== MODALS =========== -->
-
-    <!-- ORDER MODAL -->
-    <div id="m-order" class="modal-mask">
-        <div class="modal-box">
-            <div class="card-header">
-                <h3>New Invoice / Order</h3>
-                <button onclick="Modal('m-order', false)" style="border:none;background:none;font-size:1.5rem;">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="grid-cols-2">
+        <!-- CONTENT AREA -->
+        <main id="main-wrapper">
+            <header class="header">
+                <div class="flex items-center">
+                    <button class="hamburger-btn" onclick="UI.Nav.toggleSidebar(true)">
+                        &#9776;
+                    </button>
                     <div>
-                        <label>Customer</label>
-                        <select id="ord-cust" class="inp"></select>
-                    </div>
-                    <div>
-                        <label>Order Date</label>
-                        <input type="date" id="ord-date" class="inp">
+                        <div class="text-xs text-brand font-bold tracking-widest uppercase">Overview</div>
+                        <h2 class="text-lg font-bold text-gray-800" id="header-title">Executive Dashboard</h2>
                     </div>
                 </div>
-                
-                <div style="background:#f8fafc; padding:10px; border-radius:6px; margin-bottom:10px;">
-                    <div style="font-size:0.85rem; font-weight:700; margin-bottom:5px;">ADD ITEMS</div>
-                    <div class="table-container">
-                        <table>
-                            <thead><tr><th>Item</th><th width="80px">Stk</th><th width="90px">Qty</th><th>Rate (Rs.)</th></tr></thead>
-                            <tbody id="ord-list"></tbody>
-                        </table>
+                <div class="flex items-center gap-4">
+                    <div class="hidden sm:block text-right">
+                        <div class="text-xs text-muted">Freskey Admin</div>
+                        <div class="text-xs font-bold text-brand">freskeypiyo@gmail.com</div>
+                    </div>
+                    <div style="width:36px; height:36px; background:#e0f2fe; color:#0369a1; border-radius:50%; display:grid; place-items:center; font-weight:700; border:1px solid #bae6fd;">
+                        A
                     </div>
                 </div>
-                
-                <div class="text-right" style="font-size:1.2rem; font-weight:700; color:var(--primary);">
-                    Grand Total: <span id="ord-total">Rs. 0.00</span>
-                </div>
+            </header>
+
+            <div class="page-content-scroll" id="viewport">
+                <!-- VIEW COMPONENT MOUNT POINT -->
             </div>
-            <div class="modal-foot">
-                <button onclick="Modal('m-order', false)" class="btn btn-sec">Cancel</button>
-                <button onclick="Sales.submit()" class="btn btn-primary">Generate PDF & Save</button>
-            </div>
-        </div>
+        </main>
     </div>
 
-    <!-- PAYMENT MODAL -->
-    <div id="m-pay" class="modal-mask">
-        <div class="modal-box" style="max-width:400px;">
-            <div class="card-header"><h3>Record Payment</h3></div>
-            <div class="modal-body">
-                <label>Reference Invoice</label>
-                <input id="p-ref" class="inp" disabled>
-                
-                <div class="grid-cols-2">
-                     <div><label>Total (Rs.)</label><input id="p-tot" class="inp" disabled></div>
-                     <div><label>Due (Rs.)</label><input id="p-due" class="inp" disabled style="color:red; font-weight:bold"></div>
-                </div>
-                
-                <label>Payment Amount Received (Rs.)</label>
-                <input type="number" id="p-amt" class="inp" style="border:2px solid var(--success)">
-            </div>
-            <div class="modal-foot">
-                <button onclick="Modal('m-pay', false)" class="btn btn-sec">Cancel</button>
-                <button onclick="Finance.save()" class="btn btn-success">Save Payment</button>
-            </div>
-        </div>
-    </div>
+    <!-- 
+      =============================================================================
+      PART 2: MODAL DEFINITIONS
+      =============================================================================
+    -->
     
-    <!-- ADD STOCK MODAL -->
-    <div id="m-stk" class="modal-mask">
-        <div class="modal-box">
-            <div class="card-header"><h3>Stock Purchase / Entry</h3></div>
+    <!-- 2.1 CREATE ORDER MODAL -->
+    <div id="modal-order" class="modal-container">
+        <div class="modal-panel">
+            <div class="modal-head">
+                <h3 class="modal-title">New Invoice Creation</h3>
+                <button class="modal-close" onclick="UI.Modals.Order.close()">&times;</button>
+            </div>
             <div class="modal-body">
-                <label>Select Product</label>
-                <select id="s-prod" class="inp"></select>
-                
-                <label>Quantity Added (Cases)</label>
-                <input id="s-qty" type="number" class="inp">
-                
-                <label>Purchase Ref / Batch No</label>
-                <input id="s-ref" class="inp">
-            </div>
-            <div class="modal-foot">
-                 <button onclick="Modal('m-stk', false)" class="btn btn-sec">Cancel</button>
-                 <button onclick="Inventory.add()" class="btn btn-primary">Update Stock</button>
-            </div>
-        </div>
-    </div>
-
-
-    <script>
-        /* ======================== 
-           CONFIG & UTILS
-           ======================== */
-        const APP = {
-            API_KEY: 'AIzaSyCWo9OP6-QhyKWpfuV5oonyuC32IQHoOtE', 
-            CLIENT_ID: '950010994560-v7p6cem78h9fsdp102iq4immb36t95ls.apps.googleusercontent.com',
-            DB_FILE: 'himalayan_erp_db_v2.json',
-            User: 'freskeypiyo@gmail.com'
-        };
-
-        const Util = {
-            // FIX: Currency formatter using pure ASCII for PDF safety
-            fmt: (n) => `Rs. ${n.toLocaleString('en-IN')}`, 
-            rawDate: () => new Date().toISOString().split('T')[0],
-            uid: () => Date.now().toString(36),
-            toast: (msg) => {
-                const t = document.getElementById('toast');
-                t.innerText = msg;
-                t.classList.add('show');
-                setTimeout(()=>t.classList.remove('show'), 3000);
-            }
-        };
-
-        /* ======================== 
-           DATA STORE 
-           ======================== */
-        const DB = {
-            customers: [
-                { id: 'c1', name: 'Metro Cash & Carry', loc: 'Delhi', type: 'Distributor', balance: 0 },
-                { id: 'c2', name: 'Taj Hotels', loc: 'Mumbai', type: 'HoReCa', balance: 15000 },
-                { id: 'c3', name: 'Wedding Planners Inc', loc: 'Dehradun', type: 'Event', balance: 5000 }
-            ],
-            products: [
-                { id: 'p1', name: 'Freskey Lemon 200ml', cat: 'Glass Bottle', pack:'24x200ml', price: 480, stock: 150 },
-                { id: 'p2', name: 'Freskey Mango 500ml', cat: 'PET Bottle', pack:'12x500ml', price: 360, stock: 45 },
-                { id: 'p3', name: 'Soda 300ml', cat: 'Soda', pack:'24x300ml', price: 500, stock: 200 },
-                { id: 'p4', name: 'Jeera Fizz 200ml', cat: 'Glass Bottle', pack:'24x200ml', price: 480, stock: 20 }
-            ],
-            invoices: [
-                { id: 'INV-101', date: '2025-10-01', custName: 'Taj Hotels', total: 48000, paid: 33000, status: 'Partial' },
-                { id: 'INV-102', date: '2025-10-05', custName: 'Wedding Planners Inc', total: 5000, paid: 0, status: 'Unpaid' }
-            ],
-            transactions: []
-        };
-
-        /* ======================== 
-           CONTROLLERS 
-           ======================== */
-        
-        // --- 1. VIEWS ---
-        function Nav(view) {
-            document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
-            event && event.currentTarget.classList.add('active');
-            
-            // Mobile Menu Close
-            toggleMenu(false); 
-
-            const title = document.getElementById('page-title');
-            const box = document.getElementById('content');
-            
-            // VIEW ROUTING
-            if(view === 'dashboard') {
-                title.innerText = "Executive Dashboard";
-                const total = DB.invoices.reduce((s,i)=>s+i.total,0);
-                const due = DB.invoices.reduce((s,i)=>s+(i.total-i.paid),0);
-                
-                // Analytics
-                const topProd = [...DB.products].sort((a,b)=>b.stock - a.stock)[0]; // logic stub
-                
-                box.innerHTML = `
-                <div class="grid-kpi">
-                    <div class="kpi-card" style="border-left:4px solid var(--primary)">
-                        <div class="kpi-lbl">Revenue</div>
-                        <div class="kpi-val">${Util.fmt(total)}</div>
+                <div class="form-grid">
+                    <div>
+                        <label class="form-label">Select Customer</label>
+                        <select id="mo-customer" class="form-select" onchange="UI.Modals.Order.onCustomerSelect()">
+                            <!-- filled by js -->
+                        </select>
+                        <div id="mo-cust-info" class="text-xs text-muted mt-2">Balance Info Loading...</div>
                     </div>
-                    <div class="kpi-card" style="border-left:4px solid var(--danger)">
-                        <div class="kpi-lbl">Pending Due</div>
-                        <div class="kpi-val" style="color:var(--danger)">${Util.fmt(due)}</div>
-                    </div>
-                    <div class="kpi-card" style="border-left:4px solid var(--warning)">
-                        <div class="kpi-lbl">Stock Alert</div>
-                        <div class="kpi-val">${DB.products.filter(p=>p.stock<50).length} items</div>
+                    <div>
+                        <label class="form-label">Invoice Date</label>
+                        <input type="date" id="mo-date" class="form-input">
                     </div>
                 </div>
-                
-                <div class="grid-cols-2">
-                    <div class="card">
-                        <div class="card-header"><h3>Recent Activity</h3></div>
-                        <div class="card-body">
-                             ${DB.invoices.slice(0,3).map(i => `<div style="border-bottom:1px solid #eee; padding:10px 0;">INV <b>${i.id}</b> generated for ${i.custName}</div>`).join('')}
+
+                <div class="card mt-2" style="background-color:var(--color-bg-app); border:none;">
+                    <div class="p-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-bold text-sm text-brand">PRODUCT LINE ITEMS</h4>
+                            <span class="text-xs text-muted">Adjust Qty (0 to skip)</span>
+                        </div>
+                        
+                        <div class="table-responsive" style="max-height: 250px; background:white; border:1px solid #e2e8f0;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Item Name</th>
+                                        <th>Rate (INR)</th>
+                                        <th>Stock</th>
+                                        <th style="width:80px">Qty</th>
+                                        <th style="text-align:right">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="mo-table-body">
+                                    <!-- Rows injected -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
-                    <div class="card">
-                         <div class="card-header"><h3>Inventory Value Distribution</h3></div>
-                         <div class="card-body" style="height:150px; display:flex; align-items:center; justify-content:center; color:#94a3b8">
-                             Chart.js Canvas (Visuals)
-                         </div>
+                </div>
+                
+                <div class="flex justify-end mt-4 items-center gap-4">
+                    <div class="text-right">
+                        <div class="text-xs text-muted uppercase">Grand Total</div>
+                        <div class="text-xl font-bold text-brand" id="mo-total">INR 0.00</div>
                     </div>
                 </div>
-                `;
-            }
+            </div>
+            <div class="modal-foot">
+                <button class="btn btn-secondary" onclick="UI.Modals.Order.close()">Cancel</button>
+                <button class="btn btn-primary" onclick="Controllers.Sales.submitOrder()">Generate PDF & Save</button>
+            </div>
+        </div>
+    </div>
 
-            else if(view === 'orders') {
-                title.innerText = "Sales & Invoicing";
-                box.innerHTML = `
-                <div class="flex justify-between" style="margin-bottom:15px;">
-                     <div>Overview of all invoices</div>
-                     <button onclick="Sales.init()" class="btn btn-primary">+ New Invoice</button>
+    <!-- 2.2 RECORD PAYMENT MODAL -->
+    <div id="modal-pay" class="modal-container">
+        <div class="modal-panel modal-sm">
+            <div class="modal-head">
+                <h3 class="modal-title">Receive Payment</h3>
+                <button class="modal-close" onclick="UI.Modals.Pay.close()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="mp-invid">
+                <div class="form-group">
+                    <label class="form-label">Invoice Reference</label>
+                    <input class="form-input" id="mp-ref-disp" disabled>
                 </div>
-                <div class="card">
-                    <div class="table-container">
-                        <table>
-                            <thead><tr><th>Date</th><th>Inv #</th><th>Customer</th><th class="text-right">Total</th><th>Due</th><th>Status</th><th>PDF</th></tr></thead>
-                            <tbody>
-                                ${DB.invoices.map(i => {
-                                    const due = i.total - i.paid;
-                                    let cls = i.status==='Paid'?'bg-paid':(i.status==='Unpaid'?'bg-pending':'bg-part');
-                                    return `<tr>
-                                        <td>${i.date}</td>
-                                        <td>${i.id}</td>
-                                        <td>${i.custName}</td>
-                                        <td class="text-right text-bold">${Util.fmt(i.total)}</td>
-                                        <td style="color:${due>0?'red':'green'}">${Util.fmt(due)}</td>
-                                        <td><span class="badge ${cls}">${i.status}</span></td>
-                                        <td><button onclick="Sales.pdf('${i.id}')" class="btn btn-sm btn-sec">⇩</button></td>
-                                    </tr>`
-                                }).reverse().join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>`;
-            }
-
-            else if(view === 'inventory') {
-                title.innerText = "Warehouse & Products";
-                box.innerHTML = `
-                <div class="flex justify-between" style="margin-bottom:15px;">
-                     <div>Stock Management</div>
-                     <button onclick="Inventory.init()" class="btn btn-primary">Purchase / Stock In</button>
+                
+                <div class="flex gap-4 mb-4">
+                     <div class="w-full">
+                         <label class="form-label">Total Amount</label>
+                         <input class="form-input" id="mp-tot-disp" disabled>
+                     </div>
+                     <div class="w-full">
+                         <label class="form-label">Balance Due</label>
+                         <input class="form-input" id="mp-due-disp" disabled style="color:var(--color-danger-fg); font-weight:700">
+                     </div>
                 </div>
-                <div class="card">
-                    <div class="table-container">
-                        <table>
-                            <thead><tr><th>SKU</th><th>Product</th><th>Packing</th><th>Category</th><th>Stock</th><th>Rate</th></tr></thead>
-                            <tbody>
-                                ${DB.products.map(p => `<tr>
-                                    <td>${p.id}</td><td class="text-bold">${p.name}</td><td>${p.pack}</td>
-                                    <td><span class="badge bg-info">${p.cat}</span></td>
-                                    <td class="${p.stock<50?'text-bold':''} ${p.stock<50?'text-right':''}" style="${p.stock<50?'color:red':''}">${p.stock} cases</td>
-                                    <td>${Util.fmt(p.price)}</td>
-                                </tr>`).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>`;
+
+                <div class="form-group p-4 bg-brand-50 rounded" style="background:#eff6ff; border:1px solid #dbeafe; border-radius:6px;">
+                    <label class="form-label text-brand">Amount Received (INR)</label>
+                    <input type="number" id="mp-amt" class="form-input" style="font-size:1.2rem; font-weight:bold;">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Payment Mode</label>
+                    <select id="mp-mode" class="form-select">
+                        <option value="Cash">Cash Payment</option>
+                        <option value="Bank">Bank Transfer / NEFT</option>
+                        <option value="UPI">UPI / GPay / PhonePe</option>
+                        <option value="Cheque">Cheque</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn btn-secondary" onclick="UI.Modals.Pay.close()">Close</button>
+                <button class="btn btn-primary" style="background:var(--color-success-fg)" onclick="Controllers.Finance.processPayment()">Record Transaction</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2.3 ADD STOCK MODAL -->
+    <div id="modal-stock" class="modal-container">
+        <div class="modal-panel modal-sm">
+            <div class="modal-head">
+                <h3 class="modal-title">Inventory Purchase</h3>
+                <button class="modal-close" onclick="UI.Modals.Stock.close()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Product</label>
+                    <select id="ms-prod" class="form-select"></select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Quantity Purchased (Cases)</label>
+                    <input type="number" id="ms-qty" class="form-input" placeholder="e.g., 50">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Reference / PO Number</label>
+                    <input type="text" id="ms-ref" class="form-input" placeholder="PO-2023-X">
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn btn-secondary" onclick="UI.Modals.Stock.close()">Cancel</button>
+                <button class="btn btn-primary" onclick="Controllers.Inventory.addStock()">Confirm Purchase</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    <div id="toast-zone"></div>
+
+    <!-- 
+      =============================================================================
+      PART 3: DATA KERNEL & REPOSITORIES (JAVASCRIPT)
+      Strict data typing and seed logic.
+      =============================================================================
+    -->
+    <script>
+        
+        // --- 3.1 APP CONFIGURATION ---
+        const Config = {
+            API_KEY: 'AIzaSyCWo9OP6-QhyKWpfuV5oonyuC32IQHoOtE',
+            CLIENT_ID: '950010994560-v7p6cem78h9fsdp102iq4immb36t95ls.apps.googleusercontent.com',
+            SCOPES: 'https://www.googleapis.com/auth/drive.file',
+            DB_FILE: 'himalayan_full_erp.json'
+        };
+
+        // --- 3.2 DATA REPOSITORIES (MOCK DB) ---
+        // Seeding extended data for 1600 lines equivalent logic demo
+        
+        const State = {
+            customers: [
+                { id: 101, name: "Big Bazaar Retail", loc: "Delhi NCR", type: "Retailer", phone:"9876543210" },
+                { id: 102, name: "Hotel Le Meridien", loc: "Gurgaon", type: "HoReCa", phone:"9988776655" },
+                { id: 103, name: "Wedding Bells Event", loc: "Noida", type: "Event", phone:"8877665544" },
+                { id: 104, name: "Easy Day Store", loc: "Dehradun", type: "Retailer", phone:"7766554433" },
+                { id: 105, name: "Highway King Dhaba", loc: "Jaipur Highway", type: "HoReCa", phone:"6655443322" }
+            ],
+            products: [
+                { id: "P001", name: "Freskey Lemon (200ml)", category: "Glass", packing: "24 x 200ml", price: 480, stock: 150 },
+                { id: "P002", name: "Freskey Mango (200ml)", category: "Glass", packing: "24 x 200ml", price: 500, stock: 80 },
+                { id: "P003", name: "Freskey Jeera (200ml)", category: "Glass", packing: "24 x 200ml", price: 480, stock: 45 },
+                { id: "P004", name: "Soda Fizz (300ml)", category: "Soda", packing: "24 x 300ml", price: 600, stock: 220 },
+                { id: "P005", name: "Litchi Juice (500ml)", category: "PET", packing: "12 x 500ml", price: 360, stock: 35 },
+                { id: "P006", name: "Mineral Water 1L", category: "Water", packing: "12 x 1L", price: 240, stock: 500 }
+            ],
+            invoices: [
+                { id: "INV-2023-1001", date: "2023-11-01", custId: 102, total: 15000, paid: 5000, status: "Partial", items: 2 },
+                { id: "INV-2023-1002", date: "2023-11-05", custId: 105, total: 2400, paid: 2400, status: "Paid", items: 1 },
+                { id: "INV-2023-1003", date: "2023-11-08", custId: 103, total: 45000, paid: 0, status: "Unpaid", items: 4 }
+            ],
+            ledger: [
+                { id: "T1", date: "2023-11-01", desc: "Inv INV-2023-1001 generated", type: "Debit", amount: 15000 },
+                { id: "T2", date: "2023-11-02", desc: "Partial Pay received (Hotel Le Meridien)", type: "Credit", amount: 5000 }
+            ]
+        };
+
+        // --- 3.3 UTILITIES CLASS ---
+        class Utils {
+            static formatMoney(num) {
+                // PDF-Safe currency formatting (No unicode glyphs)
+                return "INR " + parseFloat(num).toLocaleString('en-IN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
             }
 
-            else if(view === 'finance') {
-                 title.innerText = "Payment Ledger";
-                 const pendings = DB.invoices.filter(i=>i.status !== 'Paid');
-                 box.innerHTML = `
-                 <div class="card">
-                    <div class="card-header"><h3>Outstanding Collections</h3></div>
-                    <div class="table-container">
-                        <table>
-                            <thead><tr><th>Inv #</th><th>Customer</th><th>Total</th><th>Paid So Far</th><th>Balance</th><th>Action</th></tr></thead>
-                            <tbody>
-                                ${pendings.length === 0 ? '<tr><td colspan="6" style="padding:20px; text-align:center">No pending payments.</td></tr>' : 
-                                  pendings.map(p => {
-                                      const bal = p.total - p.paid;
-                                      return `<tr>
-                                        <td>${p.id}</td><td>${p.custName}</td><td>${Util.fmt(p.total)}</td>
-                                        <td style="color:green">${Util.fmt(p.paid)}</td>
-                                        <td class="text-bold" style="color:red">${Util.fmt(bal)}</td>
-                                        <td><button class="btn btn-sm btn-success" onclick="Finance.open('${p.id}')">Record Pay</button></td>
-                                      </tr>`
-                                  }).join('')
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                 </div>`;
+            static today() {
+                return new Date().toISOString().split('T')[0];
             }
             
-            else if(view === 'crm') {
-                title.innerText = "Customer CRM";
-                box.innerHTML = `<div class="card">
-                   <div class="table-container">
-                     <table><thead><tr><th>Name</th><th>Location</th><th>Type</th><th>Contact</th></tr></thead><tbody>
-                     ${DB.customers.map(c=>`<tr><td><b>${c.name}</b></td><td>${c.loc}</td><td>${c.type}</td><td>-</td></tr>`).join('')}
-                     </tbody></table>
-                   </div></div>`
+            static generateId() {
+                return Math.random().toString(36).substr(2, 9).toUpperCase();
+            }
+
+            static notify(msg) {
+                const zone = document.getElementById('toast-zone');
+                const div = document.createElement('div');
+                div.className = 'toast-msg';
+                div.textContent = msg;
+                zone.appendChild(div);
+                setTimeout(() => div.remove(), 4000);
             }
         }
 
-        // --- 2. SALES LOGIC ---
-        const Sales = {
-            init: () => {
-                const s = document.getElementById('ord-cust');
-                s.innerHTML = DB.customers.map(c=>`<option value="${c.id}">${c.name}</option>`);
+
+        // --- 3.4 PDF GENERATOR SERVICE ---
+        // Special logic to handle professional layout without breaking font encodings.
+        class PDFEngine {
+            static createInvoice(invoiceId, customerObj, lineItems, total, date) {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
                 
-                document.getElementById('ord-date').value = Util.rawDate();
+                // Color Definitions
+                const brandPrimary = [7, 89, 133]; // Brand Blue
+                const brandLight   = [241, 245, 249]; // Slate 100
+
+                // HEADER SECTION
+                doc.setFillColor(...brandPrimary);
+                doc.rect(0, 0, 210, 40, 'F');
                 
-                // Build dynamic rows (Input based)
-                const list = document.getElementById('ord-list');
-                list.innerHTML = DB.products.map(p => `
-                    <tr>
-                        <td>
-                            <div>${p.name}</div>
-                            <small>${p.pack}</small>
-                        </td>
-                        <td style="${p.stock<20?'color:red':''}">${p.stock}</td>
-                        <td><input type="number" min="0" class="inp ord-qty" data-price="${p.price}" data-pid="${p.id}" data-name="${p.name}" style="width:70px; margin:0;" onchange="Sales.calc()"></td>
-                        <td>${Util.fmt(p.price)}</td>
-                    </tr>
-                `).join('');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(22);
+                doc.setFont("helvetica", "bold");
+                doc.text("HIMALAYAN BEVERAGES", 15, 20);
                 
-                Modal('m-order', true);
-                Sales.calc();
-            },
-            calc: () => {
-                let sum = 0;
-                document.querySelectorAll('.ord-qty').forEach(el => {
-                    const q = parseInt(el.value)||0;
-                    sum += q * parseFloat(el.dataset.price);
+                doc.setFontSize(10);
+                doc.setFont("helvetica", "normal");
+                doc.text("Quality Refreshments & Distribution", 15, 26);
+                
+                // Invoice Label
+                doc.setFontSize(30);
+                doc.text("INVOICE", 195, 28, {align: 'right'});
+
+                // INFO SECTION
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(10);
+                
+                // Company Details (Left)
+                let y = 50;
+                doc.setFont("helvetica", "bold");
+                doc.text("FROM:", 15, y);
+                doc.setFont("helvetica", "normal"); y += 5;
+                doc.text("Himalayan Beverages Ltd.", 15, y); y += 5;
+                doc.text("Ind. Area, Dehradun - 248001", 15, y); y += 5;
+                doc.text("GSTIN: 05AABCU9999K1Z5", 15, y); y += 5;
+                doc.text("Phone: +91-9876543210", 15, y);
+
+                // Client Details (Right)
+                y = 50;
+                doc.setFont("helvetica", "bold");
+                doc.text("BILL TO:", 140, y);
+                doc.setFont("helvetica", "normal"); y += 5;
+                doc.text(customerObj.name, 140, y); y += 5;
+                doc.text(customerObj.loc, 140, y); y += 5;
+                doc.text("Cust Type: " + customerObj.type, 140, y); y += 5;
+                doc.text("Ref ID: C-" + customerObj.id, 140, y);
+
+                // Meta Box
+                doc.setFillColor(...brandLight);
+                doc.rect(140, 75, 55, 15, 'F');
+                doc.setFont("helvetica", "bold");
+                doc.text(`Invoice #: ${invoiceId}`, 145, 81);
+                doc.text(`Date: ${date}`, 145, 86);
+
+                // ITEMS TABLE using autoTable plugin
+                // Note: Using standard INR text to prevent PDF glitch
+                const tableData = lineItems.map((item, index) => [
+                    index + 1, 
+                    item.name, 
+                    item.packing,
+                    item.qty, 
+                    item.rateFormatted.replace('INR', '').trim(), 
+                    item.totalFormatted
+                ]);
+
+                doc.autoTable({
+                    startY: 100,
+                    head: [['#', 'Item Description', 'Packing', 'Qty (Cs)', 'Rate', 'Total']],
+                    body: tableData,
+                    theme: 'grid',
+                    headStyles: { 
+                        fillColor: brandPrimary,
+                        textColor: 255,
+                        fontStyle: 'bold'
+                    },
+                    styles: { 
+                        fontSize: 9, 
+                        cellPadding: 4 
+                    },
+                    columnStyles: {
+                        0: {cellWidth: 10},
+                        3: {halign: 'center'},
+                        4: {halign: 'right'},
+                        5: {halign: 'right', fontStyle: 'bold'}
+                    }
                 });
-                document.getElementById('ord-total').innerText = Util.fmt(sum);
-            },
-            submit: () => {
-                // Collect Items
-                const inputs = document.querySelectorAll('.ord-qty');
-                const items = [];
+
+                let finalY = doc.lastAutoTable.finalY + 10;
+                
+                // TOTALS
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(12);
+                doc.text(`Grand Total: ${Utils.formatMoney(total)}`, 195, finalY, { align: 'right'});
+                
+                doc.setDrawColor(200);
+                doc.line(140, finalY+2, 195, finalY+2);
+                
+                // FOOTER
+                finalY += 30;
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(10);
+                doc.text("Bank Details:", 15, finalY);
+                doc.setFontSize(9);
+                doc.text("HDFC Bank | A/c: 502000334455 | IFSC: HDFC000123", 15, finalY + 5);
+                
+                doc.setFontSize(8);
+                doc.setTextColor(100);
+                doc.text("Terms & Conditions: Interest @ 18% on overdue payments. Goods once sold not returnable.", 105, 280, {align:'center'});
+
+                doc.save(`${invoiceId}.pdf`);
+                Utils.notify("PDF Downloaded successfully");
+            }
+        }
+
+
+        // --- 3.5 CONTROLLERS & VIEW LOGIC ---
+
+        class InventoryController {
+            static getStock(skuId) {
+                return State.products.find(p => p.id === skuId)?.stock || 0;
+            }
+            
+            static addStock() {
+                const prodId = document.getElementById('ms-prod').value;
+                const qty = parseInt(document.getElementById('ms-qty').value);
+                const ref = document.getElementById('ms-ref').value;
+
+                if (!qty || qty <= 0) return alert("Please enter valid quantity");
+
+                const product = State.products.find(p => p.id === prodId);
+                if (product) {
+                    product.stock += qty;
+                    State.ledger.push({
+                        id: Utils.generateId(),
+                        date: Utils.today(),
+                        desc: `Stock In (${product.name}) Ref: ${ref}`,
+                        type: 'Stock',
+                        amount: 0 // Financial amount could be added here in full ERP
+                    });
+                    
+                    Utils.notify(`${qty} cases added to ${product.name}`);
+                    UI.Modals.Stock.close();
+                    Router.nav('inventory');
+                    Services.Drive.backup();
+                }
+            }
+        }
+
+        class SalesController {
+            static calcLiveTotal() {
                 let total = 0;
-                
-                inputs.forEach(el => {
-                   const q = parseInt(el.value)||0;
-                   if(q > 0) {
-                       const price = parseFloat(el.dataset.price);
-                       total += (q * price);
-                       // Update Stock in DB
-                       const prod = DB.products.find(p=>p.id===el.dataset.pid);
-                       if(prod) prod.stock -= q; 
-                       items.push([prod.name, q, `Rs. ${price}`, `Rs. ${q*price}`]);
-                   }
+                document.querySelectorAll('.order-row-qty').forEach(input => {
+                    const qty = parseInt(input.value) || 0;
+                    const rate = parseFloat(input.dataset.rate);
+                    const subtotalEl = document.getElementById(`sub-${input.dataset.id}`);
+                    const sub = qty * rate;
+                    subtotalEl.innerText = Utils.formatMoney(sub);
+                    total += sub;
+                });
+                document.getElementById('mo-total').innerText = Utils.formatMoney(total);
+            }
+
+            static submitOrder() {
+                const custId = document.getElementById('mo-customer').value;
+                if (!custId) return alert("Select a Customer");
+
+                const itemsToOrder = [];
+                let grandTotal = 0;
+
+                // Harvest table data
+                document.querySelectorAll('.order-row-qty').forEach(input => {
+                    const qty = parseInt(input.value) || 0;
+                    if (qty > 0) {
+                        const pid = input.dataset.id;
+                        const product = State.products.find(p => p.id === pid);
+                        const rate = parseFloat(input.dataset.rate);
+                        itemsToOrder.push({
+                            id: pid,
+                            name: product.name,
+                            packing: product.packing,
+                            qty: qty,
+                            rateFormatted: Utils.formatMoney(rate),
+                            totalFormatted: Utils.formatMoney(qty * rate)
+                        });
+                        
+                        grandTotal += (qty * rate);
+                        
+                        // Decrease Stock
+                        product.stock -= qty; 
+                    }
+                });
+
+                if (itemsToOrder.length === 0) return alert("Please add at least 1 item");
+
+                // Check Stock Constraints (Simplified)
+                const insufficient = itemsToOrder.find(item => {
+                     const p = State.products.find(p=>p.id === item.id);
+                     return p.stock < 0; 
                 });
                 
-                if(items.length === 0) return alert("Select at least 1 item");
+                if(insufficient) return alert(`Stock not sufficient for ${insufficient.name}. Order cancelled.`);
+
+                // Create Objects
+                const invId = "INV-" + Date.now();
+                const date = document.getElementById('mo-date').value || Utils.today();
                 
-                // Save Order
-                const cid = document.getElementById('ord-cust').value;
-                const custObj = DB.customers.find(c=>c.id===cid);
-                const invId = `INV-${Math.floor(Math.random()*9000)+1000}`;
-                const date = document.getElementById('ord-date').value;
-                
-                DB.invoices.push({
+                State.invoices.unshift({
                     id: invId,
                     date: date,
-                    custName: custObj.name,
-                    total: total,
+                    custId: parseInt(custId),
+                    total: grandTotal,
                     paid: 0,
-                    status: 'Unpaid'
+                    status: 'Unpaid',
+                    items: itemsToOrder.length
                 });
-                
-                Modal('m-order', false);
-                Util.toast('Invoice Created Successfully');
-                Nav('orders');
-                
-                // GENERATE PDF
-                Sales.genPDF(invId, date, custObj, items, total);
-                
-                // Sync Drive
-                Drive.sync();
-            },
-            genPDF: (invId, date, cust, items, total) => {
-                 const { jsPDF } = window.jspdf;
-                 const doc = new jsPDF();
-                 
-                 // FIXED: No complex symbols like '₹' to avoid garbage characters "¹ &4&8"
-                 // Using "Rs." / "INR" strictly.
-                 
-                 doc.setFontSize(22);
-                 doc.setTextColor(30, 58, 138); // Blue
-                 doc.text("Himalayan Beverages", 14, 20);
-                 
-                 doc.setFontSize(10);
-                 doc.setTextColor(100);
-                 doc.text("TAX INVOICE", 195, 20, {align:'right'});
-                 doc.text(`Invoice #: ${invId}`, 195, 25, {align:'right'});
-                 doc.text(`Date: ${date}`, 195, 30, {align:'right'});
-                 
-                 doc.setTextColor(0);
-                 doc.text("Bill To:", 14, 40);
-                 doc.setFont(undefined, 'bold');
-                 doc.text(cust.name, 14, 45);
-                 doc.setFont(undefined, 'normal');
-                 doc.text(`Location: ${cust.loc}`, 14, 50);
 
-                 // TABLE
-                 doc.autoTable({
-                     startY: 60,
-                     head: [['Description', 'Qty', 'Price', 'Total']],
-                     body: items,
-                     theme: 'striped',
-                     headStyles: { fillColor: [30, 58, 138] },
-                 });
-                 
-                 const y = doc.lastAutoTable.finalY + 10;
-                 doc.text(`Grand Total: Rs. ${total.toLocaleString('en-IN')}.00`, 195, y, {align:'right'});
-                 
-                 // Footer
-                 doc.setFontSize(8);
-                 doc.setTextColor(150);
-                 doc.text("Thank you for your business. Computer Generated Invoice.", 14, 280);
-                 
-                 doc.save(`${invId}.pdf`);
-            },
-            pdf: (id) => {
-                alert("To download past PDF, recreate using data logic (Simulated here)");
-                // In full version, re-trigger genPDF with DB data
+                // Update Ledger
+                State.ledger.unshift({
+                    id: Utils.generateId(),
+                    date: date,
+                    desc: `Sales Invoice ${invId} Generated`,
+                    type: 'Debit',
+                    amount: grandTotal
+                });
+
+                Utils.notify("Order Created & Stock Updated");
+                UI.Modals.Order.close();
+                Router.nav('orders'); // Refresh View
+                
+                // Trigger PDF
+                const customer = State.customers.find(c => c.id == custId);
+                PDFEngine.createInvoice(invId, customer, itemsToOrder, grandTotal, date);
+                
+                Services.Drive.backup();
             }
-        };
-
-        // --- 3. FINANCE & STOCK ---
-        const Finance = {
-             open: (invId) => {
-                 const inv = DB.invoices.find(i=>i.id===invId);
-                 document.getElementById('p-ref').value = inv.id;
-                 document.getElementById('p-tot').value = inv.total;
-                 document.getElementById('p-due').value = inv.total - inv.paid;
-                 Modal('m-pay', true);
-             },
-             save: () => {
-                 const invId = document.getElementById('p-ref').value;
-                 const amt = parseFloat(document.getElementById('p-amt').value);
-                 if(!amt) return alert("Enter amount");
-                 
-                 const inv = DB.invoices.find(i=>i.id===invId);
-                 inv.paid += amt;
-                 inv.status = inv.paid >= inv.total ? 'Paid' : 'Partial';
-                 
-                 Modal('m-pay', false);
-                 Util.toast("Payment Recorded");
-                 Nav('finance');
-                 Drive.sync();
-             }
-        };
-
-        const Inventory = {
-             init: () => {
-                 document.getElementById('s-prod').innerHTML = DB.products.map(p=>`<option value="${p.id}">${p.name}</option>`);
-                 Modal('m-stk', true);
-             },
-             add: () => {
-                 const pid = document.getElementById('s-prod').value;
-                 const qty = parseInt(document.getElementById('s-qty').value);
-                 if(!qty) return;
-                 
-                 const p = DB.products.find(x=>x.id===pid);
-                 p.stock += qty;
-                 Modal('m-stk', false);
-                 Util.toast(`Added ${qty} cases to stock`);
-                 Nav('inventory');
-                 Drive.sync();
-             }
-        };
+        }
         
-        // --- 4. GOOGLE DRIVE SYNC ---
-        const Drive = {
-             tokenClient: null,
-             init: () => {
-                 try {
-                     gapi.load('client', async () => {
-                        await gapi.client.init({
-                            apiKey: APP.API_KEY,
-                            discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+        class FinanceController {
+            static processPayment() {
+                const invId = document.getElementById('mp-invid').value;
+                const amt = parseFloat(document.getElementById('mp-amt').value);
+                const mode = document.getElementById('mp-mode').value;
+                
+                if (!amt || amt <= 0) return alert("Invalid Amount");
+                
+                const invoice = State.invoices.find(i => i.id === invId);
+                const due = invoice.total - invoice.paid;
+                
+                if (amt > due) return alert("Amount exceeds balance due!");
+                
+                invoice.paid += amt;
+                invoice.status = (invoice.paid >= invoice.total) ? 'Paid' : 'Partial';
+                
+                State.ledger.unshift({
+                    id: Utils.generateId(),
+                    date: Utils.today(),
+                    desc: `Payment Recd (${mode}) for ${invId}`,
+                    type: 'Credit',
+                    amount: amt
+                });
+
+                Utils.notify("Payment Recorded Successfully");
+                UI.Modals.Pay.close();
+                Router.nav('finance');
+                Services.Drive.backup();
+            }
+        }
+
+        // --- 3.6 CLOUD SYNC SERVICES (GAPI) ---
+
+        const Services = {
+            Drive: {
+                tokenClient: null,
+                init: () => {
+                    try {
+                        gapi.load('client', async () => {
+                            await gapi.client.init({
+                                apiKey: Config.API_KEY,
+                                discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+                            });
                         });
-                     });
-                     Drive.tokenClient = google.accounts.oauth2.initTokenClient({
-                         client_id: APP.CLIENT_ID,
-                         scope: 'https://www.googleapis.com/auth/drive.file',
-                         callback: (resp) => {
-                             if(resp.error) return console.error(resp);
-                             Drive.onAuth();
-                         },
-                     });
-                 } catch(e){ console.log("Cloud unavailable"); }
-             },
-             auth: () => { Drive.tokenClient.requestAccessToken({prompt:'consent'}); },
-             onAuth: () => {
-                 document.getElementById('drive-stat').innerHTML = "<span style='width:8px;height:8px;border-radius:50%;background:#4ade80'></span> Online & Syncing";
-                 document.getElementById('stat-dot').style.background="#4ade80";
-                 Util.toast("Google Drive Connected");
-                 Drive.sync();
-             },
-             sync: async () => {
-                 if(!gapi.client.getToken()) return;
-                 const blob = new Blob([JSON.stringify(DB)], {type:'application/json'});
-                 // For simplicity in single-file demo, we assume overwrite or create logic
-                 // This part simulates the call structure:
-                 console.log("Syncing to " + APP.DB_FILE);
-                 // Real impl involves searching for fileId, then PATCH or POST multipart.
-             }
-        };
-        
-        // --- 5. UI CORE ---
-        function Modal(id, state) {
-            const el = document.getElementById(id);
-            if(state) el.classList.add('active');
-            else el.classList.remove('active');
-        }
-        function toggleMenu(forceState) {
-            const sb = document.getElementById('sidebar');
-            const overlay = document.getElementById('sidebar-overlay');
-            
-            // Logic to toggle 'open' class
-            const isOpen = sb.classList.contains('open');
-            const targetState = forceState !== undefined ? forceState : !isOpen;
+                        Services.Drive.tokenClient = google.accounts.oauth2.initTokenClient({
+                            client_id: Config.CLIENT_ID,
+                            scope: Config.SCOPES,
+                            callback: (resp) => {
+                                if (resp.error) return console.error(resp);
+                                Services.Drive.onAuthSuccess();
+                            },
+                        });
+                    } catch (e) { console.warn('Cloud API Load Failed', e); }
+                },
+                connect: () => {
+                    Services.Drive.tokenClient.requestAccessToken({ prompt: 'consent' });
+                },
+                onAuthSuccess: () => {
+                    const dot = document.getElementById('sync-dot');
+                    const txt = document.getElementById('sync-text');
+                    const btn = document.getElementById('btn-sync-action');
+                    
+                    dot.style.background = '#22c55e'; // Green
+                    txt.innerText = "Online & Syncing";
+                    btn.innerText = "Force Backup Now";
+                    btn.onclick = Services.Drive.backup;
+                    
+                    Utils.notify("Google Drive Connected");
+                    Services.Drive.backup(); // Initial backup
+                },
+                backup: async () => {
+                    // Logic to overwrite file on Drive
+                    if(!gapi.client.getToken()) return;
 
-            if(targetState) {
-                sb.classList.add('open');
-                overlay.style.display = 'block';
-            } else {
-                sb.classList.remove('open');
-                overlay.style.display = 'none';
+                    Utils.notify("Syncing to Cloud...");
+                    
+                    const fileContent = JSON.stringify(State);
+                    const fileMeta = {
+                        name: Config.DB_FILE,
+                        mimeType: 'application/json'
+                    };
+
+                    try {
+                        // 1. Search for existing file
+                        const q = `name = '${Config.DB_FILE}' and trashed = false`;
+                        const listRes = await gapi.client.drive.files.list({q});
+                        const files = listRes.result.files;
+
+                        if (files && files.length > 0) {
+                            // Update
+                            const fileId = files[0].id;
+                            await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+                                method: 'PATCH',
+                                headers: { 
+                                    'Authorization': `Bearer ${gapi.client.getToken().access_token}`,
+                                    'Content-Type': 'application/json' 
+                                },
+                                body: fileContent
+                            });
+                            console.log("Drive Patch Success");
+                        } else {
+                            // Create
+                            const form = new FormData();
+                            form.append('metadata', new Blob([JSON.stringify(fileMeta)], { type: 'application/json' }));
+                            form.append('file', new Blob([fileContent], { type: 'application/json' }));
+                            
+                            await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                                method: 'POST',
+                                headers: { 'Authorization': `Bearer ${gapi.client.getToken().access_token}` },
+                                body: form
+                            });
+                            console.log("Drive Create Success");
+                        }
+                        
+                    } catch (e) { console.error("Sync Error", e); }
+                }
             }
-        }
-
-        // --- INIT ---
-        window.onload = () => {
-            Nav('dashboard');
-            Drive.init();
         };
+
+        // --- 3.7 UI RENDER LOGIC ---
+
+        const Router = {
+            nav: (route) => {
+                // UI State Update
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                // Just relying on click handler logic inside standard element event bubbling would require 
+                // tracking the `event.target`. For robust demo, we update by finding elements containing text match
+                // (Omitted for brevity in favor of pure view logic below)
+                
+                UI.Nav.toggleSidebar(false); // Mobile Close
+
+                const app = document.getElementById('viewport');
+                const title = document.getElementById('header-title');
+
+                if (route === 'dashboard') {
+                    title.innerText = "Executive Overview";
+                    
+                    // Calc KPIs
+                    const totalSales = State.invoices.reduce((sum, i) => sum + i.total, 0);
+                    const outstanding = State.invoices.reduce((sum, i) => sum + (i.total - i.paid), 0);
+                    const lowStock = State.products.filter(p => p.stock < 50).length;
+
+                    // Calc Top Product
+                    // (Simplified logic)
+
+                    app.innerHTML = `
+                        <div class="metrics-grid">
+                            <div class="metric-card">
+                                <div class="metric-label">Total Revenue</div>
+                                <div class="metric-value">${Utils.formatMoney(totalSales)}</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Pending Payments</div>
+                                <div class="metric-value text-danger">${Utils.formatMoney(outstanding)}</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Stock Alerts</div>
+                                <div class="metric-value" style="color:#d97706">${lowStock} items</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Active Customers</div>
+                                <div class="metric-value">${State.customers.length}</div>
+                            </div>
+                        </div>
+
+                        <div class="form-grid">
+                             <div class="card">
+                                 <div class="card-header">
+                                     <h3 class="card-title">Recent Invoices</h3>
+                                 </div>
+                                 <div class="table-responsive">
+                                     <table>
+                                         <thead><tr><th>ID</th><th>Total</th><th>Status</th></tr></thead>
+                                         <tbody>
+                                             ${State.invoices.slice(0, 5).map(i => `
+                                                <tr>
+                                                    <td>${i.id}</td>
+                                                    <td>${Utils.formatMoney(i.total)}</td>
+                                                    <td><span class="status-badge badge-${i.status.toLowerCase()}">${i.status}</span></td>
+                                                </tr>
+                                             `).join('')}
+                                         </tbody>
+                                     </table>
+                                 </div>
+                             </div>
+
+                             <div class="card">
+                                 <div class="card-header"><h3 class="card-title">Inventory Health</h3></div>
+                                 <div class="table-responsive">
+                                      <table>
+                                          <thead><tr><th>Product</th><th>Stock</th></tr></thead>
+                                          <tbody>
+                                              ${State.products.slice(0, 5).map(p => `
+                                                 <tr>
+                                                     <td>${p.name}</td>
+                                                     <td style="${p.stock < 50 ? 'color:red; font-weight:bold' : ''}">${p.stock}</td>
+                                                 </tr>
+                                              `).join('')}
+                                          </tbody>
+                                      </table>
+                                 </div>
+                             </div>
+                        </div>
+                    `;
+                }
+
+                if (route === 'orders') {
+                    title.innerText = "Sales Invoicing";
+                    app.innerHTML = `
+                        <div class="flex justify-between items-center mb-4">
+                            <p class="text-sm text-muted">Manage invoices and create new sales orders.</p>
+                            <button class="btn btn-primary" onclick="UI.Modals.Order.open()">
+                                <span>+ Create New Invoice</span>
+                            </button>
+                        </div>
+                        <div class="card">
+                             <div class="table-responsive">
+                                 <table>
+                                     <thead>
+                                         <tr>
+                                             <th>Date</th>
+                                             <th>Invoice #</th>
+                                             <th>Customer</th>
+                                             <th style="text-align:right">Amount</th>
+                                             <th>Paid</th>
+                                             <th>Balance</th>
+                                             <th>Status</th>
+                                         </tr>
+                                     </thead>
+                                     <tbody>
+                                         ${State.invoices.map(i => {
+                                             const cust = State.customers.find(c => c.id == i.custId);
+                                             const bal = i.total - i.paid;
+                                             return `
+                                                <tr>
+                                                    <td>${i.date}</td>
+                                                    <td>${i.id}</td>
+                                                    <td>${cust ? cust.name : 'Unknown'}</td>
+                                                    <td style="text-align:right; font-weight:bold">${Utils.formatMoney(i.total)}</td>
+                                                    <td class="text-success">${Utils.formatMoney(i.paid)}</td>
+                                                    <td class="text-danger font-bold">${Utils.formatMoney(bal)}</td>
+                                                    <td><span class="status-badge badge-${i.status.toLowerCase()}">${i.status}</span></td>
+                                                </tr>
+                                             `;
+                                         }).join('')}
+                                     </tbody>
+                                 </table>
+                             </div>
+                        </div>
+                    `;
+                }
+
+                if (route === 'finance') {
+                    title.innerText = "Finance & Payments";
+                    const outstanding = State.invoices.filter(i => i.status !== 'Paid');
+                    app.innerHTML = `
+                        <div class="card mb-4">
+                            <div class="card-header"><h3 class="card-title">Outstanding Collections</h3></div>
+                            <div class="table-responsive">
+                                <table>
+                                    <thead><tr><th>Ref</th><th>Customer</th><th>Total Due</th><th>Action</th></tr></thead>
+                                    <tbody>
+                                        ${outstanding.length ? outstanding.map(i => {
+                                            const cust = State.customers.find(c => c.id == i.custId);
+                                            const bal = i.total - i.paid;
+                                            return `
+                                            <tr>
+                                                <td>${i.id}</td>
+                                                <td>${cust ? cust.name : 'Unknown'}</td>
+                                                <td class="text-danger font-bold">${Utils.formatMoney(bal)}</td>
+                                                <td>
+                                                    <button class="btn btn-secondary btn-icon" onclick="UI.Modals.Pay.open('${i.id}')">Record Pay</button>
+                                                </td>
+                                            </tr>`;
+                                        }).join('') : `<tr><td colspan="4" class="text-center p-4 text-muted">No pending payments!</td></tr>`}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                             <div class="card-header"><h3 class="card-title">Transaction Ledger</h3></div>
+                             <div class="table-responsive">
+                                <table>
+                                    <thead><tr><th>Date</th><th>Type</th><th>Description</th><th>Amount</th></tr></thead>
+                                    <tbody>
+                                        ${State.ledger.map(l => `
+                                            <tr>
+                                                <td>${l.date}</td>
+                                                <td>${l.type}</td>
+                                                <td>${l.desc}</td>
+                                                <td class="${l.type === 'Credit' ? 'text-success' : 'text-danger'} font-bold">
+                                                    ${Utils.formatMoney(l.amount)}
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                             </div>
+                        </div>
+                    `;
+                }
+
+                if (route === 'inventory') {
+                    title.innerText = "Inventory Management";
+                    app.innerHTML = `
+                        <div class="flex justify-between items-center mb-4">
+                            <p class="text-sm text-muted">Stock levels and adjustments.</p>
+                            <button class="btn btn-primary" onclick="UI.Modals.Stock.open()">
+                                <span>+ Purchase Stock</span>
+                            </button>
+                        </div>
+                        <div class="card">
+                            <div class="table-responsive">
+                                <table>
+                                    <thead><tr><th>SKU</th><th>Name</th><th>Category</th><th>Packing</th><th>Stock Level</th><th>Sell Price</th></tr></thead>
+                                    <tbody>
+                                        ${State.products.map(p => `
+                                            <tr>
+                                                <td class="text-muted text-xs">${p.id}</td>
+                                                <td class="font-bold">${p.name}</td>
+                                                <td>${p.category}</td>
+                                                <td>${p.packing}</td>
+                                                <td>
+                                                    <span class="${p.stock < 50 ? 'text-danger font-bold' : ''}">${p.stock} cases</span>
+                                                    ${p.stock < 20 ? '<span class="status-badge badge-unpaid">Low</span>' : ''}
+                                                </td>
+                                                <td>${Utils.formatMoney(p.price)}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                if (route === 'crm') {
+                    title.innerText = "Customer CRM";
+                    
+                    // Calc customer lifetime value
+                    const getLTV = (cid) => {
+                         return State.invoices.filter(i=>i.custId===cid).reduce((acc, curr)=> acc + curr.total, 0);
+                    };
+
+                    app.innerHTML = `
+                         <div class="card">
+                             <div class="table-responsive">
+                                 <table>
+                                     <thead><tr><th>Name</th><th>Type</th><th>Location</th><th>Contact</th><th>Lifetime Rev</th></tr></thead>
+                                     <tbody>
+                                         ${State.customers.map(c => `
+                                             <tr>
+                                                 <td class="font-bold">${c.name}</td>
+                                                 <td><span class="status-badge" style="background:#e0f2fe; color:#0369a1">${c.type}</span></td>
+                                                 <td>${c.loc}</td>
+                                                 <td>${c.phone}</td>
+                                                 <td class="font-bold">${Utils.formatMoney(getLTV(c.id))}</td>
+                                             </tr>
+                                         `).join('')}
+                                     </tbody>
+                                 </table>
+                             </div>
+                         </div>
+                    `;
+                }
+                
+                if(route === 'settings') {
+                    title.innerText = "System Settings";
+                    app.innerHTML = `
+                        <div class="card">
+                             <div class="card-header"><h3 class="card-title">Cloud Status</h3></div>
+                             <div class="card-body">
+                                 <p class="mb-4">Syncs with: <b>${Config.DB_FILE}</b> on authenticated Google Drive.</p>
+                                 <button class="btn btn-primary" onclick="Services.Drive.backup()">Force Cloud Sync Now</button>
+                             </div>
+                        </div>
+                    `;
+                }
+            }
+        };
+
+        const UI = {
+            Nav: {
+                toggleSidebar: (show) => {
+                    const sb = document.getElementById('sidebar');
+                    const over = document.getElementById('sidebar-overlay');
+                    if(show) {
+                        sb.classList.add('open');
+                        over.classList.add('active');
+                    } else {
+                        sb.classList.remove('open');
+                        over.classList.remove('active');
+                    }
+                }
+            },
+            Modals: {
+                Order: {
+                    open: () => {
+                        const sel = document.getElementById('mo-customer');
+                        sel.innerHTML = '<option value="">-- Select Customer --</option>';
+                        State.customers.forEach(c => sel.innerHTML += `<option value="${c.id}">${c.name}</option>`);
+                        
+                        document.getElementById('mo-date').value = Utils.today();
+                        
+                        // Render Product Table rows
+                        const tbody = document.getElementById('mo-table-body');
+                        tbody.innerHTML = '';
+                        State.products.forEach(p => {
+                            tbody.innerHTML += `
+                                <tr>
+                                    <td>
+                                        <div>${p.name}</div>
+                                        <div class="text-xs text-muted">${p.packing}</div>
+                                    </td>
+                                    <td>${Utils.formatMoney(p.price)}</td>
+                                    <td class="${p.stock < 20 ? 'text-danger':''}">${p.stock}</td>
+                                    <td>
+                                        <input type="number" min="0" class="form-input order-row-qty" 
+                                            data-id="${p.id}" 
+                                            data-rate="${p.price}"
+                                            style="padding:5px;"
+                                            onchange="SalesController.calcLiveTotal()"
+                                        >
+                                    </td>
+                                    <td class="text-right font-bold" id="sub-${p.id}">0.00</td>
+                                </tr>
+                            `;
+                        });
+                        SalesController.calcLiveTotal(); // init 0
+                        document.getElementById('modal-order').classList.add('visible');
+                    },
+                    close: () => document.getElementById('modal-order').classList.remove('visible'),
+                    onCustomerSelect: () => {
+                        // Future implementation: show credit limit
+                    }
+                },
+                Pay: {
+                    open: (invId) => {
+                        const inv = State.invoices.find(i => i.id === invId);
+                        const due = inv.total - inv.paid;
+                        
+                        document.getElementById('mp-invid').value = inv.id;
+                        document.getElementById('mp-ref-disp').value = `${invId} (${inv.date})`;
+                        document.getElementById('mp-tot-disp').value = Utils.formatMoney(inv.total);
+                        document.getElementById('mp-due-disp').value = Utils.formatMoney(due);
+                        document.getElementById('mp-amt').value = due; // Default fill
+                        
+                        document.getElementById('modal-pay').classList.add('visible');
+                    },
+                    close: () => document.getElementById('modal-pay').classList.remove('visible')
+                },
+                Stock: {
+                    open: () => {
+                         const sel = document.getElementById('ms-prod');
+                         sel.innerHTML = '';
+                         State.products.forEach(p => sel.innerHTML += `<option value="${p.id}">${p.name} (Cur: ${p.stock})</option>`);
+                         document.getElementById('modal-stock').classList.add('visible');
+                    },
+                    close: () => document.getElementById('modal-stock').classList.remove('visible')
+                }
+            }
+        };
+
+        // --- APP INITIALIZATION ---
+        window.addEventListener('DOMContentLoaded', () => {
+            // Check Google Drive API Auth Status on load? (Skipped for explicit button press logic)
+            Services.Drive.init();
+            
+            // Router Init
+            Router.nav('dashboard');
+        });
 
     </script>
 </body>
