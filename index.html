@@ -3,1605 +3,1277 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Himalayan Beverages | Enterprise Operations Platform</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Himalayan Beverages | Freskey Operations Suite Enterprise</title>
     
     <!-- 
-      ===================================================================
-      EXTERNAL DEPENDENCIES (Loaded via CDN)
-      =================================================================== 
-      1. Google Identity Services (GIS) - For Auth
-      2. Google API Client (GAPI) - For Drive Rest API
-      3. JSPDF - For client-side PDF generation
-      4. JSPDF-Autotable - For HTML Table to PDF conversion
+      =============================================================================
+      DEPENDENCIES
+      - Google Identity Services: For Auth and Drive API.
+      - JSPDF: For client-side professional PDF generation.
+      - ChartJS: (Simulated) but ready for extension.
+      ============================================================================= 
     -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://apis.google.com/js/api.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
-    <!-- 
-      ===================================================================
-      SECTION 1: CSS & STYLING
-      A robust Design System defining colors, grids, typography, 
-      components (cards, modals, inputs), and layout.
-      =================================================================== 
-    -->
     <style>
+        /* 
+         * ============================================================================
+         * DESIGN SYSTEM & THEME VARIABLES
+         * ============================================================================
+         */
         :root {
-            /* --- COLOR PALETTE (Enterprise Blue) --- */
-            --brand-primary: #1565C0;      /* Blue 800 */
-            --brand-secondary: #0D47A1;    /* Blue 900 */
-            --brand-accent: #2196F3;       /* Blue 500 */
+            /* Brand Identity - Himalayan Fresh */
+            --primary-h: 210;
+            --primary-s: 100%;
+            --primary-l: 27%;
             
-            --success-color: #2E7D32;
-            --success-bg: #E8F5E9;
+            --brand-primary: hsl(var(--primary-h), var(--primary-s), var(--primary-l)); /* Deep Blue */
+            --brand-primary-light: hsl(210, 90%, 60%);
+            --brand-primary-dark: hsl(210, 100%, 15%);
+            --brand-accent: #00B8D4; /* Ice Blue */
             
-            --warning-color: #EF6C00;
-            --warning-bg: #FFF3E0;
+            /* Status Colors */
+            --color-success: #166534;
+            --bg-success: #dcfce7;
             
-            --danger-color: #C62828;
-            --danger-bg: #FFEBEE;
+            --color-warning: #b45309;
+            --bg-warning: #fef3c7;
             
-            --info-color: #0277BD;
-            --info-bg: #E1F5FE;
+            --color-danger: #991b1b;
+            --bg-danger: #fee2e2;
 
-            /* --- NEUTRALS --- */
-            --bg-body: #F4F7FA;
-            --bg-sidebar: #1E293B;        /* Slate 800 */
+            --color-info: #075985;
+            --bg-info: #e0f2fe;
+
+            /* Surface Colors */
+            --bg-app: #F1F5F9;
             --bg-card: #FFFFFF;
-            --text-main: #1F2937;
-            --text-muted: #64748B;
-            --text-inverted: #F8FAFC;
-            --border-light: #E2E8F0;
+            --bg-sidebar: #0F172A;
             
-            /* --- DIMENSIONS --- */
-            --sidebar-width: 280px;
-            --header-height: 70px;
+            /* Typography */
+            --font-main: 'Segoe UI', 'Inter', -apple-system, system-ui, sans-serif;
+            --text-heading: #1e293b;
+            --text-body: #475569;
+            --text-muted: #94a3b8;
+            --text-white: #f8fafc;
+
+            /* Spacing & Borders */
+            --radius-sm: 4px;
             --radius-md: 8px;
-            --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
-            --transition-speed: 0.3s;
+            --radius-lg: 16px;
+            --border-light: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+            /* Layout */
+            --w-sidebar: 270px;
+            --h-header: 65px;
         }
 
-        /* --- RESET --- */
-        * {
-            box-sizing: border-box;
-            outline: none;
-        }
-
-        html, body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-            background-color: var(--bg-body);
-            color: var(--text-main);
+        /* 
+         * ============================================================================
+         * CSS RESET & BASE STYLES
+         * ============================================================================
+         */
+        *, *::before, *::after { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            margin: 0; padding: 0;
+            font-family: var(--font-main);
+            background-color: var(--bg-app);
+            color: var(--text-body);
+            font-size: 14px;
+            line-height: 1.5;
             height: 100vh;
             width: 100vw;
-            overflow: hidden; /* App-like Interface */
-        }
-
-        a { text-decoration: none; color: inherit; }
-        ul { list-style: none; padding: 0; margin: 0; }
-        button { border: none; font-family: inherit; }
-
-        /* --- LAYOUT GRID --- */
-        #app-root {
-            display: flex;
-            height: 100%;
-            width: 100%;
-        }
-
-        /* --- SIDEBAR --- */
-        aside {
-            width: var(--sidebar-width);
-            background-color: var(--bg-sidebar);
-            color: var(--text-inverted);
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid rgba(255,255,255,0.05);
-            transition: margin-left var(--transition-speed);
-            z-index: 50;
-        }
-
-        .brand-header {
-            height: var(--header-height);
-            display: flex;
-            align-items: center;
-            padding: 0 24px;
-            font-size: 1.25rem;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-            background-color: rgba(0,0,0,0.15);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .brand-header svg {
-            margin-right: 12px;
-            color: var(--brand-accent);
-        }
-
-        .sidebar-nav {
-            flex: 1;
-            overflow-y: auto;
-            padding: 24px 16px;
-        }
-
-        .nav-category {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            color: #94A3B8;
-            font-weight: 600;
-            margin-bottom: 8px;
-            padding-left: 12px;
-            letter-spacing: 0.05em;
-        }
-
-        .nav-item {
-            display: flex;
-            align-items: center;
-            padding: 12px 16px;
-            margin-bottom: 4px;
-            cursor: pointer;
-            border-radius: var(--radius-md);
-            transition: all 0.2s ease;
-            color: #CBD5E1;
-            font-size: 0.95rem;
-        }
-
-        .nav-item svg {
-            width: 20px;
-            height: 20px;
-            margin-right: 12px;
-            opacity: 0.7;
-            transition: opacity 0.2s;
-        }
-
-        .nav-item:hover {
-            background-color: rgba(255,255,255,0.08);
-            color: #FFFFFF;
-        }
-
-        .nav-item.active {
-            background-color: var(--brand-primary);
-            color: #FFFFFF;
-            font-weight: 500;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-        }
-        
-        .nav-item.active svg { opacity: 1; }
-
-        /* Sidebar Footer (Sync Status) */
-        .sidebar-footer {
-            padding: 20px;
-            background-color: rgba(0,0,0,0.2);
-            border-top: 1px solid rgba(255,255,255,0.05);
-            font-size: 0.85rem;
-        }
-        
-        .cloud-widget {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-
-        .status-dot {
-            height: 8px;
-            width: 8px;
-            background-color: #64748B;
-            border-radius: 50%;
-            display: inline-block;
-            box-shadow: 0 0 0 2px rgba(100,116,139,0.3);
-            transition: background 0.3s;
-        }
-
-        .status-dot.online {
-            background-color: #10B981;
-            box-shadow: 0 0 0 2px rgba(16,185,129,0.3);
-            animation: pulse 2s infinite;
-        }
-
-        /* --- MAIN CONTENT AREA --- */
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
             overflow: hidden;
-            position: relative;
         }
 
-        /* Top Header */
-        .top-bar {
-            height: var(--header-height);
-            background-color: var(--bg-card);
+        a { text-decoration: none; color: var(--brand-primary); cursor: pointer; }
+        ul, ol { list-style: none; margin: 0; padding: 0; }
+        button, input, select { font-family: inherit; }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* 
+         * ============================================================================
+         * APP LAYOUT STRUCTURE
+         * ============================================================================
+         */
+        #root { display: flex; height: 100%; }
+
+        /* --- Sidebar Navigation --- */
+        .sidebar {
+            width: var(--w-sidebar);
+            background-color: var(--bg-sidebar);
+            color: var(--text-white);
+            display: flex; flex-direction: column;
+            border-right: 1px solid rgba(255,255,255,0.1);
+            z-index: 50;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-brand {
+            height: var(--h-header);
+            padding: 0 24px;
+            display: flex; align-items: center; gap: 12px;
+            background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 1.25rem; font-weight: 700; letter-spacing: 0.5px;
+            color: #fff;
+        }
+
+        .brand-icon-box {
+            width: 32px; height: 32px;
+            background: var(--brand-accent);
+            color: var(--brand-primary-dark);
+            border-radius: 6px;
+            display: grid; place-items: center;
+            font-weight: 900; font-size: 18px;
+        }
+
+        .sidebar-menu { flex: 1; padding: 24px 16px; overflow-y: auto; }
+        
+        .menu-label {
+            font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em;
+            color: #64748b; font-weight: 700; margin-bottom: 8px; margin-left: 12px;
+        }
+
+        .menu-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 16px; margin-bottom: 4px;
+            border-radius: var(--radius-md);
+            color: #94a3b8;
+            transition: all 0.2s; cursor: pointer;
+            font-size: 0.95rem; font-weight: 500;
+        }
+        
+        .menu-item:hover { background-color: rgba(255,255,255,0.05); color: #fff; }
+        
+        .menu-item.active {
+            background-color: var(--brand-primary);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        .menu-icon { width: 20px; height: 20px; stroke-width: 2px; }
+
+        /* Sidebar Footer (Sync) */
+        .sync-widget {
+            margin: 16px;
+            padding: 16px;
+            background: rgba(0,0,0,0.3);
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .sync-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .sync-indicator { width: 8px; height: 8px; border-radius: 50%; background: #64748b; transition:0.3s; }
+        .sync-indicator.on { background: #10b981; box-shadow: 0 0 8px #10b981; }
+
+        /* --- Main Content --- */
+        .main-wrapper {
+            flex: 1;
+            display: flex; flex-direction: column;
+            overflow: hidden;
+            background: var(--bg-app);
+        }
+
+        .header-bar {
+            height: var(--h-header);
+            background: var(--bg-card);
             border-bottom: 1px solid var(--border-light);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            display: flex; justify-content: space-between; align-items: center;
             padding: 0 32px;
             box-shadow: var(--shadow-sm);
+            z-index: 40;
         }
 
-        .page-info h2 {
-            margin: 0;
-            font-size: 1.5rem;
-            color: var(--text-main);
-            font-weight: 600;
-        }
+        .page-title h2 { margin: 0; font-size: 1.5rem; color: var(--text-heading); }
+        .page-breadcrumbs { font-size: 0.85rem; color: var(--text-muted); }
 
-        .page-info span {
-            color: var(--text-muted);
-            font-size: 0.875rem;
-        }
+        .header-actions { display: flex; align-items: center; gap: 16px; }
 
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .user-pill {
-            display: flex;
-            align-items: center;
-            padding: 6px 12px;
-            background-color: var(--bg-body);
-            border-radius: 20px;
-            border: 1px solid var(--border-light);
-            gap: 10px;
-        }
-
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            background-color: var(--brand-accent);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 0.9rem;
-        }
-
-        /* Viewport */
-        .viewport-scroller {
+        .content-area {
             flex: 1;
             overflow-y: auto;
             padding: 32px;
-            scroll-behavior: smooth;
+            position: relative;
         }
 
-        /* --- COMPONENT: BUTTONS --- */
+        /* 
+         * ============================================================================
+         * COMPONENT STYLES
+         * ============================================================================
+         */
+
+        /* Buttons */
         .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
             padding: 10px 20px;
-            font-weight: 500;
-            font-size: 0.9rem;
             border-radius: 6px;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
-            gap: 8px;
-            line-height: 1;
+            font-weight: 600; font-size: 0.9rem;
+            border: 1px solid transparent;
+            cursor: pointer; transition: all 0.2s;
         }
-        
+
         .btn:active { transform: translateY(1px); }
 
-        .btn-primary { background: var(--brand-primary); color: white; }
-        .btn-primary:hover { background: var(--brand-secondary); box-shadow: var(--shadow-sm); }
+        .btn-primary { background-color: var(--brand-primary); color: white; border-color: var(--brand-primary); }
+        .btn-primary:hover { background-color: var(--brand-primary-dark); }
         
-        .btn-secondary { background: white; border: 1px solid var(--border-light); color: var(--text-main); }
-        .btn-secondary:hover { background: #F8FAFC; border-color: #CBD5E1; }
+        .btn-secondary { background-color: white; color: var(--text-body); border-color: var(--border-light); }
+        .btn-secondary:hover { background-color: #f8fafc; border-color: #cbd5e1; }
         
-        .btn-success { background: var(--success-color); color: white; }
-        .btn-success:hover { background: #1B5E20; }
+        .btn-success { background-color: var(--color-success); color: white; }
+        .btn-success:hover { background-color: #14532d; }
         
-        .btn-danger { background: white; border:1px solid var(--danger-color); color: var(--danger-color); }
-        .btn-danger:hover { background: var(--danger-bg); }
+        .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+        .w-full { width: 100%; }
 
-        .btn-ghost { background: transparent; color: var(--brand-primary); }
-        .btn-ghost:hover { text-decoration: underline; }
-
-        .btn-full { width: 100%; }
-
-        /* --- COMPONENT: CARDS --- */
+        /* Cards & Stats */
         .card {
             background: var(--bg-card);
             border-radius: var(--radius-md);
             border: 1px solid var(--border-light);
             box-shadow: var(--shadow-sm);
             margin-bottom: 24px;
-            transition: box-shadow 0.3s;
+            overflow: hidden;
+            transition: box-shadow 0.2s;
         }
-
-        .card:hover {
-            box-shadow: var(--shadow-md);
-        }
+        .card:hover { box-shadow: var(--shadow-md); }
 
         .card-header {
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--border-light);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 20px 24px; border-bottom: 1px solid var(--border-light);
+            display: flex; justify-content: space-between; align-items: center;
         }
+        .card-header h3 { margin: 0; font-size: 1.1rem; color: var(--text-heading); }
 
-        .card-header h3 {
-            margin: 0;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--text-main);
-        }
+        .card-body { padding: 24px; }
+        .card-footer { padding: 16px 24px; background: #f8fafc; border-top: 1px solid var(--border-light); text-align: right; }
 
-        .card-body {
-            padding: 24px;
-        }
-
-        /* --- COMPONENT: STAT GRID --- */
-        .stat-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 24px;
-            margin-bottom: 32px;
+        .grid-stats {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin-bottom: 24px;
         }
 
         .stat-card {
-            background: white;
-            padding: 24px;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border-light);
+            background: white; padding: 24px; border-radius: var(--radius-md);
+            border: 1px solid var(--border-light); box-shadow: var(--shadow-sm);
+            display: flex; flex-direction: column; justify-content: space-between;
             position: relative;
-            overflow: hidden;
         }
+        .stat-card::before {
+            content:''; position: absolute; left: 0; top: 15%; bottom: 15%; width: 4px; border-radius: 0 4px 4px 0; background: var(--brand-primary);
+        }
+        .stat-label { color: var(--text-muted); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; margin-bottom: 8px; }
+        .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--text-heading); }
 
-        .stat-card::after {
-            content: '';
-            position: absolute;
-            bottom: 0; left: 0; width: 100%; height: 4px;
-            background: var(--brand-primary);
-        }
-        
-        .stat-card.stat-green::after { background: var(--success-color); }
-        .stat-card.stat-orange::after { background: var(--warning-color); }
-        .stat-card.stat-red::after { background: var(--danger-color); }
-
-        .stat-title {
-            color: var(--text-muted);
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.05em;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-
-        .stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--text-main);
-        }
-        
-        /* --- COMPONENT: TABLES --- */
-        .table-responsive {
-            width: 100%;
-            overflow-x: auto;
-            border-radius: 6px;
-            border: 1px solid var(--border-light);
-        }
-
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.95rem;
-        }
-
+        /* Tables */
+        .table-responsive { width: 100%; overflow-x: auto; border: 1px solid var(--border-light); border-radius: var(--radius-md); }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; text-align: left; }
         .data-table th {
-            text-align: left;
-            padding: 14px 24px;
-            background-color: #F8FAFC;
-            color: var(--text-muted);
-            font-weight: 600;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            border-bottom: 1px solid var(--border-light);
+            background: #f8fafc; color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; padding: 12px 16px; border-bottom: 1px solid var(--border-light);
         }
-
-        .data-table td {
-            padding: 16px 24px;
-            border-bottom: 1px solid var(--border-light);
-            color: var(--text-main);
-            vertical-align: middle;
-        }
-
-        .data-table tbody tr:hover {
-            background-color: #F8FAFC;
-        }
-
-        /* --- COMPONENT: BADGES --- */
-        .badge {
-            display: inline-block;
-            padding: 4px 10px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            border-radius: 12px;
-            line-height: 1.2;
-        }
-
-        .badge-success { background: var(--success-bg); color: var(--success-color); }
-        .badge-warning { background: var(--warning-bg); color: var(--warning-color); }
-        .badge-danger  { background: var(--danger-bg);  color: var(--danger-color); }
-        .badge-info    { background: var(--info-bg);    color: var(--info-color); }
-        .badge-neutral { background: #F1F5F9; color: #64748B; }
-
-        /* --- COMPONENT: FORMS & INPUTS --- */
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: var(--text-main);
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 12px;
-            font-size: 0.95rem;
-            border: 1px solid var(--border-light);
-            border-radius: 6px;
-            transition: border 0.2s;
-            background: #fff;
-        }
-
-        .form-control:focus {
-            border-color: var(--brand-accent);
-            box-shadow: 0 0 0 3px rgba(33,150,243, 0.1);
-        }
-
-        /* --- COMPONENT: MODALS --- */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            backdrop-filter: blur(2px);
-            z-index: 1000;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .modal-overlay.open {
-            display: flex;
-            opacity: 1;
-        }
-
-        .modal-window {
-            background: #fff;
-            border-radius: 12px;
-            width: 600px;
-            max-width: 95%;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            transform: translateY(20px);
-            transition: transform 0.3s;
-        }
-
-        .modal-overlay.open .modal-window {
-            transform: translateY(0);
-        }
-
-        .modal-header {
-            padding: 20px 24px;
-            border-bottom: 1px solid var(--border-light);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-title { margin:0; font-size:1.25rem; }
-        .modal-close { font-size: 1.5rem; cursor: pointer; color: #999; }
-        .modal-body { padding: 24px; }
-        
-        .modal-footer {
-            padding: 20px 24px;
-            background-color: #F8FAFC;
-            border-top: 1px solid var(--border-light);
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-        }
-
-        /* --- UTILS --- */
-        .hidden { display: none !important; }
+        .data-table td { padding: 16px; border-bottom: 1px solid var(--border-light); vertical-align: middle; color: var(--text-body); }
+        .data-table tbody tr:last-child td { border-bottom: none; }
+        .data-table tbody tr:hover { background-color: #fcfcfc; }
         .text-right { text-align: right; }
-        .text-center { text-align: center; }
-        .w-full { width: 100%; }
-        .mb-4 { margin-bottom: 1rem; }
 
-        /* Animation */
-        @keyframes pulse { 
-            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
-            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-        }
+        /* Status Badges */
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 99px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.02em; text-transform: capitalize; }
+        .badge.paid { background: var(--bg-success); color: var(--color-success); }
+        .badge.unpaid { background: var(--bg-danger); color: var(--color-danger); }
+        .badge.partial { background: var(--bg-warning); color: var(--color-warning); }
+        .badge.info { background: var(--bg-info); color: var(--color-info); }
 
-        /* Toaster Notifications */
-        #toast-container {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            z-index: 2000;
+        /* Forms */
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 0.9rem; color: var(--text-heading); }
+        .form-control {
+            width: 100%; padding: 10px 12px; font-size: 0.95rem; border: 1px solid var(--border-light);
+            border-radius: 6px; transition: border-color 0.2s, box-shadow 0.2s; background: white;
         }
+        .form-control:focus { border-color: var(--brand-accent); box-shadow: 0 0 0 3px rgba(0, 184, 212, 0.1); }
+        .input-error { border-color: var(--color-danger); }
 
-        .toast-msg {
-            min-width: 300px;
-            background: #333;
-            color: #fff;
-            padding: 16px 20px;
-            border-radius: 6px;
-            margin-top: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            animation: slideInRight 0.3s ease-out;
+        /* Modal */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(2px);
+            z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+            display: grid; place-items: center; padding: 20px;
         }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
 
-        .toast-msg.success { border-left: 5px solid var(--success-color); }
-        .toast-msg.error { border-left: 5px solid var(--danger-color); }
-        
-        @keyframes slideInRight {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+        .modal {
+            background: white; border-radius: var(--radius-lg); width: 100%; max-width: 700px;
+            box-shadow: var(--shadow-lg); transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            max-height: 90vh; display: flex; flex-direction: column;
         }
-        
-        /* Printer Logic */
-        @media print {
-            aside, .top-bar, .header-actions, .btn { display: none; }
-            .card { box-shadow: none; border: none; }
+        .modal-overlay.active .modal { transform: translateY(0); }
+
+        .modal-header { padding: 24px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { margin: 0; font-size: 1.25rem; }
+        .modal-close { background: none; border: none; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; }
+        .modal-body { padding: 24px; overflow-y: auto; }
+        .modal-footer { padding: 20px 24px; background: #f8fafc; border-top: 1px solid var(--border-light); display: flex; justify-content: flex-end; gap: 12px; border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+
+        /* Toasts */
+        #toast-wrapper { position: fixed; bottom: 30px; right: 30px; z-index: 200; display: flex; flex-direction: column; gap: 10px; }
+        .toast {
+            min-width: 320px; padding: 16px; background: #1e293b; color: white; border-radius: 8px;
+            box-shadow: var(--shadow-lg); border-left: 4px solid var(--brand-accent);
+            animation: slideIn 0.3s forwards;
+            display: flex; justify-content: space-between; align-items: center;
         }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; }}
+
+        /* Utility */
+        .hidden { display: none !important; }
+        .d-flex { display: flex; align-items: center; gap: 10px; }
+        .justify-between { justify-content: space-between; }
+        .mt-4 { margin-top: 1.5rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .text-bold { font-weight: 700; }
+        .text-green { color: var(--color-success); }
+        .text-red { color: var(--color-danger); }
 
     </style>
 </head>
-
 <body>
 
-    <div id="app-root">
-        <!-- SIDEBAR START -->
-        <aside id="app-sidebar">
-            <div class="brand-header">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
-                FRESKEY ERP
+    <!-- APPLICATION ROOT -->
+    <div id="root">
+        
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon-box">F</div>
+                <span>FRESKEY ERP</span>
             </div>
             
-            <div class="sidebar-nav">
-                
-                <div class="nav-category">Management Module</div>
-                
-                <div class="nav-item active" onclick="AppRouter.navigate('dashboard')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                    Dashboard
-                </div>
-
-                <div class="nav-item" onclick="AppRouter.navigate('sales')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-                    Sales & Orders
-                </div>
-
-                <div class="nav-item" onclick="AppRouter.navigate('inventory')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"></path><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"></path><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"></path></svg>
-                    Inventory
-                </div>
-
-                <div class="nav-item" onclick="AppRouter.navigate('crm')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                    Customers (CRM)
-                </div>
-
-                <div class="nav-item" onclick="AppRouter.navigate('finance')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                    Invoices & Ledger
-                </div>
-
-                <div class="nav-category">System</div>
-
-                <div class="nav-item" onclick="AppRouter.navigate('settings')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                    Settings
+            <nav class="sidebar-menu">
+                <div class="menu-label">Main</div>
+                <div class="menu-item active" onclick="App.navigate('dashboard')">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    <span>Dashboard & Analytics</span>
                 </div>
                 
-            </div>
-
-            <div class="sidebar-footer">
-                <div class="cloud-widget">
-                    <span>Google Drive</span>
-                    <span id="sync-dot-el" class="status-dot"></span>
+                <div class="menu-label">Commercial</div>
+                <div class="menu-item" onclick="App.navigate('sales')">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                    <span>Sales Orders</span>
                 </div>
-                <div id="gdrive-status-text" style="color: #64748B; margin-bottom: 10px;">Not Connected</div>
-                <button class="btn btn-primary btn-full" onclick="GDocsService.connect()">Connect & Sync</button>
+                <div class="menu-item" onclick="App.navigate('customers')">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
+                    <span>Customers / CRM</span>
+                </div>
+
+                <div class="menu-label">Logistics</div>
+                <div class="menu-item" onclick="App.navigate('inventory')">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    <span>Product & Stock</span>
+                </div>
+
+                <div class="menu-label">Finance</div>
+                <div class="menu-item" onclick="App.navigate('finance')">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                    <span>Invoices & Ledger</span>
+                </div>
+                
+                <div class="menu-label">System</div>
+                <div class="menu-item" onclick="App.navigate('settings')">
+                    <svg class="menu-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    <span>Cloud Backup</span>
+                </div>
+            </nav>
+
+            <div class="sync-widget">
+                <div class="sync-header">
+                    <span style="font-size:0.8rem; font-weight:700; color:#fff;">Google Cloud</span>
+                    <div id="drive-indicator" class="sync-indicator"></div>
+                </div>
+                <div id="drive-status-text" style="font-size:0.75rem; color:#94a3b8; margin-bottom:10px;">Offline / Local Mode</div>
+                <button id="btn-gauth" onclick="DriveAdapter.authorize()" class="btn btn-sm btn-secondary w-full">Connect Drive</button>
             </div>
         </aside>
-        <!-- SIDEBAR END -->
 
-
-        <!-- MAIN CONTENT START -->
-        <main class="main-content">
-            
-            <header class="top-bar">
-                <div class="page-info">
-                    <h2 id="page-title-el">Dashboard</h2>
-                    <span id="page-date-el">Loading...</span>
+        <!-- MAIN CONTENT -->
+        <div class="main-wrapper">
+            <header class="header-bar">
+                <div class="page-title">
+                    <div class="page-breadcrumbs">Workspace > <span id="bread-current">Overview</span></div>
+                    <h2 id="page-head">Business Dashboard</h2>
                 </div>
-                
                 <div class="header-actions">
-                    <button class="btn btn-primary" onclick="UI.Modals.Order.open()">
+                    <button onclick="Modals.Order.open()" class="btn btn-primary">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                        Quick Sale
+                        Quick Invoice
                     </button>
-                    <div class="user-pill">
-                        <span class="user-avatar">F</span>
-                        <div style="font-size: 0.85rem; color: var(--text-muted); padding-right:8px;">Freskey Ops</div>
-                    </div>
+                    <div style="width:36px; height:36px; border-radius:50%; background:var(--brand-accent); color:var(--brand-primary-dark); display:grid; place-items:center; font-weight:700;">A</div>
                 </div>
             </header>
 
-            <div class="viewport-scroller" id="main-viewport">
-                <!-- VIEW INJECTED HERE VIA JS -->
+            <div id="app-view" class="content-area">
+                <!-- Views Injected Here by JS -->
             </div>
+        </div>
 
-        </main>
-        <!-- MAIN CONTENT END -->
     </div>
+    
+    <!-- TOAST CONTAINER -->
+    <div id="toast-wrapper"></div>
 
+    <!-- ================= MODALS ================= -->
 
-    <!-- =========================
-         MODALS COLLECTION
-         ========================= -->
-
-    <!-- 1. SALES ORDER MODAL -->
-    <div class="modal-overlay" id="modal-order">
-        <div class="modal-window">
+    <!-- 1. SALES ORDER / INVOICE MODAL -->
+    <div id="modal-order" class="modal-overlay">
+        <div class="modal">
             <div class="modal-header">
-                <h3 class="modal-title">Create New Order</h3>
-                <span class="modal-close" onclick="UI.Modals.Order.close()">&times;</span>
+                <h3>New Sales Order</h3>
+                <button onclick="Modals.Order.close()" class="modal-close">&times;</button>
             </div>
             <div class="modal-body">
-                <form id="order-form">
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label class="form-label">Customer</label>
-                            <select id="ord-cust" class="form-control" onchange="UI.Modals.Order.updateDetails()">
-                                <!-- Populated JS -->
-                            </select>
-                            <div id="cust-bal-display" style="font-size: 0.8rem; color: #dc3545; margin-top:5px; height: 16px;"></div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Order Date</label>
-                            <input type="date" id="ord-date" class="form-control" required>
-                        </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Customer</label>
+                        <select id="ord-cust" class="form-control" onchange="Modals.Order.updateCustInfo()">
+                            <!-- Filled JS -->
+                        </select>
+                        <div id="ord-cust-meta" style="font-size:0.8rem; color:#64748b; margin-top:5px;"></div>
                     </div>
-
-                    <!-- Products Table -->
-                    <div class="table-responsive" style="max-height: 250px; overflow-y:auto; margin-bottom: 20px;">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Product</th>
-                                    <th>Price</th>
-                                    <th>Stock</th>
-                                    <th width="80px">Qty</th>
-                                </tr>
-                            </thead>
-                            <tbody id="ord-product-rows">
-                                <!-- Populated by JS -->
-                            </tbody>
-                        </table>
+                    <div class="form-group">
+                        <label class="form-label">Date</label>
+                        <input type="date" id="ord-date" class="form-control">
                     </div>
-
-                    <div style="background: #F8FAFC; padding: 15px; border-radius: 8px; text-align: right;">
-                         <span style="font-size: 1.2rem; font-weight: 700; color: var(--text-main);">Total: ₹ <span id="ord-grand-total">0.00</span></span>
-                    </div>
-
-                </form>
+                </div>
+                
+                <h4 style="margin: 15px 0 10px 0; border-bottom:1px solid #eee; padding-bottom:5px;">Line Items</h4>
+                <div class="table-responsive" style="max-height: 200px; overflow-y:auto; border:none; margin-bottom:15px;">
+                    <table class="data-table">
+                        <thead><tr><th>Product</th><th width="80px">Stock</th><th>Price</th><th width="100px">Qty</th><th>Subtotal</th></tr></thead>
+                        <tbody id="ord-table-body">
+                            <!-- Filled JS -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="d-flex justify-between" style="background:var(--bg-app); padding:15px; border-radius:6px;">
+                    <span>Terms: Payment due within 15 days</span>
+                    <span class="text-bold" style="font-size:1.2rem;">Grand Total: <span id="ord-total">₹0.00</span></span>
+                </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="UI.Modals.Order.close()">Cancel</button>
-                <button class="btn btn-success" onclick="SalesController.processOrder()">Create Invoice</button>
+                <button class="btn btn-secondary" onclick="Modals.Order.close()">Cancel</button>
+                <button class="btn btn-primary" onclick="Controllers.Sales.createOrder()">Confirm & Generate PDF</button>
             </div>
         </div>
     </div>
 
-    <!-- 2. PURCHASE STOCK MODAL -->
-    <div class="modal-overlay" id="modal-purchase">
-        <div class="modal-window" style="width: 500px;">
+    <!-- 2. PAYMENT RECORD MODAL -->
+    <div id="modal-pay" class="modal-overlay">
+        <div class="modal" style="max-width: 500px;">
             <div class="modal-header">
-                <h3 class="modal-title">Stock Entry (Purchase)</h3>
-                <span class="modal-close" onclick="UI.Modals.Purchase.close()">&times;</span>
+                <h3>Record Invoice Payment</h3>
+                <button onclick="Modals.Pay.close()" class="modal-close">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label class="form-label">Product</label>
-                    <select id="pch-sku" class="form-control"></select>
+                    <label class="form-label">Target Invoice</label>
+                    <input id="pay-inv-id" class="form-control" disabled>
+                </div>
+                <div class="form-grid">
+                     <div class="form-group">
+                        <label class="form-label">Total Amount</label>
+                        <input id="pay-total" class="form-control" disabled>
+                     </div>
+                     <div class="form-group">
+                        <label class="form-label">Currently Due</label>
+                        <input id="pay-due" class="form-control" disabled style="color:var(--color-danger); font-weight:700;">
+                     </div>
+                </div>
+                <div class="form-group" style="background:#e0f2fe; padding:15px; border-radius:6px;">
+                    <label class="form-label">Payment Amount Received (₹)</label>
+                    <input type="number" id="pay-amount" class="form-control" style="font-size:1.2rem; border:2px solid var(--brand-accent);">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Payment Method</label>
+                    <select id="pay-method" class="form-control">
+                        <option>Bank Transfer / NEFT</option>
+                        <option>Cash</option>
+                        <option>Cheque</option>
+                        <option>UPI</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="Modals.Pay.close()">Close</button>
+                <button class="btn btn-success" onclick="Controllers.Finance.recordPayment()">Save Transaction</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. ADD PRODUCT MODAL -->
+    <div id="modal-product" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Add New Product SKU</h3>
+                <button onclick="Modals.Product.close()" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Product Name</label>
+                        <input id="np-name" class="form-control" placeholder="e.g. Freskey Lemon 200ml">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">SKU Code (Unique)</label>
+                        <input id="np-sku" class="form-control" placeholder="e.g. F-LEM-200">
+                    </div>
+                </div>
+                <div class="form-grid">
+                     <div class="form-group">
+                        <label class="form-label">Category</label>
+                        <select id="np-cat" class="form-control">
+                            <option>Beverage (Juice)</option>
+                            <option>Beverage (Soda)</option>
+                            <option>Merchandise</option>
+                        </select>
+                     </div>
+                     <div class="form-group">
+                        <label class="form-label">Case Size</label>
+                        <input id="np-pack" class="form-control" placeholder="e.g. 24 Bottles">
+                     </div>
                 </div>
                 <div class="form-grid">
                     <div class="form-group">
-                        <label class="form-label">Quantity (Cases)</label>
-                        <input type="number" id="pch-qty" class="form-control" value="10">
+                        <label class="form-label">Selling Price (Per Case)</label>
+                        <input type="number" id="np-price" class="form-control" value="0">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Batch / Ref No</label>
-                        <input type="text" id="pch-ref" class="form-control" placeholder="PO-XXXX">
+                        <label class="form-label">Opening Stock</label>
+                        <input type="number" id="np-stock" class="form-control" value="0">
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="UI.Modals.Purchase.close()">Close</button>
-                <button class="btn btn-primary" onclick="InventoryController.addStock()">Confirm & Update</button>
+                <button class="btn btn-secondary" onclick="Modals.Product.close()">Cancel</button>
+                <button class="btn btn-primary" onclick="Controllers.Inventory.addNewProduct()">Create Product</button>
             </div>
         </div>
     </div>
-
-    <!-- 3. ADD CUSTOMER MODAL -->
-    <div class="modal-overlay" id="modal-customer">
-        <div class="modal-window">
+    
+    <!-- 4. ADD CUSTOMER MODAL -->
+    <div id="modal-cust" class="modal-overlay">
+        <div class="modal" style="max-width:600px">
             <div class="modal-header">
-                <h3 class="modal-title">New Customer</h3>
-                <span class="modal-close" onclick="UI.Modals.CRM.close()">&times;</span>
+                <h3>New Customer Onboarding</h3>
+                <button onclick="Modals.Customer.close()" class="modal-close">&times;</button>
             </div>
             <div class="modal-body">
-                 <div class="form-group"><label class="form-label">Customer Name</label><input type="text" id="new-cust-name" class="form-control"></div>
-                 <div class="form-grid">
-                     <div class="form-group"><label class="form-label">Phone</label><input type="text" id="new-cust-phone" class="form-control"></div>
+                <div class="form-group"><label class="form-label">Business Name</label><input id="nc-name" class="form-control"></div>
+                <div class="form-grid">
+                    <div class="form-group"><label class="form-label">Phone</label><input id="nc-phone" class="form-control"></div>
+                    <div class="form-group"><label class="form-label">GSTIN (Optional)</label><input id="nc-gst" class="form-control"></div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">State/City</label>
+                        <input id="nc-state" class="form-control" placeholder="e.g. Delhi">
+                    </div>
                      <div class="form-group">
-                         <label class="form-label">Type</label>
-                         <select id="new-cust-type" class="form-control">
-                             <option value="Retailer">Retailer</option>
-                             <option value="Distributor">Distributor</option>
-                             <option value="Event">Event</option>
-                         </select>
-                     </div>
-                 </div>
+                        <label class="form-label">Type</label>
+                        <select id="nc-type" class="form-control">
+                            <option>Retailer</option>
+                            <option>Distributor</option>
+                            <option>Event</option>
+                        </select>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="UI.Modals.CRM.close()">Cancel</button>
-                <button class="btn btn-primary" onclick="CRMController.addCustomer()">Save</button>
+                <button class="btn btn-secondary" onclick="Modals.Customer.close()">Cancel</button>
+                <button class="btn btn-primary" onclick="Controllers.CRM.save()">Add Customer</button>
             </div>
         </div>
     </div>
 
-    <!-- TOAST CONTAINER -->
-    <div id="toast-container"></div>
 
     <!-- 
-      ===================================================================
-      SECTION 2: BUSINESS LOGIC (JAVASCRIPT)
-      Enterprise pattern: Repositories (Data) -> Services (Logic) -> Controllers (UI)
-      =================================================================== 
+    =============================================================================
+    BUSINESS LOGIC
+    =============================================================================
     -->
     <script>
         
-        /**
-         * SYSTEM CONFIGURATION
-         * Contains API Keys provided by the user.
-         */
-        const AppConfig = {
+        /** -- CONFIG & KEYS -- **/
+        const Config = {
             API_KEY: 'AIzaSyCWo9OP6-QhyKWpfuV5oonyuC32IQHoOtE', 
             CLIENT_ID: '950010994560-v7p6cem78h9fsdp102iq4immb36t95ls.apps.googleusercontent.com',
             SCOPES: 'https://www.googleapis.com/auth/drive.file',
-            DB_FILE_NAME: 'freskey-distribution-database.json',
-            AUTHORIZED_EMAIL: 'freskeypiyo@gmail.com'
+            DB_FILE: 'freskey_pro_database_v2.json'
         };
 
-        /**
-         * DATE UTILITIES
-         */
-        const DateUtil = {
+        /** -- HELPERS -- **/
+        const Utils = {
+            $: (id) => document.getElementById(id),
+            formatMoney: (num) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(num),
             today: () => new Date().toISOString().split('T')[0],
-            niceDate: (d) => new Date(d).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' }),
-            dateTime: () => new Date().toLocaleString()
-        };
-
-        /**
-         * CURRENCY FORMATTER (Indian Rupee)
-         */
-        const Money = (amount) => {
-            return new Intl.NumberFormat('en-IN', {
-                style: 'currency',
-                currency: 'INR',
-                minimumFractionDigits: 0
-            }).format(amount);
-        };
-
-        /**
-         * ----------------------------------------------------------
-         * DATA LAYER (In-Memory Database & Seed)
-         * ----------------------------------------------------------
-         */
-        const Database = {
-            customers: [
-                { id: 101, name: 'Goyal Supermarket', phone: '9876543210', type: 'Retailer', creditLimit: 20000, currentBalance: 0 },
-                { id: 102, name: 'Metro Distributors', phone: '9988776655', type: 'Distributor', creditLimit: 500000, currentBalance: 125000 },
-                { id: 103, name: 'Taj Hotel (Events)', phone: '8877665544', type: 'Event', creditLimit: 0, currentBalance: 0 },
-                { id: 104, name: 'Laxmi Stores', phone: '7766554433', type: 'Retailer', creditLimit: 15000, currentBalance: 4500 }
-            ],
-            products: [
-                { id: 'sku_200', name: 'Freskey 200ml (Lemon)', packing: '24 Bottles/Case', price: 480, stock: 450 },
-                { id: 'sku_500', name: 'Freskey 500ml (Lemon)', packing: '12 Bottles/Case', price: 360, stock: 120 },
-                { id: 'sku_1L', name: 'Freskey 1 Litre', packing: '6 Bottles/Case', price: 300, stock: 55 },
-                { id: 'sku_200m', name: 'Freskey 200ml (Mango)', packing: '24 Bottles/Case', price: 500, stock: 300 }
-            ],
-            orders: [
-                // Seed some orders
-                { id: 1001, date: '2025-10-01', custId: 101, items: [{name: 'Freskey 200ml', qty: 2, price: 480}], total: 960, status: 'Paid' },
-                { id: 1002, date: '2025-10-05', custId: 102, items: [{name: 'Freskey 500ml', qty: 50, price: 360}], total: 18000, status: 'Completed' }
-            ],
-            invoices: [
-                { id: 'INV-1002', orderId: 1002, custId: 102, total: 18000, date: '2025-10-05', status: 'Unpaid' }
-            ],
-            ledger: [
-                { id: 1, date: '2025-10-01', type: 'Sale', ref: 'INV-1001', amount: 960, mode: 'Credit' },
-                { id: 2, date: '2025-10-02', type: 'Payment', ref: 'INV-1001', amount: 960, mode: 'Cash' },
-                { id: 3, date: '2025-10-05', type: 'Sale', ref: 'INV-1002', amount: 18000, mode: 'Credit' }
-            ],
-
-            // Methods to interact with data safely
-            getById: (collection, id) => Database[collection].find(x => x.id == id),
-            
-            addProductStock: (skuId, qty) => {
-                const p = Database.products.find(x => x.id === skuId);
-                if (p) p.stock += parseInt(qty);
-            },
-            
-            reduceProductStock: (skuId, qty) => {
-                const p = Database.products.find(x => x.id === skuId);
-                if (p && p.stock >= qty) {
-                    p.stock -= parseInt(qty);
-                    return true;
-                }
-                return false;
-            }
-        };
-
-        /**
-         * ----------------------------------------------------------
-         * SERVICES LAYER (Business Logic)
-         * ----------------------------------------------------------
-         */
-        const NotificationService = {
-            show: (message, type = 'info') => {
-                const container = document.getElementById('toast-container');
+            generateId: () => Math.floor(Math.random() * 900000) + 100000,
+            toast: (msg, type='success') => {
+                const wrapper = document.getElementById('toast-wrapper');
                 const div = document.createElement('div');
-                div.className = `toast-msg ${type}`;
-                div.innerHTML = `<span>${message}</span> <small onclick="this.parentNode.remove()" style="cursor:pointer">&times;</small>`;
-                container.appendChild(div);
-                // Auto Remove
+                div.className = 'toast';
+                div.style.borderLeftColor = type === 'success' ? '#10b981' : '#f59e0b';
+                div.innerHTML = `<span>${msg}</span>`;
+                wrapper.appendChild(div);
                 setTimeout(() => div.remove(), 4000);
             }
         };
 
-        const SalesService = {
-            calculateCart: (inputElements) => {
-                let items = [];
-                let total = 0;
-                
-                inputElements.forEach(inp => {
-                    const qty = parseInt(inp.value) || 0;
-                    if(qty > 0) {
-                        const pid = inp.getAttribute('data-id');
-                        const product = Database.getById('products', pid);
-                        const lineTotal = product.price * qty;
-                        items.push({
-                            id: pid,
-                            name: product.name,
-                            price: product.price,
-                            qty: qty,
-                            lineTotal: lineTotal
-                        });
-                        total += lineTotal;
-                    }
+        /** -- STATE / DATA LAYER -- **/
+        const DB = {
+            customers: [
+                { id: 101, name: 'Sai Traders', type: 'Distributor', state: 'Uttarakhand', phone: '9988776655', balance: 0 },
+                { id: 102, name: 'Green Valley Hotel', type: 'HoReCa', state: 'Delhi', phone: '9876543210', balance: 15000 },
+                { id: 103, name: 'Best Mart', type: 'Retailer', state: 'UP', phone: '8877665544', balance: 5000 },
+                { id: 104, name: 'City Event Corp', type: 'Event', state: 'Delhi', phone: '7766554433', balance: 0 },
+                { id: 105, name: 'Quick Stop Shop', type: 'Retailer', state: 'Haryana', phone: '9123123123', balance: 200 }
+            ],
+            products: [
+                { id: 'sku-1', name: 'Freskey Lemon 200ml', cat: 'Beverage', price: 480, pack: '24 x 200ml', stock: 120 },
+                { id: 'sku-2', name: 'Freskey Mango 200ml', cat: 'Beverage', price: 500, pack: '24 x 200ml', stock: 80 },
+                { id: 'sku-3', name: 'Freskey Litchi 500ml', cat: 'Beverage', price: 350, pack: '12 x 500ml', stock: 45 },
+                { id: 'sku-4', name: 'Soda 300ml Glass', cat: 'Soda', price: 600, pack: '24 x 300ml', stock: 200 },
+                { id: 'sku-5', name: 'Freskey Jeera 1L', cat: 'Beverage', price: 320, pack: '6 x 1L', stock: 30 }
+            ],
+            orders: [
+                { id: 10001, date: '2025-11-01', custId: 102, total: 15000, items: [{name: 'Freskey Lemon', qty: 30, price:480, total:14400}, {name:'Soda', qty:1, price:600, total:600}] },
+                { id: 10002, date: '2025-11-02', custId: 103, total: 10000, items: [{name: 'Freskey Mango', qty: 20, price:500, total:10000}] }
+            ],
+            invoices: [
+                { id: 'INV-10001', orderId: 10001, custId: 102, total: 15000, paid: 0, status: 'Unpaid', date: '2025-11-01' },
+                { id: 'INV-10002', orderId: 10002, custId: 103, total: 10000, paid: 5000, status: 'Partial', date: '2025-11-02' }
+            ],
+            ledger: [
+                { id: 1, date: '2025-11-01', desc: 'INV-10001 Created', type: 'Debit', amt: 15000 },
+                { id: 2, date: '2025-11-02', desc: 'Payment Rcvd - Best Mart', type: 'Credit', amt: 5000 }
+            ]
+        };
+
+        /** -- ANALYTICS ENGINE -- **/
+        const Analytics = {
+            getTopCustomers: () => {
+                const map = {};
+                DB.orders.forEach(o => {
+                    const cName = DB.customers.find(c => c.id == o.custId)?.name || 'Unknown';
+                    map[cName] = (map[cName] || 0) + o.total;
                 });
-                return { items, total };
+                return Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,5);
             },
-
-            createOrder: (customerId, cartItems, totalAmount, date) => {
-                const newId = 1000 + Database.orders.length + 1;
-                
-                // 1. Stock Deduction Logic
-                for(let item of cartItems) {
-                    const success = Database.reduceProductStock(item.id, item.qty);
-                    if(!success) {
-                        alert(`CRITICAL ERROR: Stock verification failed for ${item.name} mid-process.`);
-                        return null; // Transaction rollback simulation
-                    }
-                }
-
-                // 2. Create Order Record
-                const order = {
-                    id: newId,
-                    date: date,
-                    custId: customerId,
-                    items: cartItems,
-                    total: totalAmount,
-                    status: 'Completed' 
-                };
-                Database.orders.push(order);
-
-                // 3. Create Invoice Record
-                const invoiceId = `INV-${newId}`;
-                Database.invoices.push({
-                    id: invoiceId,
-                    orderId: newId,
-                    custId: customerId,
-                    total: totalAmount,
-                    date: date,
-                    status: 'Unpaid' // Starts Unpaid
-                });
-
-                // 4. Update Customer Ledger/Balance
-                const cust = Database.getById('customers', customerId);
-                cust.currentBalance += totalAmount;
-                Database.ledger.push({
-                    id: Date.now(),
-                    date: date,
-                    type: 'Sale',
-                    ref: invoiceId,
-                    amount: totalAmount,
-                    mode: 'Credit'
-                });
-
-                return { order, invoiceId };
-            }
-        };
-
-        const PDFService = {
-            generateInvoice: (orderId) => {
-                const { jsPDF } = window.jspdf;
-                const order = Database.orders.find(o => o.id == orderId);
-                const cust = Database.getById('customers', order.custId);
-                const doc = new jsPDF();
-
-                // --- HEADER ---
-                doc.setFontSize(22);
-                doc.setTextColor(21, 101, 192); // Brand Blue
-                doc.text("HIMALAYAN BEVERAGES", 14, 20);
-                
-                doc.setFontSize(10);
-                doc.setTextColor(100);
-                doc.text("Registered Office: Plot 44, Industrial Area", 14, 26);
-                doc.text("GSTIN: 27AABCV1234F1Z5 | Contact: +91-9988776655", 14, 31);
-                
-                doc.setDrawColor(200);
-                doc.line(14, 35, 196, 35);
-
-                // --- DETAILS ---
-                doc.setFontSize(12);
-                doc.setTextColor(0);
-                doc.text(`INVOICE NO: INV-${order.id}`, 14, 45);
-                doc.text(`Date: ${order.date}`, 14, 52);
-                
-                doc.text("Bill To:", 120, 45);
-                doc.setFontSize(11);
-                doc.text(`${cust.name}`, 120, 52);
-                doc.text(`${cust.type} Account`, 120, 58);
-                doc.text(`Phone: ${cust.phone}`, 120, 64);
-
-                // --- TABLE ---
-                const tableRows = order.items.map((item, index) => {
-                    return [index+1, item.name, item.qty, item.price.toFixed(2), item.lineTotal.toFixed(2)];
-                });
-
-                doc.autoTable({
-                    startY: 75,
-                    head: [['#', 'Item Description', 'Qty (Cases)', 'Unit Price', 'Total']],
-                    body: tableRows,
-                    theme: 'striped',
-                    headStyles: { fillColor: [21, 101, 192] },
-                    foot: [['', '', '', 'Grand Total', Money(order.total)]],
-                    footStyles: { fillColor: [241, 245, 249], textColor: [0,0,0], fontStyle:'bold' }
-                });
-
-                // --- FOOTER ---
-                const finalY = doc.lastAutoTable.finalY || 100;
-                doc.setFontSize(10);
-                doc.text("Terms & Conditions:", 14, finalY + 15);
-                doc.setFontSize(8);
-                doc.setTextColor(150);
-                doc.text("1. All payments due within 15 days.", 14, finalY + 20);
-                doc.text("2. Interest @18% pa will be charged on overdue payments.", 14, finalY + 24);
-                doc.text("3. Goods once sold will not be taken back.", 14, finalY + 28);
-                
-                // SAVE DIRECTLY TO DEVICE
-                doc.save(`Himalayan_Invoice_${order.id}.pdf`);
-                NotificationService.show("PDF Downloaded successfully", "success");
-            }
-        };
-
-        const GDocsService = {
-            tokenClient: null,
-            isConnected: false,
-
-            init: () => {
-                gapi.load('client', async () => {
-                    await gapi.client.init({
-                        apiKey: AppConfig.API_KEY,
-                        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+            getTopProducts: () => {
+                const map = {};
+                DB.orders.forEach(o => {
+                    o.items.forEach(i => {
+                        map[i.name] = (map[i.name] || 0) + i.qty;
                     });
                 });
+                return Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,5);
+            },
+            getGeoData: () => {
+                 const map = {};
+                 DB.orders.forEach(o => {
+                    const c = DB.customers.find(cust => cust.id == o.custId);
+                    if(c && c.state) map[c.state] = (map[c.state] || 0) + 1;
+                 });
+                 return Object.entries(map);
+            }
+        };
 
-                GDocsService.tokenClient = google.accounts.oauth2.initTokenClient({
-                    client_id: AppConfig.CLIENT_ID,
-                    scope: AppConfig.SCOPES,
-                    callback: (resp) => {
-                        if (resp.error) {
-                            console.error(resp);
-                            return;
-                        }
-                        GDocsService.handleAuthSuccess(resp);
-                    },
+        /** -- PDF ENGINE (Professional Layout) -- **/
+        const PDFGen = {
+            createInvoice: (order, customer) => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Color Config
+                const brandBlue = [21, 101, 192]; // #1565c0
+                const lightGrey = [245, 245, 245];
+
+                // 1. Header Block
+                doc.setFillColor(...brandBlue);
+                doc.rect(0, 0, 210, 40, 'F');
+                
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(24);
+                doc.text("HIMALAYAN BEVERAGES", 14, 18);
+                doc.setFontSize(10);
+                doc.text("Refreshment from the Hills", 14, 24);
+                
+                doc.setFontSize(26);
+                doc.text("INVOICE", 195, 28, { align: 'right' });
+                
+                // 2. Info Block
+                doc.setTextColor(40, 40, 40);
+                doc.setFontSize(10);
+                
+                // Company Details (Left)
+                doc.text("Registered Office:", 14, 50);
+                doc.setFont("helvetica", "bold");
+                doc.text("Himalayan Beverages Ltd.", 14, 55);
+                doc.setFont("helvetica", "normal");
+                doc.text("Plot 42, Eco Park, Industrial Zone", 14, 60);
+                doc.text("Dehradun, Uttarakhand - 248001", 14, 65);
+                doc.text("GSTIN: 05AABCH1234K1Z2", 14, 70);
+                
+                // Invoice Details (Right)
+                const rightX = 130;
+                doc.text(`Invoice No: INV-${order.id}`, rightX, 55);
+                doc.text(`Invoice Date: ${order.date}`, rightX, 60);
+                doc.text(`Customer ID: C-${customer.id}`, rightX, 65);
+
+                // Bill To
+                doc.setFillColor(...lightGrey);
+                doc.rect(14, 78, 182, 25, 'F');
+                doc.text("Bill To:", 18, 84);
+                doc.setFont("helvetica", "bold");
+                doc.text(`${customer.name}`, 18, 90);
+                doc.setFont("helvetica", "normal");
+                doc.text(`${customer.state}, India | Ph: ${customer.phone}`, 18, 96);
+                
+                // 3. Table
+                const rows = order.items.map((item, i) => [
+                    i+1, item.name, item.qty, Utils.formatMoney(item.price), Utils.formatMoney(item.total)
+                ]);
+
+                doc.autoTable({
+                    startY: 110,
+                    head: [['#', 'Description', 'Qty (Cases)', 'Unit Price', 'Total Amount']],
+                    body: rows,
+                    theme: 'striped',
+                    headStyles: { fillColor: brandBlue, textColor: 255 },
+                    styles: { fontSize: 10, cellPadding: 5 },
                 });
-            },
-
-            connect: () => {
-                if(!GDocsService.tokenClient) return alert("Google Script not ready. Check internet.");
-                GDocsService.tokenClient.requestAccessToken({prompt: 'consent'});
-            },
-
-            handleAuthSuccess: (tokenResponse) => {
-                GDocsService.isConnected = true;
                 
-                // Update Sidebar UI
-                const statusTxt = document.getElementById('gdrive-status-text');
-                const dot = document.getElementById('sync-dot-el');
-                if(statusTxt && dot) {
-                    statusTxt.innerHTML = "Synced & Online";
-                    statusTxt.style.color = "#10B981";
-                    dot.classList.add('online');
-                }
+                // 4. Totals & Words
+                const finalY = doc.lastAutoTable.finalY + 10;
+                
+                doc.setFont("helvetica", "bold");
+                doc.text(`Grand Total: ${Utils.formatMoney(order.total)}`, 195, finalY, { align: 'right' });
+                doc.setDrawColor(200);
+                doc.line(130, finalY+2, 195, finalY+2);
+                
+                doc.setFont("helvetica", "italic");
+                doc.setFontSize(9);
+                doc.text("Amount in Words: Auto-generated based on total", 14, finalY); // Mock logic for brevity
 
-                NotificationService.show("Google Drive Connected", "success");
-                // Immediately Try to Backup
-                GDocsService.backupDatabase();
-            },
+                // 5. Banking & Terms
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(10);
+                
+                doc.text("Bank Details:", 14, finalY + 20);
+                doc.setFontSize(9);
+                doc.text("Bank Name: HDFC Bank", 14, finalY + 25);
+                doc.text("A/c No: 50200012345678", 14, finalY + 30);
+                doc.text("IFSC: HDFC0001234", 14, finalY + 35);
 
-            backupDatabase: async () => {
-                if(!GDocsService.isConnected) return;
-                try {
-                    // Create Content
-                    const dbString = JSON.stringify(Database, null, 2);
-                    const fileMetadata = {
-                        name: AppConfig.DB_FILE_NAME,
-                        mimeType: 'application/json'
-                    };
+                // Footer
+                doc.setFontSize(8);
+                doc.setTextColor(100);
+                const pageHeight = doc.internal.pageSize.height;
+                doc.text("Thank you for your business!", 105, pageHeight - 15, { align: 'center' });
+                doc.text("This is a computer generated invoice.", 105, pageHeight - 10, { align: 'center' });
 
-                    // Search for existing file to overwrite
-                    const q = `name = '${AppConfig.DB_FILE_NAME}' and trashed = false`;
-                    const res = await gapi.client.drive.files.list({q, fields:'files(id)'});
-                    const files = res.result.files;
-
-                    if (files && files.length > 0) {
-                        // UPDATE existing file
-                        const fileId = files[0].id;
-                        await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
-                            method: 'PATCH',
-                            headers: { 
-                                'Authorization': `Bearer ${gapi.client.getToken().access_token}`,
-                                'Content-Type': 'application/json' 
-                            },
-                            body: dbString
-                        });
-                        NotificationService.show("Database Background Sync: Success", "success");
-                    } else {
-                        // CREATE new file (Requires Multipart upload logic usually, simplified here using blob approach logic compatible with REST)
-                        const form = new FormData();
-                        form.append('metadata', new Blob([JSON.stringify(fileMetadata)], {type: 'application/json'}));
-                        form.append('file', new Blob([dbString], {type: 'application/json'}));
-
-                        await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-                            method: 'POST',
-                            headers: { 'Authorization': `Bearer ${gapi.client.getToken().access_token}` },
-                            body: form
-                        });
-                        NotificationService.show("New Database File Created on Drive", "success");
-                    }
-
-                } catch(err) {
-                    console.error("Drive Sync Error", err);
-                    NotificationService.show("Sync Failed: Check Console", "error");
-                }
+                // Download
+                doc.save(`Invoice_${order.id}_${customer.name.replace(/\s/g,'_')}.pdf`);
             }
         };
 
-        /**
-         * ----------------------------------------------------------
-         * CONTROLLER LAYER (DOM MANIPULATION & ROUTES)
-         * ----------------------------------------------------------
-         */
-        const AppRouter = {
-            currentRoute: 'dashboard',
-            
+
+        /** -- APP CONTROLLERS -- **/
+        const App = {
+            currentView: 'dashboard',
             init: () => {
-                // Initial Page Load
-                document.getElementById('page-date-el').innerText = DateUtil.dateTime();
-                AppRouter.navigate('dashboard');
-                
-                // Initialize Google Drive Scripts
-                GDocsService.init();
+                App.navigate('dashboard');
+                DriveAdapter.init(); // Setup Google API logic
             },
-
-            navigate: (routeId) => {
-                // Update UI Navigation State
-                const navItems = document.querySelectorAll('.nav-item');
-                navItems.forEach(el => el.classList.remove('active'));
+            navigate: (viewId) => {
+                // UI Switch
+                document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+                // Just brute force active class for simplicity based on text searching (mock routing)
+                // In prod, use ID based selection.
                 
-                // Hack: In real apps use data-attributes. Here matching by onclick text
-                // or just manually finding index is simple enough for the demo.
-                
-                // Clear Viewport
-                const container = document.getElementById('main-viewport');
-                container.innerHTML = '';
-                AppRouter.currentRoute = routeId;
-
-                // Title Update
-                const titles = {
-                    dashboard: 'Operational Dashboard',
-                    sales: 'Sales & Orders',
-                    inventory: 'Warehouse Management',
-                    finance: 'Invoicing & Ledgers',
-                    crm: 'Customer Directory',
-                    settings: 'System Configuration'
+                // Update Head
+                const heads = {
+                    dashboard: "Operational Analytics", sales: "Sales & Orders", 
+                    customers: "CRM Database", inventory: "Stock Management", 
+                    finance: "Invoicing & Partial Payments", settings: "System Settings"
                 };
-                document.getElementById('page-title-el').innerText = titles[routeId];
-
-                // Route Logic
-                switch(routeId) {
-                    case 'dashboard': DashboardView.render(container); break;
-                    case 'sales': SalesView.render(container); break;
-                    case 'inventory': InventoryView.render(container); break;
-                    case 'finance': FinanceView.render(container); break;
-                    case 'crm': CRMView.render(container); break;
-                    case 'settings': SettingsView.render(container); break;
-                }
+                Utils.$('page-head').innerText = heads[viewId];
+                Utils.$('bread-current').innerText = viewId;
+                
+                // Render View
+                const container = Utils.$('app-view');
+                if(viewId === 'dashboard') Views.renderDashboard(container);
+                if(viewId === 'sales') Views.renderSales(container);
+                if(viewId === 'customers') Views.renderCRM(container);
+                if(viewId === 'inventory') Views.renderInventory(container);
+                if(viewId === 'finance') Views.renderFinance(container);
+                if(viewId === 'settings') Views.renderSettings(container);
             }
         };
 
-        // --- VIEWS ---
-
-        const DashboardView = {
-            render: (target) => {
-                // Calculte KPIs
-                const totalSales = Database.orders.reduce((acc, curr) => acc + curr.total, 0);
-                const dueInvoices = Database.invoices.filter(i => i.status === 'Unpaid').reduce((acc, curr) => acc + curr.total, 0);
-                const lowStockCount = Database.products.filter(p => p.stock < 50).length;
-
+        const Views = {
+            renderDashboard: (target) => {
+                const totalRev = DB.invoices.reduce((a,b) => a+b.total, 0);
+                const pending = DB.invoices.filter(i=>i.status!=='Paid').reduce((a,b)=> a+(b.total - b.paid), 0);
+                const topProds = Analytics.getTopProducts();
+                const topCust = Analytics.getTopCustomers();
+                
                 target.innerHTML = `
-                    <div class="stat-grid fade-in">
-                        <div class="stat-card stat-green">
-                            <div class="stat-title">Total Revenue</div>
-                            <div class="stat-value">${Money(totalSales)}</div>
+                    <div class="grid-stats fade-in">
+                        <div class="stat-card">
+                            <span class="stat-label">Total Revenue</span>
+                            <span class="stat-value text-green">${Utils.formatMoney(totalRev)}</span>
                         </div>
-                        <div class="stat-card stat-orange">
-                            <div class="stat-title">Pending Collections</div>
-                            <div class="stat-value" style="color:var(--warning-color)">${Money(dueInvoices)}</div>
+                        <div class="stat-card">
+                            <span class="stat-label">Outstanding Balance</span>
+                            <span class="stat-value text-red">${Utils.formatMoney(pending)}</span>
                         </div>
-                        <div class="stat-card stat-red">
-                            <div class="stat-title">Low Stock Alerts</div>
-                            <div class="stat-value" style="color:var(--danger-color)">${lowStockCount} SKUs</div>
+                        <div class="stat-card">
+                            <span class="stat-label">Total Customers</span>
+                            <span class="stat-value">${DB.customers.length}</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-label">Low Stock Alerts</span>
+                            <span class="stat-value" style="color:var(--color-warning)">${DB.products.filter(p=>p.stock<50).length}</span>
                         </div>
                     </div>
-
-                    <div class="card fade-in">
-                        <div class="card-header">
-                            <h3>Recent Orders</h3>
+                    
+                    <div class="grid-stats fade-in">
+                        <div class="card" style="margin:0">
+                            <div class="card-header"><h3>Top Selling Items</h3></div>
+                            <div class="card-body">
+                                <ul>${topProds.map((p,i)=>`<li style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between"><span>${i+1}. ${p[0]}</span> <strong>${p[1]} cs</strong></li>`).join('')}</ul>
+                            </div>
                         </div>
-                        <div class="card-body" style="padding:0">
-                            <div class="table-responsive" style="border:none">
-                                <table class="data-table">
-                                    <thead><tr><th>ID</th><th>Date</th><th>Customer</th><th>Amount</th><th>Status</th></tr></thead>
-                                    <tbody>
-                                        ${Database.orders.slice(-5).reverse().map(o => {
-                                            const cust = Database.getById('customers', o.custId);
-                                            return `<tr>
-                                                <td>#${o.id}</td>
-                                                <td>${DateUtil.niceDate(o.date)}</td>
-                                                <td>${cust.name}</td>
-                                                <td>${Money(o.total)}</td>
-                                                <td><span class="badge badge-success">${o.status}</span></td>
-                                            </tr>`
-                                        }).join('')}
-                                    </tbody>
-                                </table>
+                        <div class="card" style="margin:0">
+                            <div class="card-header"><h3>Top Buyers</h3></div>
+                            <div class="card-body">
+                                <ul>${topCust.map((p,i)=>`<li style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between"><span>${i+1}. ${p[0]}</span> <strong>${Utils.formatMoney(p[1])}</strong></li>`).join('')}</ul>
                             </div>
                         </div>
                     </div>
-                `;
-            }
-        };
-
-        const SalesView = {
-            render: (target) => {
-                let html = `
+                    
                     <div class="card fade-in">
-                        <div class="card-header">
-                            <h3>Sales History</h3>
-                        </div>
-                        <div class="card-body">
-                           <div class="table-responsive">
-                                <table class="data-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Order #</th>
-                                            <th>Date</th>
-                                            <th>Customer</th>
-                                            <th>Total</th>
-                                            <th>Status</th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>`;
-                
-                // Add rows
-                Database.orders.forEach(order => {
-                    const cust = Database.getById('customers', order.custId);
-                    html += `<tr>
-                        <td>#${order.id}</td>
-                        <td>${DateUtil.niceDate(order.date)}</td>
-                        <td>${cust.name}</td>
-                        <td>${Money(order.total)}</td>
-                        <td><span class="badge badge-neutral">${order.status}</span></td>
-                        <td>
-                            <button class="btn btn-primary btn-full" style="padding:4px 10px; font-size:0.8rem;" onclick="PDFService.generateInvoice('${order.id}')">
-                                PDF Download
-                            </button>
-                        </td>
-                    </tr>`;
-                });
-
-                html += `</tbody></table></div></div></div>`;
-                target.innerHTML = html;
-            }
-        };
-
-        const InventoryView = {
-            render: (target) => {
-                let html = `
-                <div class="form-grid mb-4">
-                     <button class="btn btn-primary" onclick="UI.Modals.Purchase.open()">+ Stock Entry / Purchase</button>
-                     <div class="text-right text-muted">Total Stock Value: 
-                        <b>${Money(Database.products.reduce((acc,p)=>acc+(p.stock*p.price),0))}</b>
-                     </div>
-                </div>
-
-                <div class="card fade-in">
-                    <div class="card-body">
-                         <div class="table-responsive">
-                             <table class="data-table">
-                                 <thead>
-                                     <tr>
-                                        <th>SKU Code</th>
-                                        <th>Product Name</th>
-                                        <th>Case Packing</th>
-                                        <th>Current Stock</th>
-                                        <th>Valuation</th>
-                                     </tr>
-                                 </thead>
-                                 <tbody>`;
-                
-                Database.products.forEach(p => {
-                    const isLow = p.stock < 50;
-                    html += `
-                        <tr style="${isLow ? 'background:#fff1f2' : ''}">
-                            <td style="font-family:monospace">${p.id}</td>
-                            <td>
-                                <b>${p.name}</b>
-                                ${isLow ? '<span class="badge badge-danger" style="margin-left:5px">Low Stock</span>' : ''}
-                            </td>
-                            <td>${p.packing}</td>
-                            <td style="font-weight:bold">${p.stock} cases</td>
-                            <td>${Money(p.price * p.stock)}</td>
-                        </tr>
-                    `;
-                });
-                html += `</tbody></table></div></div></div>`;
-                target.innerHTML = html;
-            }
-        };
-        
-        const FinanceView = {
-            render: (target) => {
-                let html = `
-                <div class="card fade-in">
-                    <div class="card-header">
-                        <h3>Outstanding Invoices</h3>
+                        <div class="card-header"><h3>Regional Sales Breakdown</h3></div>
+                         <div class="card-body">
+                             <div style="display:flex; gap:10px; flex-wrap:wrap">
+                                 ${Analytics.getGeoData().map(g => `
+                                    <div style="background:#f0f9ff; padding:10px 20px; border-radius:20px; border:1px solid #b3e5fc">
+                                        ${g[0]}: <b>${g[1]} Orders</b>
+                                    </div>
+                                 `).join('')}
+                             </div>
+                         </div>
                     </div>
-                    <div class="card-body">
+                `;
+            },
+
+            renderSales: (target) => {
+                target.innerHTML = `
+                    <div class="card fade-in">
                          <div class="table-responsive">
                             <table class="data-table">
-                                <thead><tr><th>Invoice</th><th>Date</th><th>Customer</th><th>Amount</th><th>Status</th><th>Action</th></tr></thead>
-                                <tbody>`;
-                
-                // Render Invoice Rows
-                const unpaid = Database.invoices; // For simplicity showing all, filter via status in row
-                
-                unpaid.slice().reverse().forEach(inv => {
-                    const cust = Database.getById('customers', inv.custId);
-                    const isPaid = inv.status === 'Paid';
-                    
-                    html += `<tr>
-                        <td>${inv.id}</td>
-                        <td>${inv.date}</td>
-                        <td>${cust.name}</td>
-                        <td>${Money(inv.total)}</td>
-                        <td><span class="badge ${isPaid ? 'badge-success' : 'badge-danger'}">${inv.status}</span></td>
-                        <td>
-                            ${!isPaid ? 
-                              `<button class="btn btn-success" style="padding:4px 8px; font-size:0.8rem" onclick="FinanceController.recordPayment('${inv.id}')">Record Pay</button>` :
-                              `<span style="color:var(--success-color)">✓ Paid</span>`
-                            }
-                        </td>
-                    </tr>`;
-                });
-                html += `</tbody></table></div></div></div>
-                
+                                <thead><tr><th>ID</th><th>Date</th><th>Customer</th><th>Total</th><th>Status</th><th>PDF</th></tr></thead>
+                                <tbody>
+                                    ${DB.orders.map(o => {
+                                        const cust = DB.customers.find(c => c.id == o.custId);
+                                        const inv = DB.invoices.find(i => i.orderId == o.id);
+                                        return `<tr>
+                                            <td>#${o.id}</td><td>${o.date}</td>
+                                            <td>${cust?.name}</td>
+                                            <td class="text-bold">${Utils.formatMoney(o.total)}</td>
+                                            <td><span class="badge info">${inv.status}</span></td>
+                                            <td><button onclick="Controllers.Sales.downloadPdf(${o.id})" class="btn btn-sm btn-secondary">Download</button></td>
+                                        </tr>`;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                         </div>
+                    </div>
+                `;
+            },
+
+            renderFinance: (target) => {
+                target.innerHTML = `
                 <div class="card fade-in">
-                    <div class="card-header"><h3>General Ledger (Last 20)</h3></div>
-                    <div class="card-body">
+                    <div class="card-header"><h3>Invoices & Partial Payments</h3></div>
+                    <div class="table-responsive">
                          <table class="data-table">
-                             <thead><tr><th>Ref</th><th>Type</th><th>Mode</th><th>Amount</th></tr></thead>
+                             <thead><tr><th>Invoice</th><th>Customer</th><th>Total</th><th>Paid</th><th>Due</th><th>Status</th><th>Action</th></tr></thead>
                              <tbody>
-                             ${Database.ledger.slice().reverse().slice(0,20).map(l => 
-                                `<tr><td>${l.ref}</td><td>${l.type}</td><td>${l.mode}</td><td>${Money(l.amount)}</td></tr>`
-                             ).join('')}
+                                 ${DB.invoices.map(inv => {
+                                     const cust = DB.customers.find(c => c.id == inv.custId);
+                                     const due = inv.total - inv.paid;
+                                     const badge = inv.status.toLowerCase();
+                                     return `<tr>
+                                         <td>${inv.id}</td><td>${cust.name}</td>
+                                         <td>${Utils.formatMoney(inv.total)}</td>
+                                         <td class="text-green">${Utils.formatMoney(inv.paid)}</td>
+                                         <td class="text-red text-bold">${Utils.formatMoney(due)}</td>
+                                         <td><span class="badge ${badge}">${inv.status}</span></td>
+                                         <td>${due > 0 ? `<button onclick="Modals.Pay.open('${inv.id}')" class="btn btn-sm btn-success">Record Pay</button>` : '<span>✓ Cleared</span>'}</td>
+                                     </tr>`;
+                                 }).join('')}
                              </tbody>
                          </table>
                     </div>
                 </div>`;
-                target.innerHTML = html;
-            }
-        };
-
-        const CRMView = {
-            render: (target) => {
-                 let html = `
-                 <div class="mb-4 text-right">
-                    <button class="btn btn-primary" onclick="UI.Modals.CRM.open()">Add New Customer</button>
+            },
+            
+            renderInventory: (target) => {
+                 target.innerHTML = `
+                 <div class="d-flex justify-between mb-2">
+                     <p>Manage products and purchase orders</p>
+                     <button onclick="Modals.Product.open()" class="btn btn-primary">+ Add New Product</button>
                  </div>
                  <div class="card fade-in">
-                    <div class="card-body">
-                         <div class="table-responsive">
-                            <table class="data-table">
-                                <thead><tr><th>Name</th><th>Phone</th><th>Type</th><th>Current Balance</th></tr></thead>
-                                <tbody>`;
-                 Database.customers.forEach(c => {
-                     html += `<tr>
-                        <td><b>${c.name}</b></td>
-                        <td>${c.phone}</td>
-                        <td>${c.type}</td>
-                        <td style="${c.currentBalance > c.creditLimit ? 'color:red; font-weight:bold' : ''}">
-                             ${Money(c.currentBalance)}
-                        </td>
-                     </tr>`;
-                 });
-                 html += `</tbody></table></div></div></div>`;
-                 target.innerHTML = html;
-            }
-        };
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead><tr><th>SKU</th><th>Name</th><th>Packing</th><th>Category</th><th>Stock</th><th>Price</th></tr></thead>
+                            <tbody>
+                                ${DB.products.map(p => `<tr>
+                                    <td><span style="font-family:monospace">${p.id}</span></td>
+                                    <td class="text-bold">${p.name}</td>
+                                    <td>${p.pack}</td><td>${p.cat}</td>
+                                    <td class="${p.stock < 50 ? 'text-red text-bold' : ''}">${p.stock} cases</td>
+                                    <td>${Utils.formatMoney(p.price)}</td>
+                                </tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                 </div>`;
+            },
 
-        const SettingsView = {
-            render: (target) => {
+            renderCRM: (target) => {
+                 target.innerHTML = `
+                 <div class="d-flex justify-between mb-2">
+                     <p>Customer Database</p>
+                     <button onclick="Modals.Customer.open()" class="btn btn-primary">+ New Customer</button>
+                 </div>
+                 <div class="card fade-in">
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead><tr><th>Name</th><th>State</th><th>Type</th><th>Phone</th><th>Total Due</th></tr></thead>
+                            <tbody>
+                                ${DB.customers.map(c => {
+                                    // calculate actual dynamic balance from invoices
+                                    const openInvs = DB.invoices.filter(i => i.custId === c.id);
+                                    const actualBal = openInvs.reduce((sum, inv) => sum + (inv.total - inv.paid), 0);
+                                    return `<tr>
+                                    <td>${c.name}</td><td>${c.state}</td><td><span class="badge info">${c.type}</span></td>
+                                    <td>${c.phone}</td>
+                                    <td class="${actualBal>0 ? 'text-red text-bold' : 'text-green'}">${Utils.formatMoney(actualBal)}</td>
+                                </tr>`}).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                 </div>`;
+            },
+            
+            renderSettings: (target) => {
                 target.innerHTML = `
                 <div class="card fade-in">
-                    <div class="card-header"><h3>Cloud Integration</h3></div>
+                    <div class="card-header"><h3>Cloud Synchronization</h3></div>
                     <div class="card-body">
-                        <div class="form-grid">
-                            <div>
-                                <label class="form-label">Authorized Account</label>
-                                <input class="form-control" disabled value="${AppConfig.AUTHORIZED_EMAIL}">
-                            </div>
-                            <div>
-                                <label class="form-label">Client ID (Obfuscated)</label>
-                                <input class="form-control" disabled value="...${AppConfig.CLIENT_ID.slice(-8)}">
-                            </div>
-                        </div>
-                        <div class="mt-4" style="padding:20px; background:#f0f9ff; border-radius:6px; color:#0c4a6e;">
-                             <p>Google Drive synchronization saves the <b>entire in-memory database</b> to a file named <b>${AppConfig.DB_FILE_NAME}</b> in the connected account's Drive. </p>
-                             <button class="btn btn-primary" onclick="GDocsService.backupDatabase()">Force Sync Now</button>
+                        <p>Currently configured to sync entire database to <b>${Config.DB_FILE}</b> on the authenticated Google Drive.</p>
+                        <br>
+                        <button onclick="DriveAdapter.backup()" class="btn btn-primary">Force Sync Now</button>
+                        <div style="margin-top:20px; padding:10px; background:#1e293b; color:#10b981; font-family:monospace; font-size:0.85rem;" id="sync-console">
+                            > System ready...
                         </div>
                     </div>
                 </div>`;
             }
         };
 
+        const Controllers = {
+            Sales: {
+                createOrder: () => {
+                    // Collect Data from Modal
+                    const cid = Utils.$('ord-cust').value;
+                    if(!cid) return alert("Select Customer");
+                    
+                    const rows = document.querySelectorAll('.ord-row');
+                    const items = [];
+                    let total = 0;
 
-        /**
-         * ----------------------------------------------------------
-         * BUSINESS LOGIC HANDLERS (Controllers)
-         * ----------------------------------------------------------
-         */
-         
-         const InventoryController = {
-             addStock: () => {
-                 const sku = document.getElementById('pch-sku').value;
-                 const qty = document.getElementById('pch-qty').value;
-                 
-                 if(qty <= 0) return NotificationService.show("Invalid Qty", "error");
-                 
-                 Database.addProductStock(sku, qty);
-                 NotificationService.show(`Added ${qty} cases to inventory`, "success");
-                 UI.Modals.Purchase.close();
-                 AppRouter.navigate('inventory'); // Refresh
-                 GDocsService.backupDatabase();
-             }
-         };
+                    rows.forEach(r => {
+                        const qty = parseInt(r.querySelector('input').value);
+                        if(qty > 0) {
+                            const price = parseFloat(r.dataset.price);
+                            items.push({
+                                id: r.dataset.id,
+                                name: r.dataset.name,
+                                qty: qty,
+                                price: price,
+                                total: qty * price
+                            });
+                            total += (qty * price);
+                        }
+                    });
 
-         const CRMController = {
-             addCustomer: () => {
-                 const name = document.getElementById('new-cust-name').value;
-                 const phone = document.getElementById('new-cust-phone').value;
-                 const type = document.getElementById('new-cust-type').value;
+                    if(items.length === 0) return alert("Add items with quantity > 0");
 
-                 if(!name) return NotificationService.show("Name is required", "error");
+                    // Validations passed, execute Transaction
+                    const ordId = Utils.generateId();
+                    const order = { id: ordId, custId: parseInt(cid), date: Utils.$('ord-date').value, total, items };
+                    const invoice = { id: `INV-${ordId}`, orderId: ordId, custId: parseInt(cid), total: total, paid: 0, status: 'Unpaid', date: order.date };
 
-                 Database.customers.push({
-                     id: 100 + Database.customers.length + 1,
-                     name, phone, type, creditLimit: 10000, currentBalance: 0
-                 });
+                    // Deduct Stock
+                    items.forEach(it => {
+                        const p = DB.products.find(x => x.id == it.id);
+                        if(p) p.stock -= it.qty;
+                    });
 
-                 NotificationService.show("Customer saved successfully", "success");
-                 UI.Modals.CRM.close();
-                 AppRouter.navigate('crm');
-                 GDocsService.backupDatabase();
-             }
-         }
+                    DB.orders.push(order);
+                    DB.invoices.push(invoice);
+                    DB.ledger.push({ id: Utils.generateId(), date: order.date, desc: `Sale ${invoice.id}`, type:'Debit', amt:total});
 
-         const SalesController = {
-             processOrder: () => {
-                 const custId = parseInt(document.getElementById('ord-cust').value);
-                 const date = document.getElementById('ord-date').value;
-                 const inputs = document.querySelectorAll('.ord-qty-input');
-                 
-                 const { items, total } = SalesService.calculateCart(inputs);
+                    Modals.Order.close();
+                    Utils.toast('Order & Invoice Generated');
+                    App.navigate('sales');
+                    
+                    // Auto PDF
+                    if(confirm("Download Invoice PDF Now?")) {
+                         Controllers.Sales.downloadPdf(ordId);
+                    }
+                    DriveAdapter.backup();
+                },
+                downloadPdf: (ordId) => {
+                    const order = DB.orders.find(o => o.id == ordId);
+                    const cust = DB.customers.find(c => c.id == order.custId);
+                    PDFGen.createInvoice(order, cust);
+                }
+            },
+            
+            Finance: {
+                recordPayment: () => {
+                    const invId = Utils.$('pay-inv-id').value;
+                    const amt = parseFloat(Utils.$('pay-amount').value);
+                    if(!amt || amt <= 0) return alert("Invalid amount");
+                    
+                    const inv = DB.invoices.find(i => i.id == invId);
+                    const due = inv.total - inv.paid;
+                    
+                    if(amt > due) return alert("Amount exceeds due balance!");
+                    
+                    // Process
+                    inv.paid += amt;
+                    inv.status = inv.paid >= inv.total ? 'Paid' : 'Partial';
+                    
+                    DB.ledger.push({id:Utils.generateId(), date: Utils.today(), desc:`Pay received ${invId}`, type:'Credit', amt});
+                    
+                    Utils.toast('Payment Recorded successfully');
+                    Modals.Pay.close();
+                    App.navigate('finance');
+                    DriveAdapter.backup();
+                }
+            },
 
-                 if(items.length === 0) return NotificationService.show("Cart is empty", "error");
+            Inventory: {
+                addNewProduct: () => {
+                    const name = Utils.$('np-name').value;
+                    const price = parseFloat(Utils.$('np-price').value);
+                    if(!name || !price) return alert("Details incomplete");
+                    
+                    const newProd = {
+                        id: Utils.$('np-sku').value || 'sku-'+Utils.generateId(),
+                        name: name,
+                        cat: Utils.$('np-cat').value,
+                        pack: Utils.$('np-pack').value,
+                        stock: parseInt(Utils.$('np-stock').value),
+                        price: price
+                    };
+                    DB.products.push(newProd);
+                    Utils.toast('New Product Added to Master');
+                    Modals.Product.close();
+                    App.navigate('inventory');
+                    DriveAdapter.backup();
+                }
+            },
+            
+            CRM: {
+                save: () => {
+                    const name = Utils.$('nc-name').value;
+                    if(!name) return;
+                    DB.customers.push({
+                        id: 200 + DB.customers.length,
+                        name: name,
+                        phone: Utils.$('nc-phone').value,
+                        state: Utils.$('nc-state').value,
+                        type: Utils.$('nc-type').value,
+                        balance: 0
+                    });
+                    Modals.Customer.close();
+                    Utils.toast("Customer Onboarded");
+                    App.navigate('customers');
+                    DriveAdapter.backup();
+                }
+            }
+        };
 
-                 // Validate Credit (Mock Logic)
-                 const cust = Database.getById('customers', custId);
-                 if (cust.currentBalance + total > cust.creditLimit && cust.creditLimit > 0) {
-                     if(!confirm(`Credit Limit Exceeded! \nLimit: ${cust.creditLimit} \nCurrent+New: ${cust.currentBalance+total} \nProceed anyway?`)) return;
-                 }
+        const Modals = {
+            Order: {
+                open: () => {
+                    Utils.$('ord-date').value = Utils.today();
+                    const cSel = Utils.$('ord-cust');
+                    cSel.innerHTML = '<option value="">-- Select Customer --</option>' + DB.customers.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+                    
+                    // Reset products
+                    const tb = Utils.$('ord-table-body');
+                    tb.innerHTML = DB.products.map(p => `
+                        <tr class="ord-row" data-id="${p.id}" data-name="${p.name}" data-price="${p.price}">
+                            <td>${p.name}<br><small style="color:#aaa">${p.pack}</small></td>
+                            <td class="${p.stock<20?'text-red':''}">${p.stock}</td>
+                            <td>${p.price}</td>
+                            <td><input type="number" min="0" value="0" class="form-control" style="width:70px" oninput="Modals.Order.calcTotal()"></td>
+                            <td class="row-total">0</td>
+                        </tr>
+                    `).join('');
+                    Modals.Order.calcTotal();
+                    Utils.$('modal-order').classList.add('active');
+                },
+                calcTotal: () => {
+                    let gTotal = 0;
+                    document.querySelectorAll('.ord-row').forEach(row => {
+                        const q = row.querySelector('input').value;
+                        const p = row.dataset.price;
+                        const tot = q * p;
+                        row.querySelector('.row-total').innerText = tot;
+                        gTotal += tot;
+                    });
+                    Utils.$('ord-total').innerText = Utils.formatMoney(gTotal);
+                },
+                updateCustInfo: () => {
+                     const id = Utils.$('ord-cust').value;
+                     const c = DB.customers.find(x=>x.id == id);
+                     if(c) Utils.$('ord-cust-meta').innerText = `${c.state} | ${c.phone} | Type: ${c.type}`;
+                },
+                close: () => Utils.$('modal-order').classList.remove('active')
+            },
+            Pay: {
+                open: (id) => {
+                    const inv = DB.invoices.find(i => i.id == id);
+                    if(!inv) return;
+                    Utils.$('pay-inv-id').value = inv.id;
+                    Utils.$('pay-total').value = inv.total;
+                    Utils.$('pay-due').value = inv.total - inv.paid;
+                    Utils.$('pay-amount').value = '';
+                    Utils.$('modal-pay').classList.add('active');
+                },
+                close: () => Utils.$('modal-pay').classList.remove('active')
+            },
+            Product: {
+                open: () => { 
+                    Utils.$('np-name').value = ''; Utils.$('np-sku').value = '';
+                    Utils.$('modal-product').classList.add('active'); 
+                },
+                close: () => Utils.$('modal-product').classList.remove('active')
+            },
+            Customer: {
+                open: () => Utils.$('modal-cust').classList.add('active'),
+                close: () => Utils.$('modal-cust').classList.remove('active')
+            }
+        };
 
-                 const result = SalesService.createOrder(custId, items, total, date);
-
-                 if(result) {
-                     NotificationService.show(`Order ${result.order.id} Created!`, "success");
-                     UI.Modals.Order.close();
-                     
-                     // Auto download invoice
-                     if(confirm("Order Placed. Download Invoice PDF now?")) {
-                        PDFService.generateInvoice(result.order.id);
-                     }
-                     AppRouter.navigate('sales'); // refresh
-                     GDocsService.backupDatabase(); // sync
-                 }
-             }
-         };
-
-         const FinanceController = {
-             recordPayment: (invoiceId) => {
-                 const inv = Database.invoices.find(i => i.id === invoiceId);
-                 if(!inv) return;
-                 
-                 if(confirm(`Receive full payment of ${Money(inv.total)} for ${invoiceId}?`)) {
-                     inv.status = 'Paid';
-                     
-                     // Reduce Customer Balance
-                     const cust = Database.getById('customers', inv.custId);
-                     cust.currentBalance -= inv.total;
-                     
-                     // Add Ledger
-                     Database.ledger.push({
-                        id: Date.now(),
-                        date: DateUtil.today(),
-                        type: 'Payment',
-                        ref: invoiceId,
-                        amount: inv.total,
-                        mode: 'Cash/Bank'
-                     });
-
-                     NotificationService.show("Payment Recorded & Balance Updated", "success");
-                     AppRouter.navigate('finance');
-                     GDocsService.backupDatabase();
-                 }
-             }
-         };
-
-         /**
-          * UI HELPERS (Modal Logic)
-          */
-         const UI = {
-             Modals: {
-                 Order: {
-                     open: () => {
-                        // 1. Fill Customer Dropdown
-                        const custSel = document.getElementById('ord-cust');
-                        custSel.innerHTML = '<option value="">Select Customer...</option>';
-                        Database.customers.forEach(c => {
-                            custSel.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+        /** -- DRIVE API ADAPTER -- **/
+        const DriveAdapter = {
+            tokenClient: null,
+            init: () => {
+                // Initialize GAPI and GIS
+                try {
+                    gapi.load('client', async () => {
+                        await gapi.client.init({
+                            apiKey: Config.API_KEY,
+                            discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
                         });
+                    });
+                    DriveAdapter.tokenClient = google.accounts.oauth2.initTokenClient({
+                        client_id: Config.CLIENT_ID,
+                        scope: Config.SCOPES,
+                        callback: (resp) => {
+                            if (resp.error) return;
+                            DriveAdapter.onAuthSuccess();
+                        },
+                    });
+                } catch(e) { console.warn("Google Scripts blocked or failed load"); }
+            },
+            authorize: () => {
+                if(DriveAdapter.tokenClient) DriveAdapter.tokenClient.requestAccessToken({prompt: 'consent'});
+            },
+            onAuthSuccess: () => {
+                Utils.$('drive-indicator').classList.add('on');
+                Utils.$('drive-status-text').innerText = "Connected: Autosync Active";
+                Utils.$('btn-gauth').style.display = 'none';
+                Utils.toast('Google Drive Connected');
+                // Could verify allowed email here technically
+                DriveAdapter.backup();
+            },
+            backup: async () => {
+                 // Check auth
+                 const token = gapi.client.getToken();
+                 if(!token) return; 
 
-                        // 2. Set Date
-                        document.getElementById('ord-date').value = DateUtil.today();
+                 const consoleEl = Utils.$('sync-console');
+                 if(consoleEl) consoleEl.innerHTML += "<br>> Sync started...";
 
-                        // 3. Render Product Table
-                        const tBody = document.getElementById('ord-product-rows');
-                        tBody.innerHTML = '';
-                        Database.products.forEach(p => {
-                            tBody.innerHTML += `
-                                <tr>
-                                    <td>
-                                        <div>${p.name}</div>
-                                        <small style="color:#888">${p.packing}</small>
-                                    </td>
-                                    <td>₹${p.price}</td>
-                                    <td style="${p.stock < 50 ? 'color:red':''}">${p.stock} cs</td>
-                                    <td>
-                                        <input type="number" class="form-control ord-qty-input" 
-                                        min="0" data-id="${p.id}" oninput="UI.Modals.Order.updateTotal()">
-                                    </td>
-                                </tr>
-                            `;
+                 const content = JSON.stringify(DB);
+                 const fileMetadata = { name: Config.DB_FILE, mimeType: 'application/json' };
+
+                 try {
+                     // Check existence
+                     const q = `name = '${Config.DB_FILE}' and trashed = false`;
+                     const res = await gapi.client.drive.files.list({q});
+                     const files = res.result.files;
+
+                     if (files && files.length > 0) {
+                        const fileId = files[0].id;
+                        await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+                            method: 'PATCH',
+                            headers: { 'Authorization': `Bearer ${token.access_token}`, 'Content-Type': 'application/json' },
+                            body: content
                         });
-                        
-                        document.getElementById('modal-order').classList.add('open');
-                        UI.Modals.Order.updateTotal(); // reset to 0
-                     },
-                     close: () => {
-                         document.getElementById('modal-order').classList.remove('open');
-                     },
-                     updateDetails: () => {
-                         const cid = document.getElementById('ord-cust').value;
-                         if(cid) {
-                             const c = Database.getById('customers', cid);
-                             document.getElementById('cust-bal-display').innerText = `Current Due: ${Money(c.currentBalance)}`;
-                         }
-                     },
-                     updateTotal: () => {
-                         const inputs = document.querySelectorAll('.ord-qty-input');
-                         const { total } = SalesService.calculateCart(inputs);
-                         document.getElementById('ord-grand-total').innerText = total.toFixed(2);
+                        if(consoleEl) consoleEl.innerHTML += "<br>> Patch Success. Data Secure.";
+                     } else {
+                        // Create
+                        const form = new FormData();
+                        form.append('metadata', new Blob([JSON.stringify(fileMetadata)], {type: 'application/json'}));
+                        form.append('file', new Blob([content], {type: 'application/json'}));
+                        await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                             method: 'POST', headers: { 'Authorization': `Bearer ${token.access_token}` }, body: form
+                        });
+                        if(consoleEl) consoleEl.innerHTML += "<br>> File Created on Drive.";
                      }
-                 },
-                 Purchase: {
-                     open: () => {
-                         const sel = document.getElementById('pch-sku');
-                         sel.innerHTML = '';
-                         Database.products.forEach(p => sel.innerHTML += `<option value="${p.id}">${p.name}</option>`);
-                         document.getElementById('modal-purchase').classList.add('open');
-                     },
-                     close: () => document.getElementById('modal-purchase').classList.remove('open')
-                 },
-                 CRM: {
-                     open: () => document.getElementById('modal-customer').classList.add('open'),
-                     close: () => document.getElementById('modal-customer').classList.remove('open')
+                 } catch (err) {
+                     console.error(err);
                  }
-             }
-         };
+            }
+        };
 
-         // START APP
-         window.onload = AppRouter.init;
+        // Bootstrap
+        window.onload = App.init;
 
     </script>
 </body>
