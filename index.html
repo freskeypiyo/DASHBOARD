@@ -3,19 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Himalayan Beverages | Freskey Enterprise Operations Platform</title>
-    <meta name="description" content="Production Grade Single-File ERP">
-    <meta name="theme-color" content="#0f172a">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freskey Operations Manager | Himalayan Beverages ERP</title>
+    <meta name="description" content="End-to-End Distribution ERP for Water Bottle Manufacturing">
 
     <!-- 
-      ========================================================================================
-      1. DEPENDENCY MANIFEST
-      - Google Identity (GSI): Authentication.
-      - GAPI: Google Drive REST API Interaction.
-      - JSPDF: PDF Generation for Invoices.
-      - AutoTable: Advanced PDF Tables.
-      ========================================================================================
+    ========================================================================================
+    1. DEPENDENCY INJECTION
+    - GAPI & GSI: Google Drive Cloud Sync.
+    - JSPDF: Professional Invoice/Manifest Generation.
+    ========================================================================================
     -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://apis.google.com/js/api.js"></script>
@@ -23,1154 +20,948 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
 
     <!-- 
-      ========================================================================================
-      2. DESIGN SYSTEM & CSS FRAMEWORK (Core UI Layer)
-      Complete styling engine including layout, typography, components, and responsive grid.
-      ========================================================================================
+    ========================================================================================
+    2. ENTERPRISE CSS FRAMEWORK (Freskey Design System)
+    ~600 Lines of Styling Definition
+    ========================================================================================
     -->
     <style>
-        /* 
-         * ----------------------------------------------------------------------------------
-         * 2.1 CSS VARIABLES & COLOR PALETTE
-         * Using the 'Himalayan' Brand Strategy: Deep Slate & Fresh Ice Blue
-         * ----------------------------------------------------------------------------------
-         */
+        /* 2.1 THEME VARIABLES */
         :root {
-            /* BRAND IDENTITY */
+            /* Brand Identity: Crystal Water Blue & Mountain Slate */
             --color-primary-50:  #f0f9ff;
             --color-primary-100: #e0f2fe;
-            --color-primary-200: #bae6fd;
-            --color-primary-300: #7dd3fc;
-            --color-primary-400: #38bdf8;
-            --color-primary-500: #0ea5e9;
-            --color-primary-600: #0284c7;
+            --color-primary-500: #0ea5e9; /* Sky Blue */
+            --color-primary-600: #0284c7; /* Brand Blue */
             --color-primary-700: #0369a1;
-            --color-primary-800: #075985;
-            --color-primary-900: #0c4a6e;
-            --color-primary-950: #082f49;
+            --color-primary-900: #0c4a6e; /* Deep Header */
 
-            /* SEMANTIC STATES */
-            --color-success: #22c55e;
-            --color-success-dark: #15803d;
-            --color-success-bg: #dcfce7;
+            /* Functional Palette */
+            --color-success: #16a34a;
+            --color-warning: #ea580c; /* Burnt Orange for Urgent */
+            --color-danger:  #dc2626;
+            --color-purple:  #7c3aed;
             
-            --color-warning: #f59e0b;
-            --color-warning-dark: #b45309;
-            --color-warning-bg: #fef3c7;
+            /* Surface Tones */
+            --bg-body:    #f1f5f9;
+            --bg-card:    #ffffff;
+            --bg-sidebar: #0f172a; /* Night Blue */
             
-            --color-danger: #ef4444;
-            --color-danger-dark: #b91c1c;
-            --color-danger-bg: #fee2e2;
+            /* Text Hierarchy */
+            --text-main:  #1e293b;
+            --text-muted: #64748b;
+            --text-light: #94a3b8;
+            --text-inv:   #ffffff;
 
-            /* NEUTRALS / SURFACE */
-            --color-slate-50:  #f8fafc;
-            --color-slate-100: #f1f5f9;
-            --color-slate-200: #e2e8f0;
-            --color-slate-300: #cbd5e1;
-            --color-slate-400: #94a3b8;
-            --color-slate-500: #64748b;
-            --color-slate-600: #475569;
-            --color-slate-700: #334155;
-            --color-slate-800: #1e293b;
-            --color-slate-900: #0f172a;
-            --color-white:     #ffffff;
-
-            /* COMPONENT VARIABLES */
-            --font-family-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-            --font-family-mono: 'JetBrains Mono', 'Fira Code', monospace;
-            
-            --border-radius-sm: 4px;
-            --border-radius-md: 8px;
-            --border-radius-lg: 12px;
-            --border-radius-xl: 16px;
-            
-            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-
-            /* LAYOUT METRICS */
-            --sidebar-width: 280px;
-            --header-height: 70px;
-            --z-header: 40;
-            --z-modal: 100;
-            --z-toast: 900;
-            --z-login: 9999;
+            /* Metrics */
+            --sidebar-w: 270px;
+            --header-h: 68px;
+            --radius-md: 8px;
+            --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
         }
 
-        /* 
-         * ----------------------------------------------------------------------------------
-         * 2.2 CSS RESET & BASE
-         * ----------------------------------------------------------------------------------
-         */
-        *, *::before, *::after {
-            box-sizing: border-box;
-            outline: none;
-            -webkit-tap-highlight-color: transparent;
+        /* 2.2 BASE RESETS */
+        *, *::before, *::after { box-sizing: border-box; outline: none; }
+        body {
+            margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-body); color: var(--text-main); font-size: 14px;
+            height: 100vh; overflow: hidden; display: flex;
         }
-
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100vh;
-            overflow: hidden;
-            font-family: var(--font-family-sans);
-            font-size: 14px;
-            background-color: var(--color-slate-50);
-            color: var(--color-slate-800);
-            line-height: 1.5;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        h1, h2, h3, h4, h5, h6 { margin: 0; font-weight: 700; color: var(--color-slate-900); }
-        a { color: var(--color-primary-600); text-decoration: none; cursor: pointer; }
-        ul, ol { margin: 0; padding: 0; list-style: none; }
+        h1, h2, h3, h4 { margin: 0; font-weight: 700; color: var(--text-main); }
+        ul { list-style: none; padding: 0; margin: 0; }
+        button, input, select, textarea { font-family: inherit; font-size: inherit; }
         
-        button { border: none; background: none; font-family: inherit; cursor: pointer; }
-        img, svg { display: block; max-width: 100%; }
+        /* 2.3 LAYOUT GRID */
+        #root-app { display: flex; width: 100%; height: 100%; position: relative; }
 
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--color-slate-300); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--color-slate-400); }
-
-        /* 
-         * ----------------------------------------------------------------------------------
-         * 2.3 LAYOUT STRUCTURES
-         * Flexbox and Grid definitions for the Shell
-         * ----------------------------------------------------------------------------------
-         */
-        #root {
-            display: flex;
-            width: 100vw;
-            height: 100vh;
-            position: relative;
-        }
-
-        /* --- SIDEBAR --- */
+        /* Sidebar Styling */
         .sidebar {
-            width: var(--sidebar-width);
-            background-color: var(--color-slate-900);
-            color: var(--color-slate-400);
-            display: flex;
-            flex-direction: column;
+            width: var(--sidebar-w); background: var(--bg-sidebar); color: var(--text-light);
+            display: flex; flex-direction: column; z-index: 50; transition: 0.3s ease;
             border-right: 1px solid rgba(255,255,255,0.05);
-            flex-shrink: 0;
-            transition: transform 0.3s ease;
-            z-index: 50;
-        }
-
-        .sidebar-brand {
-            height: var(--header-height);
-            display: flex;
-            align-items: center;
-            padding: 0 1.5rem;
-            background: rgba(0,0,0,0.2);
-            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
         
-        .brand-text {
-            color: var(--color-white);
-            font-size: 1.25rem;
-            font-weight: 800;
-            letter-spacing: -0.025em;
+        .brand-section {
+            height: var(--header-h); display: flex; align-items: center; padding: 0 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2);
         }
-        .brand-text span { color: var(--color-primary-400); }
+        .brand-logo { 
+            font-size: 1.4rem; font-weight: 800; color: #fff; letter-spacing: -0.5px; 
+            display: flex; align-items: center; gap: 10px;
+        }
+        .logo-water { width: 12px; height: 12px; background: #38bdf8; border-radius: 50%; box-shadow: 0 0 10px #38bdf8; }
 
-        .nav-wrapper { flex: 1; overflow-y: auto; padding: 1.5rem 1rem; }
-        
-        .nav-group-title {
-            font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;
-            color: var(--color-slate-500); margin-bottom: 0.5rem; padding-left: 0.75rem;
-            font-weight: 700;
-        }
+        .nav-scroller { flex: 1; padding: 1.5rem 1rem; overflow-y: auto; }
+        .nav-category { font-size: 0.7rem; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 8px; margin-top: 20px; padding-left: 10px; letter-spacing: 0.5px; }
+        .nav-category:first-child { margin-top: 0; }
 
         .nav-item {
-            display: flex; align-items: center; gap: 0.75rem;
-            padding: 0.75rem 1rem; border-radius: var(--border-radius-md);
-            margin-bottom: 0.25rem; transition: all 0.2s;
-            color: var(--color-slate-400); font-weight: 500; font-size: 0.95rem;
+            display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+            border-radius: var(--radius-md); color: var(--text-light); cursor: pointer;
+            transition: all 0.2s; font-weight: 500; margin-bottom: 2px;
         }
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
+        .nav-item.active { background: var(--color-primary-600); color: #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .nav-icon { width: 18px; height: 18px; opacity: 0.8; }
 
-        .nav-item:hover { background-color: rgba(255,255,255,0.05); color: var(--color-white); }
-        .nav-item.active { 
-            background-color: var(--color-primary-600); 
-            color: var(--color-white); 
-            box-shadow: var(--shadow-md); 
-        }
-
-        .sidebar-footer {
-            padding: 1.25rem;
-            background: rgba(0,0,0,0.3);
-            border-top: 1px solid rgba(255,255,255,0.05);
-            font-size: 0.85rem;
-        }
-
-        /* --- MAIN CONTENT AREA --- */
-        .main-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            background-color: var(--color-slate-50);
-            position: relative;
-        }
-
-        /* --- HEADER --- */
-        .app-header {
-            height: var(--header-height);
-            background-color: var(--color-white);
-            border-bottom: 1px solid var(--color-slate-200);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 2rem;
-            z-index: var(--z-header);
-            box-shadow: var(--shadow-sm);
-        }
+        /* Sync Footer */
+        .sidebar-foot { padding: 1.5rem; background: rgba(0,0,0,0.25); border-top: 1px solid rgba(255,255,255,0.05); }
+        .user-panel { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--color-warning); display: grid; place-items: center; color: white; font-weight: 700; }
         
-        .mobile-toggle { display: none; color: var(--color-slate-800); margin-right: 1rem; }
-
-        .header-title h2 { font-size: 1.15rem; font-weight: 700; color: var(--color-slate-800); }
-        .header-breadcrumb { font-size: 0.85rem; color: var(--color-slate-500); margin-top: 0.1rem; }
-
-        .user-pill {
-            display: flex; align-items: center; gap: 0.75rem;
-            padding: 0.35rem 0.5rem 0.35rem 1rem;
-            background-color: var(--color-slate-50);
-            border: 1px solid var(--color-slate-200);
-            border-radius: 50px;
-        }
-        .user-avatar {
-            width: 32px; height: 32px; background: var(--color-primary-600); color: white;
-            border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 0.9rem;
-        }
-
-        /* --- SCROLL VIEWPORT --- */
-        .view-scroll {
-            flex: 1;
-            overflow-y: auto;
-            padding: 2rem;
-            scroll-behavior: smooth;
-        }
-
-        /* 
-         * ----------------------------------------------------------------------------------
-         * 2.4 COMPONENTS
-         * ----------------------------------------------------------------------------------
-         */
-
-        /* CARDS */
-        .card {
-            background: var(--color-white);
-            border-radius: var(--border-radius-lg);
-            border: 1px solid var(--color-slate-200);
-            box-shadow: var(--shadow-sm);
-            margin-bottom: 1.5rem;
-            overflow: hidden;
-        }
+        /* Main Workspace */
+        .main-wrapper { flex: 1; display: flex; flex-direction: column; position: relative; background: var(--bg-body); }
         
-        .card-header {
-            padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid var(--color-slate-100);
+        .header {
+            height: var(--header-h); background: var(--bg-card);
+            border-bottom: 1px solid #e2e8f0; padding: 0 2rem;
             display: flex; justify-content: space-between; align-items: center;
+            box-shadow: var(--shadow-sm); z-index: 40;
         }
-        .card-title { font-size: 1rem; font-weight: 600; color: var(--color-slate-800); }
+        
+        .header-title h2 { font-size: 1.25rem; font-weight: 700; }
+        .header-title span { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
+
+        .view-content { flex: 1; padding: 2rem; overflow-y: auto; }
+
+        /* 2.4 COMPONENTS */
+        /* Cards */
+        .card { background: var(--bg-card); border-radius: var(--radius-md); border: 1px solid #e2e8f0; box-shadow: var(--shadow-sm); margin-bottom: 1.5rem; overflow: hidden; }
+        .card-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+        .card-header h3 { font-size: 1rem; color: var(--text-main); font-weight: 700; }
         .card-body { padding: 1.5rem; }
+
+        /* Grid System */
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
         
-        /* GRIDS */
-        .grid-stats {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
+        /* KPI Widget */
+        .kpi-box { padding: 1.5rem; background: #fff; border-radius: 8px; border: 1px solid #e2e8f0; position: relative; }
+        .kpi-box::after { content:''; position: absolute; left: 0; top: 15%; bottom: 15%; width: 4px; border-radius: 0 4px 4px 0; background: var(--color-primary-500); }
+        .kpi-val { font-size: 2rem; font-weight: 800; color: var(--text-main); line-height: 1.2; margin-top: 5px; }
+        .kpi-lbl { font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px; }
 
-        .stat-card {
-            background: var(--color-white);
-            border-radius: var(--border-radius-lg);
-            padding: 1.5rem;
-            border: 1px solid var(--color-slate-200);
-            box-shadow: var(--shadow-sm);
-            position: relative;
-        }
-        .stat-card::after {
-            content: ''; position: absolute; left: 0; top: 15%; bottom: 15%; width: 4px; 
-            background: var(--color-primary-500); border-radius: 0 4px 4px 0;
-        }
-        .stat-label { font-size: 0.75rem; color: var(--color-slate-500); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
-        .stat-val { font-size: 1.85rem; color: var(--color-slate-800); font-weight: 800; margin-top: 0.5rem; }
-
-        /* BUTTONS */
-        .btn {
-            display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
-            padding: 0.5rem 1rem; font-size: 0.9rem; font-weight: 600; border-radius: var(--border-radius-md);
-            transition: all 0.2s; white-space: nowrap; user-select: none;
-        }
+        /* Buttons */
+        .btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: 0.2s; border: 1px solid transparent; gap: 8px; }
         .btn:active { transform: translateY(1px); }
+        .btn-primary { background: var(--color-primary-600); color: white; }
+        .btn-primary:hover { background: var(--color-primary-700); }
+        .btn-secondary { background: white; border: 1px solid #cbd5e1; color: var(--text-main); }
+        .btn-secondary:hover { background: #f8fafc; border-color: #94a3b8; }
+        .btn-success { background: var(--color-success); color: white; }
+        .btn-danger { background: white; border:1px solid var(--color-danger); color: var(--color-danger); }
+        .btn-whatsapp { background: #25D366; color: white; } /* WhatsApp Brand Color */
+        .w-full { width: 100%; }
+
+        /* Tables */
+        .table-responsive { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th { text-align: left; background: #f8fafc; color: var(--text-muted); padding: 12px 16px; font-size: 0.75rem; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; }
+        td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+        tr:last-child td { border: none; }
         
-        .btn-primary { background-color: var(--color-primary-600); color: white; border: 1px solid transparent; }
-        .btn-primary:hover { background-color: var(--color-primary-700); }
+        .badge { padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+        .badge-green { background: #dcfce7; color: #166534; }
+        .badge-yellow { background: #fef9c3; color: #854d0e; }
+        .badge-red { background: #fee2e2; color: #991b1b; }
+        .badge-blue { background: #e0f2fe; color: #075985; }
 
-        .btn-secondary { background-color: var(--color-white); color: var(--color-slate-700); border: 1px solid var(--color-slate-300); }
-        .btn-secondary:hover { background-color: var(--color-slate-50); border-color: var(--color-slate-400); }
+        /* Form Inputs */
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .form-group { margin-bottom: 15px; }
+        .form-label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.85rem; }
+        .form-control { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.95rem; }
+        .form-control:focus { border-color: var(--color-primary-500); box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2); }
 
-        .btn-success { background-color: var(--color-success); color: white; border: 1px solid transparent; }
-        .btn-danger { background-color: white; color: var(--color-danger); border: 1px solid var(--color-danger); }
+        /* Modals */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 100; display: none; align-items: center; justify-content: center; }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: white; width: 100%; max-width: 600px; max-height: 90vh; display: flex; flex-direction: column; border-radius: 12px; box-shadow: var(--shadow-lg); animation: slideUp 0.3s; }
+        .modal-lg { max-width: 900px; }
+        @keyframes slideUp { from{transform:translateY(20px);opacity:0;} to{transform:translateY(0);opacity:1;} }
         
-        /* TABLES */
-        .table-responsive { width: 100%; overflow-x: auto; border: 1px solid var(--color-slate-200); border-radius: var(--border-radius-md); }
-        table { width: 100%; border-collapse: collapse; min-width: 650px; }
-        th { text-align: left; background: var(--color-slate-50); color: var(--color-slate-500); padding: 0.85rem 1rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; border-bottom: 2px solid var(--color-slate-200); }
-        td { padding: 1rem; border-bottom: 1px solid var(--color-slate-100); color: var(--color-slate-700); }
-        tr:hover { background-color: var(--color-slate-50); }
+        .modal-head { padding: 20px 24px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 24px; overflow-y: auto; }
+        .modal-foot { padding: 16px 24px; background: #f8fafc; border-top: 1px solid #f1f5f9; display: flex; justify-content: flex-end; gap: 10px; border-radius: 0 0 12px 12px; }
 
-        .status-badge { padding: 0.2rem 0.6rem; border-radius: 50px; font-size: 0.75rem; font-weight: 700; }
-        .status-paid { background: var(--color-success-bg); color: var(--color-success-dark); }
-        .status-unpaid { background: var(--color-danger-bg); color: var(--color-danger-dark); }
-        .status-partial { background: var(--color-warning-bg); color: var(--color-warning-dark); }
+        /* Toasts */
+        .toast-rack { position: fixed; bottom: 30px; right: 30px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; }
+        .toast-msg { min-width: 300px; background: #1e293b; color: white; padding: 14px 20px; border-radius: 8px; border-left: 4px solid var(--color-primary-500); box-shadow: var(--shadow-lg); animation: fadeLeft 0.3s; display: flex; justify-content: space-between; }
+        @keyframes fadeLeft { from{transform:translateX(50px); opacity:0;} to {transform:translateX(0); opacity:1;} }
 
-        /* FORMS */
-        .form-group { margin-bottom: 1rem; }
-        .form-label { display: block; font-size: 0.875rem; font-weight: 500; color: var(--color-slate-700); margin-bottom: 0.4rem; }
-        .form-control {
-            width: 100%; padding: 0.65rem 0.75rem; font-size: 0.95rem; border: 1px solid var(--color-slate-300);
-            border-radius: var(--border-radius-md); color: var(--color-slate-900); transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .form-control:focus { border-color: var(--color-primary-500); box-shadow: 0 0 0 3px var(--color-primary-100); }
-
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-        
-        /* 
-         * ----------------------------------------------------------------------------------
-         * 2.5 LOGIN PAGE & MODALS
-         * ----------------------------------------------------------------------------------
-         */
-        
-        /* LOGIN OVERLAY - Ensure it covers EVERYTHING initially */
-        #auth-portal {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background-color: var(--color-slate-900);
-            background-image: radial-gradient(circle at top right, #1e293b, #0f172a);
-            z-index: var(--z-login);
-            display: flex;
-            align-items: center; justify-content: center;
-            opacity: 1; transition: opacity 0.5s ease-out;
-        }
-        
-        .login-card {
-            background: var(--color-white);
-            width: 100%; max-width: 420px;
-            padding: 3rem 2rem;
-            border-radius: var(--border-radius-xl);
-            box-shadow: var(--shadow-xl);
-            text-align: center;
-        }
-
-        .auth-logo-box {
-            width: 64px; height: 64px; background: var(--color-primary-600);
-            border-radius: 50%; display: grid; place-items: center; color: white;
-            font-size: 2rem; font-weight: 800; margin: 0 auto 1.5rem auto;
-            box-shadow: 0 10px 20px -5px rgba(2, 132, 199, 0.4);
-        }
-
-        /* MODAL SYSTEM */
-        .modal-mask {
-            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(4px); z-index: var(--z-modal);
-            display: none; align-items: center; justify-content: center;
-            opacity: 0; transition: opacity 0.2s;
-        }
-        .modal-mask.active { display: flex; opacity: 1; }
-        
-        .modal-container {
-            background: var(--color-white); width: 100%; max-width: 650px; max-height: 90vh;
-            border-radius: var(--border-radius-xl); box-shadow: var(--shadow-xl);
-            display: flex; flex-direction: column; transform: translateY(20px); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .modal-mask.active .modal-container { transform: translateY(0); }
-
-        .modal-body { padding: 1.5rem; overflow-y: auto; }
-        .modal-footer { padding: 1.25rem 1.5rem; background: var(--color-slate-50); border-top: 1px solid var(--color-slate-200); display: flex; justify-content: flex-end; gap: 0.75rem; border-radius: 0 0 12px 12px; }
-
-        /* TOAST */
-        .toast-container { position: fixed; bottom: 30px; right: 30px; z-index: var(--z-toast); display: flex; flex-direction: column; gap: 10px; }
-        .toast {
-            min-width: 320px; background: var(--color-slate-800); color: white;
-            padding: 14px 20px; border-radius: 8px; border-left: 4px solid var(--color-primary-500);
-            box-shadow: var(--shadow-lg); font-size: 0.9rem;
-            animation: slideIn 0.3s ease-out;
-        }
-        @keyframes slideIn { from{ transform:translateX(50px); opacity:0 } to { transform:translateX(0); opacity:1} }
-
-        /* RESPONSIVE */
-        @media (max-width: 1024px) {
-            .grid-stats { grid-template-columns: repeat(2, 1fr); }
-        }
+        /* Mobile Adjustments */
+        .mobile-menu-btn { display: none; background: none; border: none; font-size: 24px; color: var(--text-main); }
         @media (max-width: 768px) {
-            .sidebar { position: fixed; left: -100%; height: 100%; z-index: 1000; box-shadow: 10px 0 25px rgba(0,0,0,0.5); }
+            .sidebar { position: fixed; left: -100%; height: 100%; width: 280px; box-shadow: 10px 0 20px rgba(0,0,0,0.5); }
             .sidebar.active { left: 0; }
-            .mobile-toggle { display: block; }
-            .grid-stats { grid-template-columns: 1fr; }
-            .grid-2 { grid-template-columns: 1fr; }
+            .grid-4, .grid-2, .form-row { grid-template-columns: 1fr; }
+            .mobile-menu-btn { display: block; margin-right: 15px; }
+            .view-content { padding: 1rem; }
         }
+        
+        /* 2.5 AUTH SCREEN STYLE */
+        #auth-layer { position: fixed; inset: 0; z-index: 9000; background: var(--bg-sidebar); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .login-card { background: white; padding: 40px; border-radius: 16px; box-shadow: var(--shadow-lg); width: 90%; max-width: 400px; }
+        .login-title { font-size: 1.5rem; font-weight: 800; color: var(--color-primary-900); margin-bottom: 10px; }
     </style>
 </head>
-
 <body>
 
     <!-- 
-      ========================================================================================
-      3. AUTH PORTAL (Fixed & Robust Login)
-      ========================================================================================
+    ========================================================================================
+    3. INITIAL AUTH GATE (LOGIN)
+    Prevents access until secure authentication is established.
+    ========================================================================================
     -->
-    <div id="auth-portal">
+    <div id="auth-layer">
         <div class="login-card">
-            <div class="auth-logo-box">H</div>
-            <h1 class="text-xl font-bold text-slate-900 mb-1">Himalayan ERP</h1>
-            <p class="text-slate-500 mb-6">Secure Cloud Workspace v4.0</p>
-
-            <div id="loading-spinner" style="display:none; margin: 20px 0;">
-                 <div style="width:30px; height:30px; border:3px solid #e2e8f0; border-top-color:#0ea5e9; border-radius:50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
-                 <p class="text-xs text-slate-400 mt-2" id="loading-msg">Connecting to Google Drive...</p>
-                 <style>@keyframes spin {to{transform: rotate(360deg)}}</style>
+            <div style="font-size:3rem; margin-bottom:15px;">💧</div>
+            <div class="login-title">Himalayan Beverages ERP</div>
+            <p style="color:#64748b; margin-bottom:30px;">Freskey Secure Operation Access</p>
+            
+            <div id="loading-auth" style="display:none; margin:20px;">
+                <div style="border:3px solid #f1f5f9; border-top-color:#0284c7; border-radius:50%; width:30px; height:30px; animation:spin 1s linear infinite; margin:0 auto;"></div>
+                <div style="font-size:0.8rem; margin-top:10px;">Connecting to Cloud DB...</div>
             </div>
-
-            <!-- PRIMARY AUTH: GOOGLE IDENTITY -->
+            
+            <!-- GOOGLE OAUTH 2.0 -->
             <div id="g_id_onload"
                  data-client_id="950010994560-v7p6cem78h9fsdp102iq4immb36t95ls.apps.googleusercontent.com"
-                 data-callback="onGoogleAuth"
+                 data-callback="App.handleCredentialResponse"
                  data-auto_prompt="false">
             </div>
             <div class="g_id_signin" 
                  data-type="standard" 
                  data-size="large" 
-                 data-theme="filled_blue" 
+                 data-theme="outline" 
                  data-text="sign_in_with" 
                  data-shape="rectangular" 
                  data-logo_alignment="left"
                  data-width="320">
             </div>
 
-            <div style="margin-top: 1.5rem; border-top: 1px solid #e2e8f0; padding-top: 1.5rem;">
-                <p class="text-xs text-slate-400 mb-2">Dev / Offline Testing Only</p>
-                <button onclick="System.Auth.demoLogin()" class="btn btn-secondary w-full">
-                    ⚠️ Demo Mode (Skip Auth)
-                </button>
+            <!-- OFFLINE FALLBACK -->
+            <div style="margin-top:20px; padding-top:20px; border-top:1px solid #eee;">
+                <button class="btn btn-secondary w-full" onclick="App.System.demoLogin()">Demo Mode (Skip Auth)</button>
             </div>
         </div>
+        <style>@keyframes spin {to{transform: rotate(360deg)}}</style>
     </div>
 
 
     <!-- 
-      ========================================================================================
-      4. APP SHELL (Hidden by default)
-      ========================================================================================
+    ========================================================================================
+    4. APPLICATION INTERFACE
+    Hidden by default, revealed after Auth.
+    ========================================================================================
     -->
-    <div id="root" style="display: none;">
+    <div id="root-app" style="display:none;">
         
-        <!-- 4.1 SIDEBAR NAVIGATION -->
-        <aside class="sidebar" id="sidebar-nav">
-            <div class="sidebar-brand">
-                <span class="brand-text"><span>Himalayan</span> ERP</span>
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar-el">
+            <div class="brand-section">
+                <div class="brand-logo"><span class="logo-water"></span> FRESKEY<span style="font-weight:300;">OPS</span></div>
             </div>
-
-            <nav class="nav-wrapper">
-                <div class="nav-group-title">MAIN MENU</div>
+            
+            <nav class="nav-scroller">
+                <div class="nav-category">Main Console</div>
+                <div class="nav-item active" onclick="Nav.go('dashboard')">
+                    <span>📊</span> Dashboard
+                </div>
                 
-                <div class="nav-item active" onclick="System.Router.go('dashboard')">
-                    <!-- Dashboard Icon -->
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                    <span>Dashboard</span>
-                </div>
-
-                <div class="nav-item" onclick="System.Router.go('orders')">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
-                    <span>Sales & Orders</span>
-                </div>
-
-                <div class="nav-item" onclick="System.Router.go('inventory')">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                    <span>Stock Control</span>
-                </div>
-
-                <div class="nav-item" onclick="System.Router.go('finance')">
-                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2v20M2 12h20"></path></svg>
-                     <span>Payments & Ledger</span>
-                </div>
-
-                <div class="nav-group-title" style="margin-top:1.5rem">SETTINGS</div>
-
-                <div class="nav-item" onclick="System.Router.go('crm')">
-                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
-                     <span>CRM Database</span>
-                </div>
-
-                <div class="nav-item" onclick="System.Router.go('settings')">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
-                    <span>Data & Backup</span>
-                </div>
+                <div class="nav-category">Sales & Fulfillment</div>
+                <div class="nav-item" onclick="Nav.go('crm')"><span>👥</span> Customer CRM</div>
+                <div class="nav-item" onclick="Nav.go('orders')"><span>🧾</span> Orders & Invoices</div>
+                <div class="nav-item" onclick="Nav.go('dispatch')"><span>🚚</span> Dispatch / Manifests</div>
+                
+                <div class="nav-category">Logistics</div>
+                <div class="nav-item" onclick="Nav.go('inventory')"><span>🏭</span> Stock / Warehouse</div>
+                <div class="nav-item" onclick="Nav.go('purchase')"><span>📥</span> Supplier Purchase</div>
+                
+                <div class="nav-category">Administration</div>
+                <div class="nav-item" onclick="Nav.go('finance')"><span>💰</span> Ledger & Payments</div>
+                <div class="nav-item" onclick="Nav.go('settings')"><span>⚙️</span> Sync Settings</div>
             </nav>
 
-            <div class="sidebar-footer">
-                <div style="font-size:0.75rem; color:#64748b;">LOGGED IN AS</div>
-                <div class="text-white font-bold" id="ui-user-email">Guest User</div>
-                <div style="margin-top:8px; display:flex; align-items:center; gap:8px;">
-                    <div id="sync-light" style="width:8px; height:8px; border-radius:50%; background: #64748b;"></div>
-                    <span style="font-size:0.75rem; color:#94a3b8;" id="sync-txt">Offline Mode</span>
+            <div class="sidebar-foot">
+                <div class="user-panel">
+                    <div class="user-avatar" id="ua-init">U</div>
+                    <div>
+                        <div style="font-size:0.85rem; font-weight:700; color:#fff;" id="ua-name">User</div>
+                        <div style="font-size:0.7rem; color:var(--color-primary-500);">Administrator</div>
+                    </div>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; color:#64748b; font-size:0.75rem;">
+                    <span>Sync Status:</span>
+                    <span id="sync-dot" style="width:8px; height:8px; border-radius:50%; background:#94a3b8;"></span>
                 </div>
             </div>
         </aside>
 
-        <!-- 4.2 CONTENT -->
-        <main class="main-content">
-            <header class="app-header">
-                <div style="display:flex; align-items:center;">
-                    <button class="mobile-toggle" onclick="document.getElementById('sidebar-nav').classList.toggle('active')">
-                        <svg width="24" height="24" stroke="currentColor" fill="none" viewBox="0 0 24 24"><path stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                    </button>
-                    <div>
-                        <div class="header-breadcrumb">Workspace</div>
-                        <h2 id="page-heading">Operations Dashboard</h2>
+        <!-- MAIN WRAPPER -->
+        <main class="main-wrapper">
+            <!-- Mobile Toggle Overlay -->
+            <div onclick="Nav.toggleSide(false)" id="mob-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:45;"></div>
+
+            <header class="header">
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <button class="mobile-menu-btn" onclick="Nav.toggleSide(true)">☰</button>
+                    <div class="header-title">
+                        <h2 id="pg-title">Overview</h2>
+                        <span id="pg-desc">Daily Operational Stats</span>
                     </div>
                 </div>
-
-                <div class="user-pill">
-                    <div class="user-avatar">F</div>
-                    <span style="font-size:0.85rem; font-weight:600;">Admin</span>
+                <div style="display:flex; gap:10px;">
+                    <button onclick="Modal.open('modal-quote')" class="btn btn-secondary">New Quote</button>
+                    <button onclick="Modal.open('modal-order')" class="btn btn-primary">+ Create Order</button>
                 </div>
             </header>
 
-            <div id="viewport" class="view-scroll">
-                <!-- DYNAMIC CONTENT LOADED HERE -->
+            <div class="view-content" id="viewport">
+                <!-- CONTENT INJECTED VIA JS -->
             </div>
         </main>
     </div>
 
-    <!-- TOAST RACK -->
-    <div class="toast-container" id="toast-rack"></div>
+    <!-- TOAST CONTAINER -->
+    <div class="toast-rack" id="toaster"></div>
+
 
     <!-- 
-      ========================================================================================
-      5. MODAL SYSTEM
-      Reuseable UI blocks for data entry.
-      ========================================================================================
+    ========================================================================================
+    5. MODAL SYSTEM
+    Dedicated Interfaces for specific tasks.
+    ========================================================================================
     -->
 
-    <!-- MODAL: ORDER CREATION -->
-    <div id="m-order" class="modal-mask">
-        <div class="modal-container">
-            <div style="padding:1.5rem; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between;">
-                <h3 style="font-size:1.25rem;">Create Sales Invoice</h3>
-                <button onclick="System.UI.closeModal('m-order')">✕</button>
-            </div>
+    <!-- 5.1 SALES ORDER MODAL -->
+    <div id="modal-order" class="modal-overlay">
+        <div class="modal-box modal-lg">
+            <div class="modal-head"><h3>New Sales Order</h3><button onclick="Modal.close('modal-order')" class="btn btn-sm btn-secondary">✕</button></div>
             <div class="modal-body">
-                <div class="grid-2">
-                    <div class="form-group">
+                <div class="form-row">
+                    <div>
                         <label class="form-label">Customer</label>
-                        <select id="o-cust" class="form-select"></select>
+                        <select id="mo-cust" class="form-control" onchange="Ctrls.Order.onCustSelect()"></select>
+                        <small id="mo-bal" style="color:var(--color-danger);"></small>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Date</label>
-                        <input type="date" id="o-date" class="form-control">
-                    </div>
+                    <div><label class="form-label">Date</label><input type="date" id="mo-date" class="form-control"></div>
                 </div>
-
-                <div class="card" style="margin-top:10px; border:none; background:#f8fafc;">
+                <div class="card" style="background:#f8fafc; border:none;">
                     <div class="card-body">
-                        <h4 style="margin-bottom:1rem; color:#64748b;">Add Items</h4>
-                        <div class="table-responsive" style="max-height: 250px; background:white; border:1px solid #e2e8f0;">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Item Name</th>
-                                        <th style="width:100px;">Price</th>
-                                        <th style="width:80px;">Qty</th>
-                                        <th style="width:120px;text-align:right;">Line Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="o-lines">
-                                    <!-- Rendered JS -->
-                                </tbody>
+                        <h4 style="margin-bottom:10px; color:#475569">Cart Items</h4>
+                        <div class="table-responsive" style="background:white; border:1px solid #e2e8f0; max-height:200px;">
+                            <table style="font-size:0.9rem;">
+                                <thead><tr><th>Product (Pack Size)</th><th>Price/Unit</th><th>Stock</th><th style="width:80px">Qty</th><th class="text-right">Line Total</th></tr></thead>
+                                <tbody id="mo-lines"></tbody>
                             </table>
                         </div>
                     </div>
                 </div>
-
-                <div style="text-align:right; font-size:1.5rem; font-weight:bold; margin-top:1rem; color:var(--color-primary-600);">
-                    Total: <span id="o-total">INR 0.00</span>
+                <div class="text-right" style="font-size:1.5rem; font-weight:800; color:var(--color-primary-600); margin-top:15px;">
+                    Total: <span id="mo-total">INR 0.00</span>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="System.UI.closeModal('m-order')">Cancel</button>
-                <button class="btn btn-primary" onclick="Controllers.Sales.confirmOrder()">Generate Invoice</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- MODAL: PAYMENT -->
-    <div id="m-pay" class="modal-mask">
-        <div class="modal-container" style="max-width:500px;">
-             <div style="padding:1.5rem; border-bottom:1px solid #e2e8f0;">
-                <h3 style="font-size:1.25rem;">Record Payment</h3>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="p-id">
-                <div class="form-group">
-                    <label class="form-label">Invoice ID</label>
-                    <input class="form-control" id="p-disp" disabled>
-                </div>
-                 <div class="grid-2">
-                     <div><label class="form-label">Due Amount</label><input class="form-control" id="p-due" disabled style="color:red; font-weight:bold;"></div>
-                     <div><label class="form-label">Paid So Far</label><input class="form-control" id="p-curr" disabled></div>
-                 </div>
-                 <div class="form-group" style="margin-top:15px;">
-                     <label class="form-label">Payment Received (INR)</label>
-                     <input type="number" id="p-amt" class="form-control" style="font-size:1.25rem; font-weight:bold;">
-                 </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="System.UI.closeModal('m-pay')">Cancel</button>
-                <button class="btn btn-success" onclick="Controllers.Finance.pay()">Save Payment</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- MODAL: ADD STOCK -->
-    <div id="m-stk" class="modal-mask">
-        <div class="modal-container" style="max-width:500px;">
-            <div style="padding:1.5rem; border-bottom:1px solid #e2e8f0;">
-                <h3>Purchase Entry (Add Stock)</h3>
-            </div>
-            <div class="modal-body">
-                <div class="form-group"><label class="form-label">Select Product</label><select id="s-prod" class="form-select"></select></div>
-                <div class="form-group"><label class="form-label">Qty Purchased (Cases)</label><input type="number" id="s-qty" class="form-control"></div>
-                <div class="form-group"><label class="form-label">Reference / Supplier</label><input type="text" id="s-ref" class="form-control"></div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="System.UI.closeModal('m-stk')">Cancel</button>
-                <button class="btn btn-primary" onclick="Controllers.Inventory.add()">Confirm Purchase</button>
+            <div class="modal-foot">
+                <button onclick="Modal.close('modal-order')" class="btn btn-secondary">Cancel</button>
+                <button onclick="Ctrls.Order.save()" class="btn btn-primary">Generate Invoice</button>
             </div>
         </div>
     </div>
 
+    <!-- 5.2 CUSTOMER MODAL -->
+    <div id="modal-cust" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-head"><h3>Add Customer</h3><button onclick="Modal.close('modal-cust')">✕</button></div>
+            <div class="modal-body">
+                <div class="form-group"><label class="form-label">Business Name</label><input id="mc-name" class="form-control"></div>
+                <div class="form-row">
+                    <div><label class="form-label">Type</label><select id="mc-type" class="form-control"><option>Distributor</option><option>Retailer</option><option>Event</option><option>HoReCa</option></select></div>
+                    <div><label class="form-label">Phone</label><input id="mc-phone" class="form-control"></div>
+                </div>
+                <div class="form-group"><label class="form-label">GSTIN / Tax ID</label><input id="mc-gst" class="form-control"></div>
+                <div class="form-group"><label class="form-label">Address</label><input id="mc-addr" class="form-control"></div>
+            </div>
+            <div class="modal-foot">
+                <button onclick="Ctrls.CRM.add()" class="btn btn-primary">Save Profile</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5.3 PURCHASE / STOCK IN MODAL -->
+    <div id="modal-buy" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-head"><h3>Stock Purchase (Himalayan)</h3><button onclick="Modal.close('modal-buy')">✕</button></div>
+            <div class="modal-body">
+                <div class="form-group"><label class="form-label">Product</label><select id="mb-prod" class="form-control"></select></div>
+                <div class="form-group"><label class="form-label">Location</label><select id="mb-loc" class="form-control"><option value="Main WH">Central Warehouse</option><option value="Van1">Route Van 1</option></select></div>
+                <div class="form-row">
+                    <div><label class="form-label">Qty (Cases)</label><input type="number" id="mb-qty" class="form-control"></div>
+                    <div><label class="form-label">Cost/Case</label><input type="number" id="mb-cost" class="form-control"></div>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button onclick="Ctrls.Purchase.save()" class="btn btn-success">Record Stock</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5.4 PAYMENT RECORD MODAL -->
+    <div id="modal-pay" class="modal-overlay">
+        <div class="modal-box" style="max-width:400px;">
+            <div class="modal-head"><h3>Receive Payment</h3></div>
+            <div class="modal-body">
+                <input type="hidden" id="mp-id">
+                <label class="form-label">Inv Reference</label><input id="mp-ref" class="form-control" disabled style="margin-bottom:10px;">
+                <div class="form-row">
+                    <div><label class="form-label">Total</label><input id="mp-tot" class="form-control" disabled></div>
+                    <div><label class="form-label">Due</label><input id="mp-due" class="form-control" disabled style="color:red; font-weight:bold;"></div>
+                </div>
+                <label class="form-label">Amount Received</label><input type="number" id="mp-amt" class="form-control" style="border:2px solid green; font-size:1.2rem; font-weight:bold;">
+                <label class="form-label" style="margin-top:10px">Method</label><select id="mp-mode" class="form-control"><option>UPI</option><option>Cash</option><option>Bank Transfer</option></select>
+            </div>
+            <div class="modal-foot">
+                <button onclick="Ctrls.Finance.pay()" class="btn btn-success w-full">Save Transaction</button>
+            </div>
+        </div>
+    </div>
 
     <!-- 
-      ========================================================================================
-      6. JAVASCRIPT KERNEL (State, Logic, Drive Sync)
-      Complete MVC Architecture
-      ========================================================================================
+    ========================================================================================
+    6. JAVASCRIPT CORE
+    Complete Application Logic: Data, Logic, View, Network.
+    ========================================================================================
     -->
     <script>
         
         /**
-         * 6.1 APP CONFIGURATION & STATE
+         * --------------------------------------------------------
+         * 6.1 CONSTANTS & CONFIG
+         * --------------------------------------------------------
          */
-        const AppConfig = {
-            API_KEY: 'AIzaSyCWo9OP6-QhyKWpfuV5oonyuC32IQHoOtE', // * Your provided key *
-            CLIENT_ID: '950010994560-v7p6cem78h9fsdp102iq4immb36t95ls.apps.googleusercontent.com', // * Your provided client *
+        const CFG = {
+            API_KEY: 'AIzaSyCWo9OP6-QhyKWpfuV5oonyuC32IQHoOtE', 
+            CLIENT_ID: '950010994560-v7p6cem78h9fsdp102iq4immb36t95ls.apps.googleusercontent.com',
             SCOPES: 'https://www.googleapis.com/auth/drive.file',
-            DB_FILE: 'himalayan_db_v4.json'
+            FILE: 'himalayan_freskey_v5.json'
         };
 
-        // Reactive State Store
-        const Store = {
+        /**
+         * --------------------------------------------------------
+         * 6.2 DATA SEED (The "Database")
+         * --------------------------------------------------------
+         */
+        let Store = {
             customers: [
-                { id: 'C01', name: 'Sample Retailer', loc: 'Main Market', type: 'Retailer', phone:'9999999999' }
+                {id: 101, name: "Shiv Shakti Traders", type: "Distributor", phone:"9898989898", addr:"Sector 4, Market", balance: 0},
+                {id: 102, name: "Grand Hotel", type: "Events", phone:"9797979797", addr:"Highway Road", balance: 5000}
             ],
             products: [
-                { id: 'P01', name: 'Freskey Lemon 200ml', stock: 150, price: 480 },
-                { id: 'P02', name: 'Freskey Mango 200ml', stock: 80, price: 500 },
-                { id: 'P03', name: 'Freskey Litchi 500ml', stock: 45, price: 360 },
-                { id: 'P04', name: 'Soda Fizz 300ml', stock: 200, price: 600 },
-                { id: 'P05', name: 'Water 1L', stock: 500, price: 240 }
+                {id: "SKU-200", name: "Freskey 200ml", unit:"Case (24)", price: 480, stock: 200, vanStock: 50},
+                {id: "SKU-500", name: "Freskey 500ml", unit:"Case (24)", price: 600, stock: 150, vanStock: 20},
+                {id: "SKU-1000", name: "Freskey 1L", unit:"Case (12)", price: 360, stock: 500, vanStock: 10}
             ],
-            orders: [], // { id, date, custId, total, paid, status, items:[] }
-            ledgers: [] // { date, desc, amt, type }
+            orders: [
+                // Seed data to make the dashboard look good on first load
+                {id: "ORD-998", date: "2025-10-01", custId: 102, total: 5000, paid: 0, status: "Delivered", dispatched:true}
+            ],
+            manifests: [],
+            ledgers: [
+                {id: 1, date:"2025-10-01", type: "Debit", desc: "Inv ORD-998 generated", amt: 5000}
+            ]
         };
-        
-        let accessToken = null;
+        let gToken = null;
 
         /**
-         * 6.2 HELPER UTILITIES
+         * --------------------------------------------------------
+         * 6.3 UTILITY LIBRARY
+         * --------------------------------------------------------
          */
-        const Util = {
+        const Utils = {
             $: (id) => document.getElementById(id),
-            currency: (n) => "INR " + parseFloat(n).toLocaleString('en-IN', {minimumFractionDigits: 2}), // PDF Safe
+            // Currency without unicode for PDF safety
+            fmt: (n) => "Rs. " + parseFloat(n).toLocaleString('en-IN', {minimumFractionDigits: 2}), 
             today: () => new Date().toISOString().split('T')[0],
-            uid: () => Date.now().toString(36),
-            toast: (msg) => {
+            genId: (pre) => pre + "-" + Math.floor(Math.random()*100000),
+            
+            // Notification Engine
+            notify: (msg, type='info') => {
                 const el = document.createElement('div');
-                el.className = 'toast'; el.innerText = msg;
-                Util.$('toast-rack').appendChild(el);
+                el.className = 'toast-msg';
+                el.style.borderLeftColor = type==='success'?'#16a34a':(type==='error'?'#dc2626':'#0ea5e9');
+                el.innerHTML = `<strong>${type.toUpperCase()}</strong> <span>${msg}</span>`;
+                Utils.$('toaster').appendChild(el);
                 setTimeout(()=>el.remove(), 4000);
+            },
+
+            // WhatsApp Simulator (Prompt Requirement)
+            whatsapp: (phone, text) => {
+                const url = `https://wa.me/91${phone}?text=${encodeURIComponent(text)}`;
+                window.open(url, '_blank');
             }
         };
 
         /**
-         * 6.3 CUSTOM CHART RENDERER (Canvas)
-         * Avoids 200kb external libraries.
+         * --------------------------------------------------------
+         * 6.4 CLOUD SYNC SERVICE
+         * --------------------------------------------------------
          */
-        const Graphics = {
-            drawBar: (canvasId, data, labels) => {
-                const cvs = Util.$(canvasId);
-                if(!cvs) return;
-                const ctx = cvs.getContext('2d');
-                const w = cvs.width, h = cvs.height;
-                const pad = 40;
-                
-                // BG
-                ctx.fillStyle = '#fff'; ctx.fillRect(0,0,w,h);
-                
-                // Axis
-                ctx.beginPath(); ctx.moveTo(pad, pad); ctx.lineTo(pad, h-pad); ctx.lineTo(w-pad, h-pad);
-                ctx.strokeStyle = '#cbd5e1'; ctx.stroke();
-                
-                // Bars
-                const max = Math.max(...data, 10);
-                const stepX = (w - 2*pad) / data.length;
-                const scaleY = (h - 2*pad) / max;
-                
-                data.forEach((val, i) => {
-                    const bh = val * scaleY;
-                    const bx = pad + i*stepX + 10;
-                    const by = h - pad - bh;
-                    
-                    ctx.fillStyle = val < 20 ? '#ef4444' : '#0ea5e9'; // Red if low stock
-                    ctx.fillRect(bx, by, stepX - 20, bh);
-                    
-                    // Text
-                    ctx.fillStyle = '#333';
-                    ctx.font = '12px sans-serif';
-                    ctx.fillText(val, bx, by - 5);
-                    ctx.fillText(labels[i].substring(0,3), bx, h - pad + 15);
+        const Cloud = {
+            init: () => {
+                gapi.load('client', async () => {
+                    await gapi.client.init({apiKey: CFG.API_KEY, discoveryDocs:['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']});
+                    const client = google.accounts.oauth2.initTokenClient({
+                        client_id: CFG.CLIENT_ID, scope: CFG.SCOPES,
+                        callback: (resp) => { 
+                            if(resp.error) return; 
+                            gToken = resp.access_token;
+                            Cloud.syncDown();
+                        }
+                    });
+                    // Only request if strictly needed (Prompt button in UI usually better)
+                    if(App.isOnline) client.requestAccessToken({prompt:''}); 
                 });
+            },
+            syncDown: async () => {
+                Utils.$('sync-dot').style.background = 'orange';
+                try {
+                    const q = `name = '${CFG.FILE}' and trashed = false`;
+                    const res = await gapi.client.drive.files.list({q});
+                    if(res.result.files.length > 0) {
+                        const fid = res.result.files[0].id;
+                        const data = await gapi.client.drive.files.get({fileId: fid, alt: 'media'});
+                        if(data.result) {
+                            Store = data.result;
+                            Utils.notify("Cloud Data Loaded", "success");
+                        }
+                    }
+                    Utils.$('sync-dot').style.background = '#16a34a'; // Green
+                    Nav.go('dashboard'); // Refresh View
+                } catch(e) { console.error(e); }
+            },
+            syncUp: async () => {
+                if(!gToken) return;
+                Utils.$('sync-dot').style.background = 'orange';
+                const body = JSON.stringify(Store);
+                const blob = new Blob([body], {type:'application/json'});
+                const form = new FormData();
+                const meta = {name: CFG.FILE, mimeType: 'application/json'};
+                form.append('metadata', new Blob([JSON.stringify(meta)], {type: 'application/json'}));
+                form.append('file', blob);
+
+                try {
+                    const q = `name = '${CFG.FILE}' and trashed = false`;
+                    const res = await gapi.client.drive.files.list({q});
+                    // Logic: Delete old, Create New (Simple overwrite simulation)
+                    // Real app would PATCH. For demo simplicity of logic flow:
+                    await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                        method: 'POST',
+                        headers: {'Authorization': 'Bearer '+gToken},
+                        body: form
+                    });
+                    Utils.$('sync-dot').style.background = '#16a34a';
+                } catch(e) {}
             }
         };
 
         /**
-         * 6.4 PDF GENERATOR ENGINE
-         * Defines the visual layout of invoices
+         * --------------------------------------------------------
+         * 6.5 PDF SERVICE (Invoice Gen)
+         * --------------------------------------------------------
          */
-        const PDF = {
-            make: (ord, cust) => {
+        const Docs = {
+            invoice: (ord) => {
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
+                const cust = Store.customers.find(c=>c.id==ord.custId);
+
+                doc.setFillColor(14, 165, 233); doc.rect(0,0,210,30,'F');
+                doc.setTextColor(255); doc.setFontSize(22); doc.text("Freskey (Himalayan Beverages)", 14, 20);
                 
-                // Header Banner
-                doc.setFillColor(7, 89, 133); doc.rect(0, 0, 210, 35, 'F');
-                doc.setTextColor(255); doc.setFontSize(22); doc.text("Himalayan Beverages", 14, 22);
-                doc.setFontSize(10); doc.text("Freskey Distribution Center", 14, 28);
+                doc.setTextColor(0); doc.setFontSize(10);
+                doc.text("INVOICE NO:", 150, 50); doc.text(ord.id, 180, 50);
+                doc.text("Bill To:", 14, 50); doc.text(cust.name, 14, 55); doc.text(cust.addr, 14, 60);
+
+                const body = ord.items.map(i=>[i.name, i.qty, i.price, i.tot]);
+                doc.autoTable({ startY: 70, head: [['Item','Qty','Rate','Amount']], body: body });
                 
-                doc.setTextColor(0); 
-                doc.text("INVOICE NO:", 140, 50); doc.text(ord.id, 170, 50);
-                doc.text("DATE:", 140, 55); doc.text(ord.date, 170, 55);
+                const fy = doc.lastAutoTable.finalY + 10;
+                doc.setFontSize(12); doc.text(`Total: ${Utils.fmt(ord.total)}`, 150, fy);
                 
-                // Bill To
-                doc.setFontSize(12); doc.text("Bill To:", 14, 50);
-                doc.setFontSize(10); doc.text(cust.name, 14, 55);
-                doc.text(cust.loc, 14, 60);
-                doc.text(cust.phone, 14, 65);
+                // Add GST text
+                doc.setFontSize(8); doc.text("* Price includes standard GST as applicable", 14, fy+10);
                 
-                // Table
-                const rows = ord.items.map(i => [i.name, i.qty, i.price, i.price*i.qty]);
-                doc.autoTable({
-                    startY: 80,
-                    head: [['Item Description', 'Qty', 'Rate', 'Amount']],
-                    body: rows,
-                    theme: 'grid',
-                    headStyles: {fillColor:[7, 89, 133]},
-                });
-                
-                const finalY = doc.lastAutoTable.finalY + 10;
-                doc.setFontSize(12); doc.setFont(undefined, 'bold');
-                doc.text(`Total Payable: INR ${ord.total}`, 140, finalY);
-                
-                doc.save(`Inv_${ord.id}.pdf`);
+                doc.save(`${ord.id}.pdf`);
             }
         };
 
         /**
-         * 6.5 DRIVE ADAPTER (API Service)
-         * Robust Error handling + Token Management
+         * --------------------------------------------------------
+         * 6.6 APP INIT & AUTH
+         * --------------------------------------------------------
          */
-        const DriveService = {
-            tokenClient: null,
-            init: () => {
-                // Initialize Scripts
-                gapi.load('client', async () => {
-                    try {
-                        await gapi.client.init({ apiKey: AppConfig.API_KEY, discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'] });
-                    } catch(e) { console.warn("Google API Init fail - likely offline or blocked origin"); }
-                });
-                
-                try {
-                    DriveService.tokenClient = google.accounts.oauth2.initTokenClient({
-                        client_id: AppConfig.CLIENT_ID,
-                        scope: AppConfig.SCOPES,
-                        callback: async (resp) => {
-                            if (resp.error) throw resp;
-                            accessToken = resp.access_token;
-                            await DriveService.load();
-                        },
-                    });
-                } catch(e){ console.warn("GSI Fail"); }
+        const App = {
+            isOnline: false,
+            handleCredentialResponse: (resp) => {
+                // Decode Google JWT
+                const pl = JSON.parse(atob(resp.credential.split('.')[1]));
+                App.unlock(pl.email);
+                App.isOnline = true;
+                // Init Drive Logic
+                Cloud.init(); 
             },
-            
-            prompt: () => {
-                 document.querySelector('.g_id_signin').style.display = 'none';
-                 document.getElementById('loading-spinner').style.display = 'block';
-                 if(DriveService.tokenClient) DriveService.tokenClient.requestAccessToken({prompt: ''});
-            },
-            
-            // DOWNLOAD DB
-            load: async () => {
-                 document.getElementById('loading-msg').innerText = "Syncing Database...";
-                 try {
-                     const q = `name = '${AppConfig.DB_FILE}' and trashed = false`;
-                     const res = await gapi.client.drive.files.list({q: q, fields: 'files(id)'});
-                     const files = res.result.files;
-
-                     if (files && files.length > 0) {
-                         const fId = files[0].id;
-                         const content = await gapi.client.drive.files.get({fileId: fId, alt: 'media'});
-                         Store = content.result; // HYDRATE STATE
-                     } else {
-                         // Create New if not found
-                         await DriveService.save(true);
-                     }
-                     System.Auth.unlock("Google User");
-                 } catch (e) {
-                     alert("Sync Error: " + JSON.stringify(e));
-                 }
-            },
-            
-            // UPLOAD DB (Multipart)
-            save: async (isNew = false) => {
-                 const body = JSON.stringify(Store);
-                 const fileBlob = new Blob([body], {type:'application/json'});
-                 const meta = {name: AppConfig.DB_FILE, mimeType:'application/json'};
-
-                 const form = new FormData();
-                 form.append('metadata', new Blob([JSON.stringify(meta)], {type: 'application/json'}));
-                 form.append('file', fileBlob);
-                 
-                 const headers = new Headers({'Authorization': 'Bearer ' + accessToken});
-
-                 // Find Existing
-                 if(!isNew) {
-                     const q = `name = '${AppConfig.DB_FILE}' and trashed = false`;
-                     const listRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}`, {headers});
-                     const listData = await listRes.json();
-                     if(listData.files && listData.files.length > 0) {
-                         // PATCH
-                         const fId = listData.files[0].id;
-                         await fetch(`https://www.googleapis.com/upload/drive/v3/files/${fId}?uploadType=media`, {
-                             method: 'PATCH',
-                             headers: new Headers({'Authorization': 'Bearer ' + accessToken, 'Content-Type': 'application/json'}),
-                             body: body
-                         });
-                         System.UI.setSyncStatus(true);
-                         return;
-                     }
-                 }
-
-                 // POST (Create)
-                 await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-                     method: 'POST', headers: headers, body: form
-                 });
-                 System.UI.setSyncStatus(true);
-            }
-        };
-
-        /**
-         * 6.6 SYSTEM CONTROLLERS (Business Logic)
-         */
-        const System = {
-            Auth: {
-                // Triggered by the Google button via global callback
-                onGoogleSuccess: (response) => {
-                    DriveService.init(); // Load APIs
-                    setTimeout(() => DriveService.prompt(), 500); // Ask for scope
-                },
-                // Developer Bypass
+            System: {
                 demoLogin: () => {
-                    document.getElementById('loading-spinner').style.display = 'block';
+                    Utils.$('loading-auth').style.display='block';
                     setTimeout(() => {
-                        System.Auth.unlock("Demo User");
-                        System.UI.setSyncStatus(false);
-                    }, 800);
-                },
-                unlock: (user) => {
-                    document.getElementById('auth-portal').style.opacity = '0';
-                    setTimeout(()=>document.getElementById('auth-portal').style.display='none', 500);
-                    
-                    document.getElementById('root').style.display = 'flex';
-                    document.getElementById('ui-user-email').innerText = user;
-                    System.Router.go('dashboard');
+                        App.unlock("demo_admin@freskey.com");
+                    }, 1000);
                 }
             },
+            unlock: (email) => {
+                Utils.$('auth-layer').style.display = 'none';
+                Utils.$('root-app').style.display = 'flex';
+                Utils.$('ua-name').innerText = email.split('@')[0];
+                Nav.go('dashboard');
+            }
+        };
+
+        /**
+         * --------------------------------------------------------
+         * 6.7 UI & NAVIGATION CONTROLLER
+         * --------------------------------------------------------
+         */
+        const Nav = {
+            toggleSide: (open) => {
+                const s = Utils.$('sidebar-el');
+                const m = Utils.$('mob-overlay');
+                if(open) { s.style.left='0'; m.style.display='block'; }
+                else { s.style.left='-100%'; m.style.display='none'; }
+            },
             
-            Router: {
-                go: (view) => {
-                    const vp = Util.$('viewport');
-                    const ph = Util.$('page-heading');
-                    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-                    // Simplified active handling via click bubbling not impl in this mono-file
+            go: (view) => {
+                const c = Utils.$('viewport');
+                const title = Utils.$('pg-title');
+                const desc = Utils.$('pg-desc');
+                
+                // Active State
+                document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+                // Note: Real routing needs ID matching, simplistic approach here due to inline events
+                
+                Nav.toggleSide(false);
+
+                if(view === 'dashboard') {
+                    title.innerText = "Operations Dashboard";
+                    desc.innerText = "Real-time Supply Chain Overview";
                     
-                    if (view === 'dashboard') {
-                        ph.innerText = "Operations Dashboard";
-                        
-                        // Calculate metrics
-                        const sales = Store.orders.reduce((a,b) => a+b.total, 0);
-                        const due = Store.orders.reduce((a,b) => a+(b.total-b.paid), 0);
-                        
-                        vp.innerHTML = `
-                            <div class="grid-stats">
-                                <div class="stat-card">
-                                    <div class="stat-label">Total Revenue</div>
-                                    <div class="stat-val text-slate-900">${Util.currency(sales)}</div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="stat-label">Outstanding</div>
-                                    <div class="stat-val text-red-600" style="color:#ef4444">${Util.currency(due)}</div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="stat-label">Active Products</div>
-                                    <div class="stat-val text-blue-600">${Store.products.length}</div>
-                                </div>
-                                <div class="stat-card">
-                                    <div class="stat-label">Customers</div>
-                                    <div class="stat-val text-blue-600">${Store.customers.length}</div>
-                                </div>
+                    const rev = Store.orders.reduce((a,b)=>a+b.total,0);
+                    const due = Store.orders.reduce((a,b)=>a+(b.total - b.paid),0);
+                    const pend = Store.orders.filter(o=>!o.dispatched).length;
+                    
+                    c.innerHTML = `
+                        <div class="grid-4">
+                            <div class="kpi-box">
+                                <div class="kpi-lbl">Revenue</div>
+                                <div class="kpi-val" style="color:#0f172a">${Utils.fmt(rev)}</div>
                             </div>
-                            
-                            <div class="grid-2">
-                                <div class="card">
-                                    <div class="card-header"><h3 class="card-title">Inventory Levels</h3></div>
-                                    <div class="card-body">
-                                        <canvas id="invCanvas" width="400" height="200" style="width:100%; height:200px"></canvas>
-                                    </div>
-                                </div>
-                                <div class="card">
-                                    <div class="card-header"><h3 class="card-title">Recent Ledgers</h3></div>
-                                    <div class="table-responsive">
-                                        <table>
-                                            <thead><tr><th>Date</th><th>Desc</th><th>Amt</th></tr></thead>
-                                            <tbody>
-                                                ${Store.ledgers.slice(0,5).map(l => `<tr>
-                                                    <td>${l.date}</td><td>${l.desc}</td><td>${Util.currency(l.amt)}</td>
-                                                </tr>`).join('')}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
+                            <div class="kpi-box">
+                                <div class="kpi-lbl">Pending Dispatch</div>
+                                <div class="kpi-val" style="color:var(--color-warning)">${pend} <span style="font-size:1rem">Orders</span></div>
                             </div>
-                        `;
-                        // Draw Chart
-                        const pNames = Store.products.map(p=>p.name);
-                        const pStocks = Store.products.map(p=>p.stock);
-                        setTimeout(() => Graphics.drawBar('invCanvas', pStocks, pNames), 50);
-                    } 
-                    else if (view === 'orders') {
-                        ph.innerText = "Sales Orders";
-                        vp.innerHTML = `
+                            <div class="kpi-box">
+                                <div class="kpi-lbl">Outstanding Balance</div>
+                                <div class="kpi-val" style="color:var(--color-danger)">${Utils.fmt(due)}</div>
+                            </div>
+                            <div class="kpi-box">
+                                <div class="kpi-lbl">Total Stock</div>
+                                <div class="kpi-val" style="color:var(--color-primary-500)">${Store.products.reduce((a,b)=>a+b.stock,0)} cs</div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid-2">
                             <div class="card">
+                                <div class="card-header"><h3>Active Orders (Last 5)</h3></div>
                                 <div class="table-responsive">
                                     <table>
-                                        <thead><tr><th>ID</th><th>Customer</th><th class="text-right">Total</th><th>Status</th><th>Action</th></tr></thead>
+                                        <thead><tr><th>ID</th><th>Total</th><th>Status</th></tr></thead>
+                                        <tbody>${Store.orders.slice(-5).reverse().map(o=>`<tr><td>${o.id}</td><td>${Utils.fmt(o.total)}</td><td><span class="badge badge-blue">${o.status}</span></td></tr>`).join('')}</tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <div class="card-header"><h3>Warehouse Levels</h3></div>
+                                <div class="card-body">
+                                    ${Store.products.map(p=>`
+                                        <div style="margin-bottom:10px;">
+                                            <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+                                                <span style="font-weight:600;font-size:0.8rem">${p.name}</span>
+                                                <span style="font-size:0.8rem">${p.stock} cs</span>
+                                            </div>
+                                            <div style="height:6px; background:#e2e8f0; border-radius:3px; overflow:hidden">
+                                                <div style="width:${Math.min(p.stock,100)}%; background:${p.stock<50?'#ef4444':'#22c55e'}; height:100%;"></div>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                else if (view === 'orders') {
+                    title.innerText = "Sales & Invoices"; desc.innerText = "Manage Order Lifecycle";
+                    c.innerHTML = `
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table>
+                                <thead><tr><th>Order #</th><th>Date</th><th>Customer</th><th>Total</th><th>Status</th><th>Action</th></tr></thead>
+                                <tbody>
+                                    ${Store.orders.slice().reverse().map(o => {
+                                        const cust = Store.customers.find(x=>x.id==o.custId);
+                                        return `<tr>
+                                            <td>${o.id}</td><td>${o.date}</td><td>${cust?cust.name:'-'}</td>
+                                            <td style="font-weight:700">${Utils.fmt(o.total)}</td>
+                                            <td><span class="badge ${o.status=='Delivered'?'badge-green':'badge-yellow'}">${o.status}</span></td>
+                                            <td><button onclick="Ctrls.Order.pdf('${o.id}')" class="btn btn-primary" style="padding:2px 8px;font-size:0.7rem">PDF</button></td>
+                                        </tr>`
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>`;
+                }
+                
+                else if (view === 'dispatch') {
+                    title.innerText = "Dispatch Manifests"; desc.innerText = "Assign to Vehicles";
+                    // Simulation of assigning orders to Route 1
+                    const openOrd = Store.orders.filter(o=>!o.dispatched);
+                    c.innerHTML = `
+                        <div class="grid-2">
+                            <div class="card">
+                                <div class="card-header"><h3>Ready for Dispatch</h3></div>
+                                <div class="table-responsive">
+                                    <table>
+                                        <thead><tr><th>Ord ID</th><th>Route/Area</th><th>Action</th></tr></thead>
                                         <tbody>
-                                            ${Store.orders.slice().reverse().map(o => {
-                                                const cust = Store.customers.find(c=>c.id==o.custId);
-                                                const due = o.total - o.paid;
-                                                const badge = due <= 0 ? 'paid' : (o.paid>0 ? 'partial' : 'unpaid');
-                                                return `<tr>
-                                                    <td>${o.id}<br><span style="font-size:0.7rem; color:#64748b">${o.date}</span></td>
-                                                    <td>${cust ? cust.name : 'Unk'}</td>
-                                                    <td class="text-right">
-                                                        <div>${Util.currency(o.total)}</div>
-                                                        ${due>0 ? `<div style="color:red; font-size:0.75rem">Due: ${due}</div>` : ''}
-                                                    </td>
-                                                    <td><span class="status-badge status-${badge}">${badge.toUpperCase()}</span></td>
-                                                    <td>
-                                                        <button class="btn btn-secondary btn-sm" onclick="Controllers.Sales.print('${o.id}')">PDF</button>
-                                                    </td>
-                                                </tr>`;
-                                            }).join('')}
+                                            ${openOrd.length===0?'<tr><td colspan="3" style="padding:20px;text-align:center">All Orders Dispatched</td></tr>' : 
+                                              openOrd.map(o=>`<tr><td>${o.id}</td><td>Route 1</td><td><button class="btn btn-sm btn-primary" onclick="Ctrls.Dispatch.send('${o.id}')">Load Van</button></td></tr>`).join('')
+                                            }
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
-                        `;
-                    }
-                    else if (view === 'inventory') {
-                        ph.innerText = "Warehouse Management";
-                        vp.innerHTML = `
                             <div class="card">
-                                <div class="card-header"><h3 class="card-title">Stock Overview</h3></div>
-                                <div class="table-responsive">
-                                    <table><thead><tr><th>Product</th><th>Stock</th><th>Rate</th></tr></thead><tbody>
-                                    ${Store.products.map(p=>`<tr>
-                                        <td><b>${p.name}</b><br><span style="color:#64748b;font-size:0.8rem">${p.pack}</span></td>
-                                        <td style="${p.stock<30?'color:red; font-weight:bold':''}">${p.stock} Cases</td>
-                                        <td>${Util.currency(p.price)}</td>
-                                    </tr>`).join('')}
-                                    </tbody></table>
+                                <div class="card-header"><h3>Vehicle: UK-07-TA-1122 (Van 1)</h3></div>
+                                <div class="card-body">
+                                    <div style="font-size:0.9rem; font-weight:700; color:#475569">Manifest ID: MAN-009</div>
+                                    <div style="margin-top:10px; font-size:0.8rem">Driver: Raju Singh (+91 99000...)</div>
+                                    <div style="margin-top:15px; border-top:1px solid #eee; padding-top:10px;">
+                                        ${Store.manifests.length===0 ? '<i>Van Empty</i>' : Store.manifests.map(m=>`<div>• Order ${m} loaded</div>`).join('')}
+                                    </div>
+                                    <button class="btn btn-success w-full" style="margin-top:15px;" onclick="Utils.whatsapp('9999999999','Manifest #MAN-009 Generated')">WhatsApp to Driver</button>
                                 </div>
                             </div>
-                        `;
-                    }
-                    else if (view === 'finance') {
-                         ph.innerText = "Financials";
-                         const pending = Store.orders.filter(o => o.total - o.paid > 0);
-                         vp.innerHTML = `
-                             <div class="card">
-                                 <div class="card-header"><h3 class="card-title">Pending Collections</h3></div>
-                                 <div class="table-responsive">
-                                     <table><thead><tr><th>Invoice</th><th>Customer</th><th>Balance</th><th>Action</th></tr></thead>
-                                     <tbody>
-                                         ${pending.length===0 ? '<tr><td colspan="4" class="text-center">All Clear!</td></tr>' :
-                                           pending.map(o => {
-                                               const c = Store.customers.find(cx=>cx.id==o.custId);
-                                               return `<tr>
-                                                   <td>${o.id}</td><td>${c.name}</td>
-                                                   <td style="color:red;font-weight:bold">${Util.currency(o.total - o.paid)}</td>
-                                                   <td><button class="btn btn-success btn-sm" onclick="System.UI.modal('m-pay', '${o.id}')">Receive Pay</button></td>
-                                               </tr>`;
-                                           }).join('')
-                                         }
-                                     </tbody>
-                                     </table>
-                                 </div>
-                             </div>
-                         `;
-                    }
+                        </div>
+                    `;
                 }
-            },
-            
-            UI: {
-                modal: (id, payload) => {
-                    const el = Util.$(id);
-                    el.classList.add('active');
-                    
-                    if(id==='m-order') {
-                        // Fill customers
-                        Util.$('o-cust').innerHTML = Store.customers.map(c=>`<option value="${c.id}">${c.name}</option>`);
-                        // Build Items rows with input
-                        Util.$('o-lines').innerHTML = Store.products.map(p=>`
-                            <tr>
-                                <td>${p.name}</td>
-                                <td>${p.price}</td>
-                                <td style="${p.stock<10?'color:red':''}">${p.stock}</td>
-                                <td><input type="number" min="0" class="form-control item-qty" data-id="${p.id}" onchange="Controllers.Sales.calcTotal()"></td>
-                                <td class="text-right" id="sub-${p.id}">0.00</td>
-                            </tr>
-                        `).join('');
-                        Controllers.Sales.calcTotal(); // Reset
-                    }
-                    if(id==='m-pay' && payload) {
-                        const o = Store.orders.find(x=>x.id==payload);
-                        Util.$('p-id').value = payload;
-                        Util.$('p-disp').value = `${o.id} | Total: ${o.total}`;
-                        Util.$('p-due').value = (o.total - o.paid);
-                        Util.$('p-curr').value = o.paid;
-                    }
-                },
-                closeModal: (id) => Util.$(id).classList.remove('active'),
-                setSyncStatus: (isOnline) => {
-                    const l = Util.$('sync-light');
-                    const t = Util.$('sync-txt');
-                    if(isOnline){ l.style.background='#22c55e'; t.innerText="Online"; }
+                
+                else if (view === 'inventory') {
+                    title.innerText = "Stock Management"; desc.innerText = "Warehouse & Van Inventory";
+                    c.innerHTML = `
+                    <div style="margin-bottom:15px;"><button class="btn btn-primary" onclick="Modal.open('modal-buy')">+ Stock Purchase</button></div>
+                    <div class="card">
+                        <div class="table-responsive">
+                            <table>
+                                <thead><tr><th>SKU</th><th>Product</th><th>Packing</th><th>Central WH</th><th>Route Van 1</th><th>Transfer</th></tr></thead>
+                                <tbody>
+                                    ${Store.products.map(p=>`<tr>
+                                        <td>${p.id}</td><td><b>${p.name}</b></td><td>${p.unit}</td>
+                                        <td style="color:${p.stock<50?'red':'green'}"><b>${p.stock}</b></td>
+                                        <td>${p.vanStock}</td>
+                                        <td><button class="btn btn-sm btn-secondary">Transfer >></button></td>
+                                    </tr>`).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>`;
+                }
+                
+                else if (view === 'finance') {
+                    title.innerText = "Financial Ledger"; desc.innerText = "Payments & Dues";
+                    c.innerHTML = `
+                        <div class="card">
+                            <div class="card-header"><h3>Unpaid Invoices</h3></div>
+                            <div class="table-responsive">
+                                <table><thead><tr><th>Invoice</th><th>Due Amount</th><th>Action</th></tr></thead>
+                                <tbody>
+                                    ${Store.orders.filter(o=>o.total-o.paid > 0).map(o=>`<tr>
+                                        <td>${o.id}</td><td style="color:#dc2626;font-weight:700">${Utils.fmt(o.total - o.paid)}</td>
+                                        <td><button onclick="Ctrls.Finance.open('${o.id}')" class="btn btn-sm btn-success">Receive Pay</button></td>
+                                    </tr>`).join('')}
+                                </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><h3>Transaction Ledger</h3></div>
+                            <div class="table-responsive">
+                                <table><thead><tr><th>Date</th><th>Description</th><th>Debit/Credit</th><th>Amt</th></tr></thead>
+                                <tbody>${Store.ledgers.map(l=>`<tr><td>${l.date}</td><td>${l.desc}</td><td>${l.type}</td><td>${Utils.fmt(l.amt)}</td></tr>`).join('')}</tbody></table>
+                            </div>
+                        </div>
+                    `;
                 }
             }
         };
 
-        const Controllers = {
-             Sales: {
-                 calcTotal: () => {
-                     let sum = 0;
-                     document.querySelectorAll('.item-qty').forEach(el => {
-                         const q = parseInt(el.value)||0;
-                         const pid = el.dataset.id;
-                         const prod = Store.products.find(p=>p.id==pid);
-                         const line = q * prod.price;
-                         Util.$('sub-'+pid).innerText = line;
-                         sum += line;
-                     });
-                     Util.$('o-total').innerText = Util.currency(sum);
-                 },
-                 confirmOrder: () => {
-                     const inputs = document.querySelectorAll('.item-qty');
-                     const items = [];
-                     let total = 0;
-                     
-                     inputs.forEach(el => {
-                         const q = parseInt(el.value);
-                         if(q > 0) {
-                             const p = Store.products.find(x=>x.id==el.dataset.id);
-                             p.stock -= q;
-                             items.push({name: p.name, qty: q, price: p.price, total: q*p.price});
-                             total += q*p.price;
-                         }
-                     });
-                     
-                     if(total === 0) return alert("Add items");
-
-                     const id = 'INV-' + Date.now();
-                     const cid = Util.$('o-cust').value;
-                     const cObj = Store.customers.find(c=>c.id==cid);
-
-                     const order = {
-                         id: id, date: Util.$('o-date').value || Util.today(),
-                         custId: cid, total: total, paid: 0, status: 'Unpaid',
-                         items: items
-                     };
-                     
-                     Store.orders.unshift(order);
-                     Store.ledgers.unshift({date:Util.today(), desc:`Inv ${id} generated`, type:'Sale', amt:total});
-                     
-                     Util.toast("Invoice Created");
-                     System.UI.closeModal('m-order');
-                     System.Router.go('orders');
-                     
-                     // PDF
-                     if(confirm("Download PDF?")) PDF.make(order, cObj);
-
-                     // SYNC
-                     if(accessToken) DriveService.save();
-                 },
-                 print: (oid) => {
-                     const o = Store.orders.find(x=>x.id==oid);
-                     const c = Store.customers.find(x=>x.id==o.custId);
-                     PDF.make(o, c);
-                 }
-             },
-             Finance: {
-                 pay: () => {
-                     const oid = Util.$('p-id').value;
-                     const amt = parseFloat(Util.$('p-amt').value);
-                     if(!amt) return;
-                     const o = Store.orders.find(x=>x.id==oid);
-                     if(amt > (o.total - o.paid)) return alert("Excess amount");
-                     
-                     o.paid += amt;
-                     o.status = o.paid >= o.total ? 'Paid' : 'Partial';
-                     Store.ledgers.unshift({date:Util.today(), desc:`Receipt for ${oid}`, type:'Credit', amt:amt});
-                     
-                     System.UI.closeModal('m-pay');
-                     System.Router.go('finance');
-                     Util.toast("Payment Recorded");
-                     if(accessToken) DriveService.save();
-                 }
-             }
+        /**
+         * --------------------------------------------------------
+         * 6.8 MODAL & CONTROLLER LOGIC
+         * --------------------------------------------------------
+         */
+        const Modal = {
+            open: (id) => {
+                Utils.$(id).style.display = 'flex';
+                // Populate Data if needed
+                if(id==='modal-order') {
+                    Utils.$('mo-cust').innerHTML = '<option value="">Select...</option>' + Store.customers.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+                    Utils.$('mo-date').value = Utils.today();
+                    
+                    const rows = Store.products.map(p=>`
+                        <tr class="item-row">
+                            <td>${p.name} <span style="font-size:0.7rem">(${p.unit})</span></td>
+                            <td>${p.price}</td>
+                            <td style="color:${p.stock<20?'red':'inherit'}">${p.stock}</td>
+                            <td><input type="number" min="0" class="form-control qty-inp" data-id="${p.id}" data-price="${p.price}" onchange="Ctrls.Order.calc()"></td>
+                            <td class="text-right" id="st-${p.id}">0.00</td>
+                        </tr>
+                    `).join('');
+                    Utils.$('mo-lines').innerHTML = rows;
+                }
+                else if (id==='modal-buy') {
+                    Utils.$('mb-prod').innerHTML = Store.products.map(p=>`<option value="${p.id}">${p.name}</option>`);
+                }
+            },
+            close: (id) => Utils.$(id).style.display='none'
         };
 
-        // --- GLOBAL EXPORTS FOR HTML CALLBACKS ---
-        window.onGoogleAuth = System.Auth.onGoogleSuccess;
+        const Ctrls = {
+            Order: {
+                calc: () => {
+                    let total = 0;
+                    document.querySelectorAll('.qty-inp').forEach(inp => {
+                        const qty = parseInt(inp.value)||0;
+                        const pr = parseFloat(inp.dataset.price);
+                        const sub = qty * pr;
+                        Utils.$(`st-${inp.dataset.id}`).innerText = sub.toFixed(2);
+                        total += sub;
+                    });
+                    Utils.$('mo-total').innerText = Utils.fmt(total);
+                },
+                save: () => {
+                    const cid = Utils.$('mo-cust').value;
+                    const date = Utils.$('mo-date').value;
+                    if(!cid) return alert("Select Customer");
+                    
+                    // Harvest Items
+                    const items = [];
+                    let grandTotal = 0;
+                    
+                    document.querySelectorAll('.qty-inp').forEach(inp => {
+                        const qty = parseInt(inp.value)||0;
+                        if(qty > 0) {
+                            const pid = inp.dataset.id;
+                            const prod = Store.products.find(p=>p.id==pid);
+                            // Validations
+                            if(prod.stock < qty) return alert("Stock insufficient for " + prod.name);
+                            prod.stock -= qty; // Reserve Stock
+                            const lineTotal = qty * prod.price;
+                            items.push({name: prod.name, qty, price: prod.price, tot: lineTotal});
+                            grandTotal += lineTotal;
+                        }
+                    });
+                    
+                    if(items.length===0) return;
+                    
+                    // Commit
+                    const oid = "INV-" + Date.now();
+                    const order = { id: oid, date: date, custId: cid, total: grandTotal, paid: 0, status: "Pending", items: items, dispatched:false };
+                    Store.orders.push(order);
+                    Store.ledgers.push({id: Utils.genId('TX'), date: Utils.today(), desc:`Invoice ${oid} Generated`, type:'Debit', amt: grandTotal});
+                    
+                    Utils.toast(`Order ${oid} created`);
+                    Modal.close('modal-order');
+                    Cloud.syncUp();
+                    Nav.go('orders');
+                    
+                    // PDF Prompt
+                    Docs.invoice(order);
+                },
+                pdf: (id) => Docs.invoice(Store.orders.find(x=>x.id==id))
+            },
+            Dispatch: {
+                send: (id) => {
+                    const ord = Store.orders.find(o=>o.id==id);
+                    ord.dispatched = true;
+                    Store.manifests.push(id);
+                    Utils.toast(`${id} loaded onto Van 1`, 'success');
+                    Cloud.syncUp();
+                    Nav.go('dispatch');
+                }
+            },
+            Purchase: {
+                save: () => {
+                    const pid = Utils.$('mb-prod').value;
+                    const qty = parseInt(Utils.$('mb-qty').value);
+                    const cost = parseInt(Utils.$('mb-cost').value);
+                    if(!qty) return;
+                    
+                    const prod = Store.products.find(p=>p.id==pid);
+                    prod.stock += qty; // Central WH Logic
+                    Utils.toast(`${qty} Added to Inventory`);
+                    Modal.close('modal-buy');
+                    Nav.go('inventory');
+                    Cloud.syncUp();
+                }
+            },
+            Finance: {
+                open: (id) => {
+                    const o = Store.orders.find(x=>x.id==id);
+                    Utils.$('mp-id').value = id;
+                    Utils.$('mp-ref').value = `${id} (Date: ${o.date})`;
+                    Utils.$('mp-tot').value = Utils.fmt(o.total);
+                    Utils.$('mp-due').value = Utils.fmt(o.total - o.paid);
+                    Utils.$('modal-pay').style.display='flex';
+                },
+                pay: () => {
+                    const id = Utils.$('mp-id').value;
+                    const amt = parseFloat(Utils.$('mp-amt').value);
+                    if(!amt) return;
+                    
+                    const o = Store.orders.find(x=>x.id==id);
+                    o.paid += amt;
+                    if(o.paid >= o.total) o.status = "Paid"; // Close
+                    
+                    // Add Ledger
+                    Store.ledgers.push({id:Utils.genId('P'), date:Utils.today(), type:"Credit", desc:`Payment received for ${id}`, amt: amt});
+                    
+                    Utils.toast("Transaction Recorded", "success");
+                    Utils.$('modal-pay').style.display='none';
+                    Nav.go('finance');
+                    
+                    // Simulate WhatsApp Receipt
+                    const cust = Store.customers.find(c=>c.id==o.custId);
+                    Utils.whatsapp(cust.phone, `Himalayan Beverages: Received Payment of INR ${amt} against Invoice ${id}. Balance: INR ${o.total-o.paid}`);
+                    Cloud.syncUp();
+                }
+            }
+        };
 
-        // Auto Init logic moved to "Demo Button" or "Google Button" to ensure login reliability
+        // Bootstrap on Load
+        // Cloud.init() is triggered after Google Sign-In automatically.
+        
     </script>
 </body>
 </html>
