@@ -961,75 +961,70 @@
                 `;
             },
 
-            newOrder: function() {
-                const customers = appStore.get().customers;
-                if(customers.length === 0) return `<div class="card text-center"><h3>No Customers Found</h3><p class="text-gray-500 my-4">Please add customers before creating an order.</p><button class="btn btn-primary" onclick="Router.navigate('customers')">Go to Customers</button></div>`;
+           newOrder: function() {
+        const customers = appStore.get().customers;
+        // Check if customers exist
+        if(customers.length === 0) return `<div class="card text-center"><h3>No Customers</h3><p style="margin:1rem 0; color:#666;">You must add customers before creating an order.</p><button class="btn btn-primary" onclick="Router.navigate('customers')">Go to Customers</button></div>`;
 
-                const custOptions = customers.map(c => `<option value="${c.id}">${c.company} (${c.name})</option>`).join('');
+        const custOptions = customers.map(c => `<option value="${c.id}">${c.company} (${c.name})</option>`).join('');
+        const skus = ['200ml', '500ml', '1L'];
+        const prices = appStore.get().settings.prices;
+        const inventory = appStore.get().inventory;
 
-                return `
-                    <div class="card" style="max-width: 900px; margin: 0 auto;">
-                        <div class="card-header"><h3 class="card-title">Create New Order</h3></div>
-                        
-                        <div class="grid-2">
-                            <div class="form-group">
-                                <label class="form-label">Select Customer</label>
-                                <select id="ord-cust" class="form-control">${custOptions}</select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Order Date</label>
-                                <input type="date" id="ord-date" class="form-control" value="${new Date().toISOString().split('T')[0]}">
-                            </div>
-                        </div>
-
-                        <div style="background: var(--gray-50); padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--gray-200); margin-bottom: 1.5rem;">
-                            <h4 class="form-label" style="margin-bottom: 1rem;">Order Items</h4>
-                            
-                            <div class="grid-3" style="font-size: 0.85rem; color: var(--gray-500); margin-bottom: 0.5rem; font-weight: 700;">
-                                <div>PRODUCT SKU</div>
-                                <div>RATE (₹)</div>
-                                <div>QUANTITY (Bottles)</div>
-                            </div>
-
-                            ${SKUS.map(sku => `
-                                <div class="grid-3" style="align-items: center; margin-bottom: 1rem;">
-                                    <div>
-                                        <strong>${sku}</strong>
-                                        <div style="font-size: 0.75rem; color: var(--gray-500);">Stock: ${appStore.get().inventory[sku]}</div>
-                                    </div>
-                                    <input type="number" id="rate-${sku}" class="form-control" value="${appStore.get().settings.prices[sku]}" oninput="Logic.calcOrderTotal()">
-                                    <input type="number" id="qty-${sku}" class="form-control" placeholder="0" oninput="Logic.calcOrderTotal()">
-                                </div>
-                            `).join('')}
-                        </div>
-
-                        <div class="grid-2" style="align-items: center;">
-                            <div class="form-group">
-                                <label class="form-label">Payment Method</label>
-                                <select id="ord-pay" class="form-control">
-                                    <option value="Cash">Cash</option>
-                                    <option value="Online">Online / UPI</option>
-                                    <option value="Credit">Credit (Add to Balance)</option>
-                                </select>
-                            </div>
-                            <div style="text-align: right;">
-                                <div style="font-size: 0.9rem; color: var(--gray-500);">Grand Total</div>
-                                <div id="ord-total-disp" style="font-size: 2rem; font-weight: 800; color: var(--primary-900);">₹0.00</div>
-                            </div>
-                        </div>
-
-                        <hr style="border:0; border-top: 1px solid var(--gray-200); margin: 1.5rem 0;">
-
-                        <div style="display: flex; justify-content: flex-end;">
-                            <button class="btn btn-success" style="padding: 1rem 2rem; font-size: 1rem;" onclick="Logic.submitOrder()">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                Confirm Order
-                            </button>
-                        </div>
+        return `
+            <div class="card" style="max-width: 800px; margin: 0 auto;">
+                <div class="card-header"><h3 class="card-title">Create New Order</h3></div>
+                
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Select Customer</label>
+                        <select id="ord-cust" class="form-control">${custOptions}</select>
                     </div>
-                `;
-            },
+                    <div class="form-group">
+                        <label class="form-label">Date</label>
+                        <input type="date" id="ord-date" class="form-control" value="${new Date().toISOString().split('T')[0]}">
+                    </div>
+                </div>
 
+                <div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
+                    <h4 class="form-label" style="margin-bottom: 1rem;">Order Items</h4>
+                    <div class="grid-3" style="font-weight:700; color:#64748b; font-size:0.8rem; margin-bottom:0.5rem;">
+                        <div>ITEM & STOCK</div>
+                        <div>RATE (₹)</div>
+                        <div>QUANTITY</div>
+                    </div>
+                    ${skus.map(sku => `
+                        <div class="grid-3" style="align-items: center; margin-bottom: 1rem;">
+                            <div>
+                                <strong>${sku}</strong>
+                                <div style="font-size: 0.75rem; color: #64748b;">Avail: ${inventory[sku]}</div>
+                            </div>
+                            <input type="number" id="rate-${sku}" class="form-control" value="${prices[sku]}" oninput="Logic.calcOrderTotal()">
+                            <input type="number" id="qty-${sku}" class="form-control" placeholder="0" oninput="Logic.calcOrderTotal()">
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="grid-2" style="align-items: center;">
+                    <div class="form-group">
+                        <label class="form-label">Payment Mode</label>
+                        <select id="ord-pay" class="form-control">
+                            <option value="Cash">Cash</option>
+                            <option value="Online">Online / UPI</option>
+                            <option value="Credit">Credit (Add to Balance)</option>
+                        </select>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 0.9rem; color: #64748b;">Grand Total</div>
+                        <div id="ord-total-disp" style="font-size: 2rem; font-weight: 800; color: #0f172a;">₹0.00</div>
+                    </div>
+                </div>
+
+                <hr style="border:0; border-top: 1px solid #e2e8f0; margin: 1.5rem 0;">
+                <button class="btn btn-success" style="width:100%; padding: 1rem;" onclick="Logic.submitOrder()">Confirm & Save Order</button>
+            </div>
+        `;
+    },
             orders: function() {
         const orders = appStore.get().orders.slice().reverse();
         return `
@@ -1298,6 +1293,68 @@
             },
 
             // --- Order Logic ---
+
+
+calcOrderTotal: function() {
+        let total = 0;
+        ['200ml', '500ml', '1L'].forEach(sku => {
+            const r = parseFloat(document.getElementById(`rate-${sku}`).value) || 0;
+            const q = parseFloat(document.getElementById(`qty-${sku}`).value) || 0;
+            total += (r * q);
+        });
+        document.getElementById('ord-total-disp').innerText = '₹' + total.toFixed(2);
+    },
+
+    submitOrder: function() {
+        const custId = document.getElementById('ord-cust').value;
+        const date = document.getElementById('ord-date').value;
+        const pay = document.getElementById('ord-pay').value;
+        const skus = ['200ml', '500ml', '1L'];
+        
+        let items = [];
+        let total = 0;
+
+        // 1. Gather Items
+        for(let sku of skus) {
+            const q = parseFloat(document.getElementById(`qty-${sku}`).value) || 0;
+            const r = parseFloat(document.getElementById(`rate-${sku}`).value) || 0;
+            if(q > 0) {
+                // Stock Check
+                const stock = appStore.get().inventory[sku];
+                if(stock < q) {
+                    if(!confirm(`Low Stock for ${sku}. Available: ${stock}. Proceed?`)) return;
+                }
+                items.push({ sku, qty: q, rate: r });
+                total += (q * r);
+            }
+        }
+
+        if(items.length === 0) return alert("Please enter at least one item quantity.");
+
+        // 2. Credit Check
+        const cust = appStore.get().customers.find(c => c.id === custId);
+        if(pay === 'Credit' && (cust.balance + total > cust.limit)) {
+            if(!confirm(`Credit Limit Exceeded!\nCurrent: ₹${cust.balance}\nNew Total: ₹${cust.balance + total}\nLimit: ₹${cust.limit}\n\nProceed anyway?`)) return;
+        }
+
+        // 3. Create Order Object
+        const order = {
+            id: 'ORD-' + Date.now(),
+            date: date,
+            custId: custId,
+            items: items,
+            total: total,
+            paymentMode: pay,
+            status: 'Completed'
+        };
+
+        // 4. Save to Store
+        appStore.addOrder(order);
+        alert("Order Saved Successfully!");
+        Router.navigate('orders');
+    },
+
+            
             calcOrderTotal: function() {
                 let total = 0;
                 SKUS.forEach(sku => {
