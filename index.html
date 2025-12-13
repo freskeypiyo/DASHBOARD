@@ -53,6 +53,7 @@
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -99,21 +100,22 @@
             border: 1px solid transparent;
             transition: all 0.2s;
             font-size: 0.875rem;
+            white-space: nowrap;
         }
 
         .btn-primary { background-color: var(--color-primary); color: white; }
-        .btn-primary:hover { background-color: var(--color-primary-light); }
+        .btn-primary:active, .btn-primary:hover { background-color: var(--color-primary-light); }
         
         .btn-accent { background-color: var(--color-accent); color: white; }
-        .btn-accent:hover { background-color: var(--color-accent-hover); }
+        .btn-accent:active, .btn-accent:hover { background-color: var(--color-accent-hover); }
 
         .btn-danger { background-color: var(--color-danger); color: white; }
-        .btn-danger:hover { opacity: 0.9; }
+        .btn-danger:active, .btn-danger:hover { opacity: 0.9; }
 
         .btn-success { background-color: var(--color-success); color: white; }
         
         .btn-outline { background-color: transparent; border-color: var(--border-color); color: var(--text-main); }
-        .btn-outline:hover { background-color: var(--bg-body); }
+        .btn-outline:active, .btn-outline:hover { background-color: var(--bg-body); }
         
         .btn-google {
             background-color: white;
@@ -122,6 +124,10 @@
             display: flex;
             gap: 10px;
             width: 100%;
+            border-radius: var(--radius-sm);
+            padding: 0.75rem;
+            align-items: center;
+            justify-content: center;
         }
         .btn-google:hover { background-color: #f1f1f1; }
 
@@ -144,6 +150,7 @@
             align-items: center;
             justify-content: center;
             z-index: 9999;
+            padding: 1rem;
         }
 
         .login-box {
@@ -171,6 +178,7 @@
             display: grid;
             grid-template-columns: 240px 1fr;
             height: 100vh;
+            overflow: hidden;
         }
 
         /* Sidebar */
@@ -180,6 +188,8 @@
             display: flex;
             flex-direction: column;
             border-right: 1px solid var(--color-primary-light);
+            z-index: 100;
+            transition: transform 0.3s ease;
         }
 
         .brand-section {
@@ -207,7 +217,7 @@
             font-weight: 500;
         }
 
-        .nav-item:hover {
+        .nav-item:hover, .nav-item:active {
             color: white;
             background-color: rgba(255,255,255,0.05);
         }
@@ -232,6 +242,7 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
+            width: 100%;
         }
 
         .top-bar {
@@ -246,6 +257,9 @@
             z-index: 10;
         }
 
+        #menu-toggle { display: none; margin-right: 10px; font-size: 1.25rem; background: none; border: 1px solid #ddd; padding: 4px 8px; border-radius: 4px; }
+        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 90; }
+
         .screen-title { font-size: 1.25rem; font-weight: 700; color: var(--color-primary); }
 
         .content-area {
@@ -256,11 +270,11 @@
         }
 
         /* =========================================
-           5. DASHBOARD SPECIFIC
+           5. DASHBOARD SPECIFIC & RESPONSIVENESS
            ========================================= */
         .stat-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
@@ -279,7 +293,7 @@
 
         .dashboard-split {
             display: grid;
-            grid-template-columns: 2fr 1fr;
+            grid-template-columns: 2fr 1fr; /* Default laptop */
             gap: 1.5rem;
         }
 
@@ -348,7 +362,9 @@
             background: white;
         }
 
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: var(--radius-md); overflow: hidden; }
+        /* Responsive Table */
+        .table-container { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: var(--radius-md); overflow: hidden; min-width: 600px; }
         th { text-align: left; padding: 1rem; background: var(--bg-body); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); }
         td { padding: 1rem; border-top: 1px solid var(--border-color); font-size: 0.9rem; }
         tr:hover td { background-color: #f8fafc; }
@@ -400,13 +416,14 @@
             display: flex; align-items: center; justify-content: center;
             z-index: 5000;
             backdrop-filter: blur(2px);
+            padding: 1rem;
         }
         .modal {
             background: white;
             padding: 2rem;
             border-radius: var(--radius-md);
-            width: 90%;
-            max-width: 600px;
+            width: 100%;
+            max-width: 500px;
             max-height: 90vh;
             overflow-y: auto;
             box-shadow: var(--shadow-lg);
@@ -417,6 +434,74 @@
         
         /* Helper for helpers */
         .hint-text { font-size: 0.75rem; color: var(--color-accent); font-weight: 600; margin-top: 4px; display:block; }
+
+        /* =========================================
+           9. MOBILE MEDIA QUERIES
+           ========================================= */
+        @media (max-width: 768px) {
+            #app-container {
+                display: block; /* Removes grid to allow sidebar overlay */
+            }
+
+            .sidebar {
+                position: fixed;
+                left: -260px; /* Hide off screen */
+                top: 0; bottom: 0; width: 260px;
+                box-shadow: var(--shadow-lg);
+            }
+
+            .sidebar.open {
+                transform: translateX(260px);
+            }
+
+            .main-content {
+                width: 100%;
+                height: 100vh;
+            }
+
+            .top-bar {
+                padding: 1rem;
+            }
+
+            #menu-toggle {
+                display: block; /* Show hamburger */
+                margin-right: 15px;
+            }
+            
+            #overlay.active {
+                display: block;
+            }
+
+            .dashboard-split {
+                grid-template-columns: 1fr; /* Stack columns */
+            }
+
+            .flex {
+                flex-wrap: wrap; /* Allow wrapping */
+            }
+            
+            .content-area {
+                padding: 1rem;
+            }
+
+            .btn {
+                width: 100%; /* Full width buttons on mobile usually better */
+                margin-bottom: 0.5rem;
+                justify-content: center;
+            }
+
+            /* Adjust SKU selector in new order */
+            .flex.gap-4 {
+                gap: 1rem;
+            }
+            
+            .w-full {
+                margin-bottom: 0.5rem;
+            }
+            
+            /* Responsive Utilities */
+            .hide-mobile { display: none; }
+        }
 
     </style>
 </head>
@@ -445,13 +530,20 @@
     </div>
 </div>
 
+<!-- OVERLAY FOR MOBILE SIDEBAR -->
+<div id="overlay" onclick="app.toggleSidebar()"></div>
+
 <!-- APP CONTAINER (INITIALLY HIDDEN) -->
 <div id="app-container" class="hidden">
     
     <!-- LEFT SIDEBAR -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar">
         <div class="brand-section">
-            <div class="brand-title">FRESKEY</div>
+            <div class="flex justify-between items-center">
+                <div class="brand-title">FRESKEY</div>
+                <!-- Close btn for mobile -->
+                <div class="close-modal hide-mobile" onclick="app.toggleSidebar()" style="color:white; display:none;">×</div>
+            </div>
             <div class="brand-subtitle">Control First</div>
         </div>
         <nav class="nav-menu">
@@ -474,10 +566,13 @@
     <!-- MAIN CONTENT -->
     <main class="main-content">
         <header class="top-bar">
-            <div class="screen-title" id="page-title">Dashboard</div>
-            <div class="action-butons">
-                <span id="clock" class="text-muted font-mono" style="margin-right: 15px;"></span>
-                <button class="btn btn-outline" onclick="GoogleAuth.logout()">Logout</button>
+            <div class="flex items-center">
+                <button id="menu-toggle" onclick="app.toggleSidebar()">☰</button>
+                <div class="screen-title" id="page-title">Dashboard</div>
+            </div>
+            <div class="action-butons flex items-center">
+                <span id="clock" class="text-muted font-mono" style="margin-right: 15px; display:none;"></span>
+                <button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size:0.8rem;" onclick="GoogleAuth.logout()">Logout</button>
             </div>
         </header>
 
@@ -500,10 +595,11 @@
 <script>
 /**
  * =========================================================================================
- * FRESKEY ADMIN PANEL - STAND ALONE PROJECT (Detailed)
+ * FRESKEY ADMIN PANEL - STAND ALONE PROJECT (Detailed & Responsive)
  * =========================================================================================
- * - Google Auth Integrated (Requires Localhost/Server)
- * - Drive API Backup Feature
+ * - Google Auth Integrated
+ * - Responsive Mobile Layout
+ * - Drive API Backup
  * - Events Feature Activated
  * - Case Wise Calculations
  * =========================================================================================
@@ -605,13 +701,11 @@ const GoogleAuth = {
     },
 
     fetchUserInfo: async function(token) {
-        // Just for display, we decode simplified info or just use the target email logic
-        // Ideally we call userinfo endpoint, but for this standalone we just gatekeep
-        
-        // Simulating checking user
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('app-container').classList.remove('hidden');
-        document.getElementById('app-container').style.display = 'grid';
+        
+        // Use Grid/Block appropriate for viewport is handled by CSS
+        // but we removed 'hidden' class which is important.
         
         // Fetch User Info via API
         fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
@@ -923,7 +1017,7 @@ const Pages = {
                         </div>
                     </div>
                      <div class="flex gap-4">
-                        <button class="btn btn-primary" style="flex:1; height: 60px; font-size:1.2rem;" onclick="router.navigate('new-order')">+ New Order Setup</button>
+                        <button class="btn btn-primary" style="flex:1; height: 60px; font-size:1.2rem;" onclick="router.navigate('new-order')">+ New Order </button>
                         <button class="btn btn-outline" style="flex:1;" onclick="router.navigate('deliveries')">Delivery View</button>
                     </div>
                 </div>
@@ -950,12 +1044,12 @@ const Pages = {
                     <label class="form-label">Select Customer</label>
                     <select id="ord-cust" class="form-select" onchange="Pages.handleOrderCustChange()">${custOptions}</select>
                 </div>
-                <div class="form-group flex justify-between">
-                    <div>
+                <div class="form-group flex justify-between gap-4">
+                    <div class="w-full">
                         <label class="form-label">Type</label>
-                        <input id="ord-type" disabled class="form-input" style="background:#e2e8f0; width: 150px;">
+                        <input id="ord-type" disabled class="form-input" style="background:#e2e8f0;">
                     </div>
-                    <div>
+                    <div class="w-full">
                          <label class="form-label">Delivery Date</label>
                         <input type="date" id="ord-date" class="form-input" value="${new Date().toISOString().split('T')[0]}">
                     </div>
@@ -964,17 +1058,17 @@ const Pages = {
                 <h4 class="font-bold mb-2">SKU Selection (Enter Bottles)</h4>
                 <div class="flex gap-4 mb-2">
                     <div class="w-full">
-                        <label class="form-label">200ml (24/case)</label>
+                        <label class="form-label">200ml (24/c)</label>
                         <input type="number" id="qty-200" class="form-input" value="0" min="0" oninput="Pages.updateCaseHint('200ml', this.value, 'hint-200')">
                         <span id="hint-200" class="hint-text">0 Cases</span>
                     </div>
                     <div class="w-full">
-                        <label class="form-label">500ml (20/case)</label>
+                        <label class="form-label">500ml (20/c)</label>
                         <input type="number" id="qty-500" class="form-input" value="0" min="0" oninput="Pages.updateCaseHint('500ml', this.value, 'hint-500')">
                          <span id="hint-500" class="hint-text">0 Cases</span>
                     </div>
                     <div class="w-full">
-                        <label class="form-label">1 Litre (12/case)</label>
+                        <label class="form-label">1 Litre (12/c)</label>
                         <input type="number" id="qty-1l" class="form-input" value="0" min="0" oninput="Pages.updateCaseHint('1L', this.value, 'hint-1l')">
                          <span id="hint-1l" class="hint-text">0 Cases</span>
                     </div>
@@ -983,7 +1077,7 @@ const Pages = {
                 <div class="flex justify-between items-center bg-gray-50 p-4 rounded mb-4">
                     <div>
                         <div class="text-muted text-sm">Payment Mode</div>
-                        <select id="ord-payment" class="form-select" style="width:150px">
+                        <select id="ord-payment" class="form-select" style="min-width:120px">
                             ${CONSTANTS.PAYMENT_MODES.map(m => `<option value="${m}">${m}</option>`).join('')}
                         </select>
                     </div>
@@ -1103,9 +1197,10 @@ const Pages = {
 
         return `
             <div class="flex justify-between items-center mb-4">
-                <input type="text" placeholder="Search Customer..." class="form-input" style="width: 300px;">
-                <button class="btn btn-primary" onclick="Pages.addCustomerModal()">+ Add Customer</button>
+                <input type="text" placeholder="Search Customer..." class="form-input" style="width: 300px; max-width: 60%">
+                <button class="btn btn-primary" onclick="Pages.addCustomerModal()">+ Add</button>
             </div>
+            <div class="table-container">
             <table>
                 <thead>
                     <tr>
@@ -1115,6 +1210,7 @@ const Pages = {
                 </thead>
                 <tbody>${rows}</tbody>
             </table>
+            </div>
         `;
     },
 
@@ -1220,10 +1316,11 @@ const Pages = {
                 </div>
             </div>
             <div class="flex gap-4 mb-4"><strong class="text-xl">Today's Sheets (${today})</strong></div>
+            <div class="table-container">
             <table>
                 <thead><tr><th>Customer</th><th>Hub</th><th>SKU Mix</th><th>Total Qty</th><th>Action</th></tr></thead>
                 <tbody>${rows.length === 0 ? '<tr><td colspan="5" class="text-center text-muted">No pending deliveries for today.</td></tr>' : rows}</tbody>
-            </table>
+            </table></div>
         `;
     },
 
@@ -1250,7 +1347,9 @@ const Pages = {
              <div class="stat-card mb-4" style="border-left: 5px solid red;">
                 <div class="stat-label">Total Market Outstanding</div><div class="stat-value text-danger">₹${totalOut}</div>
             </div>
+            <div class="table-container">
             <table><thead><tr><th>Party Name</th><th>Outstanding Amount</th><th>Credit Limit</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table>
+            </div>
         `;
     },
 
@@ -1289,8 +1388,8 @@ const Pages = {
                 <h2 class="screen-title">Event Operations</h2>
                 <button class="btn btn-primary" onclick="Pages.addEventModal()">+ Book New Event</button>
             </div>
-            <table><thead><tr><th>Event Name</th><th>Date</th><th>Bottles</th><th>Prepaid Amt</th><th>Status</th></tr></thead>
-            <tbody>${rows}</tbody></table>
+            <div class="table-container"><table><thead><tr><th>Event Name</th><th>Date</th><th>Bottles</th><th>Prepaid Amt</th><th>Status</th></tr></thead>
+            <tbody>${rows}</tbody></table></div>
         `;
     },
 
@@ -1399,7 +1498,16 @@ const Pages = {
 // --- 8. ROUTER ---
 const router = {
     currentPage: 'dashboard',
-    navigate: function(pageId) { this.currentPage = pageId; this.updateNav(); this.render(); },
+    navigate: function(pageId) {
+        this.currentPage = pageId;
+        this.updateNav();
+        this.render();
+        // On mobile, auto close sidebar when navigating
+        const sidebar = document.getElementById('sidebar');
+        if(window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+             app.toggleSidebar();
+        }
+    },
     updateNav: function() { document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); },
     render: function() {
         const contentEl = document.getElementById('content-area');
@@ -1423,9 +1531,26 @@ const router = {
 
 const app = {
     init: function() {
-        setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString(); }, 1000);
+        setInterval(() => { 
+            const clock = document.getElementById('clock');
+            if(clock) clock.innerText = new Date().toLocaleTimeString(); 
+        }, 1000);
         GoogleAuth.init(); // Load Google Scripts
     },
+    
+    toggleSidebar: function() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        sidebar.classList.toggle('open');
+        if(overlay) {
+            if (sidebar.classList.contains('open')) {
+                overlay.style.display = 'block';
+            } else {
+                overlay.style.display = 'none';
+            }
+        }
+    },
+    
     logout: function() { GoogleAuth.logout(); }
 };
 
