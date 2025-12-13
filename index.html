@@ -4,514 +4,120 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Freskey Admin Panel | Control Room</title>
+    
     <!-- Google API Scripts -->
     <script src="https://apis.google.com/js/api.js"></script>
     <script src="https://accounts.google.com/gsi/client"></script>
     
+    <!-- PDF Generation Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+    
     <style>
         /* =========================================
-           1. CSS VARIABLES & RESET
+           CSS STYLES (Responsive & Clean)
            ========================================= */
         :root {
-            /* Brand Colors */
-            --color-primary: #0f172a; /* Slate 900 - Deep Control */
-            --color-primary-light: #1e293b; /* Slate 800 */
-            --color-accent: #0ea5e9; /* Sky 500 - Action */
+            --color-primary: #0f172a; 
+            --color-primary-light: #1e293b;
+            --color-accent: #0ea5e9; 
             --color-accent-hover: #0284c7;
-            
-            /* Status Colors */
-            --color-success: #10b981; /* Emerald */
-            --color-warning: #f59e0b; /* Amber */
-            --color-danger: #ef4444; /* Red */
-            --color-info: #3b82f6;
-
-            /* Backgrounds */
-            --bg-body: #f1f5f9; /* Slate 100 */
+            --color-success: #10b981; 
+            --color-warning: #f59e0b; 
+            --color-danger: #ef4444; 
+            --bg-body: #f1f5f9; 
             --bg-card: #ffffff;
             --bg-input: #f8fafc;
-
-            /* Text */
             --text-main: #0f172a;
             --text-muted: #64748b;
             --text-light: #94a3b8;
-            --text-white: #ffffff;
-
-            /* Borders */
             --border-color: #e2e8f0;
             --radius-sm: 4px;
             --radius-md: 8px;
             --radius-lg: 12px;
-
-            /* Shadows */
             --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
             --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            font-size: 14px;
-            line-height: 1.5;
-            height: 100vh;
-            overflow: hidden; /* App feel */
-        }
-
-        /* =========================================
-           2. UTILITIES & TYPOGRAPHY
-           ========================================= */
-        .text-center { text-align: center; }
-        .text-right { text-align: right; }
-        .text-left { text-align: left; }
-        .text-success { color: var(--color-success); }
-        .text-danger { color: var(--color-danger); }
-        .text-warning { color: var(--color-warning); }
-        .text-muted { color: var(--text-muted); }
-        .font-bold { font-weight: 700; }
-        .font-semi { font-weight: 600; }
-        .caps { text-transform: uppercase; letter-spacing: 0.5px; font-size: 0.75rem; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-body); color: var(--text-main); font-size: 14px; line-height: 1.5; height: 100vh; overflow: hidden; }
         
-        .flex { display: flex; }
-        .flex-col { flex-direction: column; }
-        .items-center { align-items: center; }
-        .justify-between { justify-content: space-between; }
-        .gap-2 { gap: 0.5rem; }
-        .gap-4 { gap: 1rem; }
-        .w-full { width: 100%; }
-        .h-full { height: 100%; }
-        .hidden { display: none !important; }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0.5rem 1rem;
-            border-radius: var(--radius-sm);
-            font-weight: 600;
-            cursor: pointer;
-            border: 1px solid transparent;
-            transition: all 0.2s;
-            font-size: 0.875rem;
-            white-space: nowrap;
-        }
-
-        .btn-primary { background-color: var(--color-primary); color: white; }
-        .btn-primary:active, .btn-primary:hover { background-color: var(--color-primary-light); }
+        /* Layout */
+        #app-container { display: grid; grid-template-columns: 240px 1fr; height: 100vh; }
+        .sidebar { background-color: var(--color-primary); color: white; display: flex; flex-direction: column; z-index: 100; transition: 0.3s; }
+        .main-content { background-color: var(--bg-body); overflow-y: auto; display: flex; flex-direction: column; width: 100%; }
         
-        .btn-accent { background-color: var(--color-accent); color: white; }
-        .btn-accent:active, .btn-accent:hover { background-color: var(--color-accent-hover); }
-
-        .btn-danger { background-color: var(--color-danger); color: white; }
-        .btn-danger:active, .btn-danger:hover { opacity: 0.9; }
-
-        .btn-success { background-color: var(--color-success); color: white; }
-        
-        .btn-outline { background-color: transparent; border-color: var(--border-color); color: var(--text-main); }
-        .btn-outline:active, .btn-outline:hover { background-color: var(--bg-body); }
-        
-        .btn-google {
-            background-color: white;
-            color: #757575;
-            border: 1px solid #ddd;
-            display: flex;
-            gap: 10px;
-            width: 100%;
-            border-radius: var(--radius-sm);
-            padding: 0.75rem;
-            align-items: center;
-            justify-content: center;
-        }
-        .btn-google:hover { background-color: #f1f1f1; }
-
-        .card {
-            background: var(--bg-card);
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-sm);
-            padding: 1.5rem;
+        /* Mobile Specific */
+        @media (max-width: 768px) {
+            #app-container { display: block; }
+            .sidebar { position: fixed; left: -260px; top: 0; bottom: 0; width: 260px; box-shadow: var(--shadow-lg); }
+            .sidebar.open { transform: translateX(260px); }
+            .top-bar { padding: 1rem; }
+            #menu-toggle { display: block !important; margin-right: 15px; background:none; border:1px solid #ddd; padding:4px 8px; font-size:1.2rem;}
+            #overlay.active { display: block; }
+            .dashboard-split { grid-template-columns: 1fr !important; }
         }
 
-        /* =========================================
-           3. LOGIN SCREEN
-           ========================================= */
-        #login-screen {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--color-primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            padding: 1rem;
-        }
-
-        .login-box {
-            background: white;
-            padding: 2.5rem;
-            border-radius: var(--radius-lg);
-            width: 100%;
-            max-width: 400px;
-            box-shadow: var(--shadow-lg);
-        }
-
-        .login-logo {
-            font-size: 2rem;
-            font-weight: 800;
-            color: var(--color-primary);
-            margin-bottom: 2rem;
-            text-align: center;
-            letter-spacing: -1px;
-        }
-
-        /* =========================================
-           4. APP LAYOUT (SIDEBAR + MAIN)
-           ========================================= */
-        #app-container {
-            display: grid;
-            grid-template-columns: 240px 1fr;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            background-color: var(--color-primary);
-            color: var(--text-white);
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid var(--color-primary-light);
-            z-index: 100;
-            transition: transform 0.3s ease;
-        }
-
-        .brand-section {
-            padding: 1.5rem;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .brand-title { font-size: 1.5rem; font-weight: bold; }
-        .brand-subtitle { font-size: 0.75rem; color: var(--text-light); text-transform: uppercase; }
-
-        .nav-menu {
-            flex: 1;
-            padding: 1rem 0;
-            overflow-y: auto;
-        }
-
-        .nav-item {
-            padding: 0.75rem 1.5rem;
-            cursor: pointer;
-            color: var(--text-light);
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 500;
-        }
-
-        .nav-item:hover, .nav-item:active {
-            color: white;
-            background-color: rgba(255,255,255,0.05);
-        }
-
-        .nav-item.active {
-            color: var(--color-accent);
-            background-color: rgba(14, 165, 233, 0.1);
-            border-left: 3px solid var(--color-accent);
-        }
-
-        .user-section {
-            padding: 1rem 1.5rem;
-            border-top: 1px solid rgba(255,255,255,0.1);
-            font-size: 0.875rem;
-            color: var(--text-light);
-            word-break: break-all;
-        }
-
-        /* Main Content */
-        .main-content {
-            background-color: var(--bg-body);
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-        }
-
-        .top-bar {
-            background: white;
-            padding: 1rem 2rem;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        #menu-toggle { display: none; margin-right: 10px; font-size: 1.25rem; background: none; border: 1px solid #ddd; padding: 4px 8px; border-radius: 4px; }
+        #menu-toggle { display: none; }
         #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 90; }
 
-        .screen-title { font-size: 1.25rem; font-weight: 700; color: var(--color-primary); }
-
-        .content-area {
-            padding: 2rem;
-            max-width: 1400px;
-            margin: 0 auto;
-            width: 100%;
-        }
-
-        /* =========================================
-           5. DASHBOARD SPECIFIC & RESPONSIVENESS
-           ========================================= */
-        .stat-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-sm);
-        }
-
-        .stat-label { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem; }
-        .stat-value { font-size: 1.75rem; font-weight: 700; color: var(--color-primary); }
-        .stat-trend { font-size: 0.8rem; margin-top: 0.25rem; }
-
-        .dashboard-split {
-            display: grid;
-            grid-template-columns: 2fr 1fr; /* Default laptop */
-            gap: 1.5rem;
-        }
-
-        .progress-bar-container {
-            background: var(--bg-body);
-            border-radius: 99px;
-            height: 12px;
-            width: 100%;
-            overflow: hidden;
-            margin: 10px 0;
-        }
-
-        .progress-bar-fill {
-            height: 100%;
-            background: var(--color-primary);
-            transition: width 0.5s ease;
-        }
-
-        .sku-mix-display {
-            display: flex;
-            height: 40px;
-            border-radius: var(--radius-sm);
-            overflow: hidden;
-            margin-top: 1rem;
-        }
-
-        .sku-segment {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 0.75rem;
-            font-weight: bold;
-        }
-
-        /* Alert Box */
-        .alert-box {
-            background: #fef2f2;
-            border: 1px solid #fee2e2;
-            color: #b91c1c;
-            padding: 1rem;
-            border-radius: var(--radius-md);
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        /* =========================================
-           6. FORMS & TABLES
-           ========================================= */
-        .form-group { margin-bottom: 1rem; }
-        .form-label { display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.875rem; }
-        .form-input, .form-select {
-            width: 100%;
-            padding: 0.625rem;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            background: var(--bg-input);
-            font-size: 0.9rem;
-            transition: border-color 0.2s;
-        }
-        .form-input:focus, .form-select:focus {
-            outline: none;
-            border-color: var(--color-accent);
-            background: white;
-        }
-
-        /* Responsive Table */
-        .table-container { width: 100%; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: var(--radius-md); overflow: hidden; min-width: 600px; }
-        th { text-align: left; padding: 1rem; background: var(--bg-body); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); }
-        td { padding: 1rem; border-top: 1px solid var(--border-color); font-size: 0.9rem; }
-        tr:hover td { background-color: #f8fafc; }
-
-        .badge {
-            padding: 0.25rem 0.6rem;
-            border-radius: 99px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-        .badge-success { background: #dcfce7; color: #166534; }
-        .badge-warning { background: #fef3c7; color: #92400e; }
-        .badge-danger { background: #fee2e2; color: #991b1b; }
-        .badge-info { background: #e0f2fe; color: #075985; }
-
-        /* =========================================
-           7. CUSTOM TOASTS
-           ========================================= */
-        #toast-container {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            z-index: 10000;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .toast {
-            min-width: 300px;
-            background: white;
-            padding: 1rem;
-            border-radius: var(--radius-md);
-            box-shadow: var(--shadow-lg);
-            border-left: 4px solid var(--color-primary);
-            animation: slideIn 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
-
-        /* =========================================
-           8. MODALS
-           ========================================= */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.6);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 5000;
-            backdrop-filter: blur(2px);
-            padding: 1rem;
-        }
-        .modal {
-            background: white;
-            padding: 2rem;
-            border-radius: var(--radius-md);
-            width: 100%;
-            max-width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: var(--shadow-lg);
-        }
-        .modal-header { display: flex; justify-content: space-between; margin-bottom: 1.5rem; }
-        .modal-title { font-size: 1.25rem; font-weight: bold; }
-        .close-modal { cursor: pointer; font-size: 1.5rem; line-height: 1; }
+        /* UI Elements */
+        .btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 1rem; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; border: none; transition: 0.2s; }
+        .btn-primary { background: var(--color-primary); color: white; }
+        .btn-primary:hover { background: var(--color-primary-light); }
+        .btn-outline { background: transparent; border: 1px solid var(--border-color); }
+        .btn-google { background: white; color: #555; border: 1px solid #ddd; width: 100%; gap:10px; padding: 0.8rem; }
         
-        /* Helper for helpers */
-        .hint-text { font-size: 0.75rem; color: var(--color-accent); font-weight: 600; margin-top: 4px; display:block; }
+        .card { background: var(--bg-card); padding: 1.5rem; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); }
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .dashboard-split { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
+        
+        .form-group { margin-bottom: 1rem; }
+        .form-label { display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.85rem; }
+        .form-input, .form-select { width: 100%; padding: 0.6rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: var(--bg-input); }
+        
+        /* Tables */
+        .table-container { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; background: white; min-width: 600px; }
+        th { text-align: left; padding: 1rem; background: var(--bg-body); font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); }
+        td { padding: 1rem; border-top: 1px solid var(--border-color); }
+        
+        /* Sidebar Nav */
+        .brand-section { padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .brand-title { font-size: 1.5rem; font-weight: bold; }
+        .nav-item { padding: 0.8rem 1.5rem; cursor: pointer; color: var(--text-light); transition: 0.2s; }
+        .nav-item:hover, .nav-item.active { color: var(--color-accent); background: rgba(255,255,255,0.05); }
+        .user-section { padding: 1rem; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; }
 
-        /* =========================================
-           9. MOBILE MEDIA QUERIES
-           ========================================= */
-        @media (max-width: 768px) {
-            #app-container {
-                display: block; /* Removes grid to allow sidebar overlay */
-            }
+        /* Login Screen */
+        #login-screen { position: fixed; inset: 0; background: var(--color-primary); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .login-box { background: white; padding: 2.5rem; border-radius: var(--radius-lg); width: 90%; max-width: 400px; box-shadow: var(--shadow-lg); text-align: center; }
 
-            .sidebar {
-                position: fixed;
-                left: -260px; /* Hide off screen */
-                top: 0; bottom: 0; width: 260px;
-                box-shadow: var(--shadow-lg);
-            }
-
-            .sidebar.open {
-                transform: translateX(260px);
-            }
-
-            .main-content {
-                width: 100%;
-                height: 100vh;
-            }
-
-            .top-bar {
-                padding: 1rem;
-            }
-
-            #menu-toggle {
-                display: block; /* Show hamburger */
-                margin-right: 15px;
-            }
-            
-            #overlay.active {
-                display: block;
-            }
-
-            .dashboard-split {
-                grid-template-columns: 1fr; /* Stack columns */
-            }
-
-            .flex {
-                flex-wrap: wrap; /* Allow wrapping */
-            }
-            
-            .content-area {
-                padding: 1rem;
-            }
-
-            .btn {
-                width: 100%; /* Full width buttons on mobile usually better */
-                margin-bottom: 0.5rem;
-                justify-content: center;
-            }
-
-            /* Adjust SKU selector in new order */
-            .flex.gap-4 {
-                gap: 1rem;
-            }
-            
-            .w-full {
-                margin-bottom: 0.5rem;
-            }
-            
-            /* Responsive Utilities */
-            .hide-mobile { display: none; }
-        }
-
+        /* Toast */
+        #toast-container { position: fixed; bottom: 2rem; right: 2rem; z-index: 10000; display: flex; flex-direction: column; gap: 0.5rem; }
+        .toast { background: white; padding: 1rem; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); border-left: 4px solid var(--color-primary); min-width: 250px; animation: slideIn 0.3s; }
+        @keyframes slideIn { from{transform:translateX(100%)} to{transform:translateX(0)} }
+        
+        /* Modals */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 5000; padding: 1rem; }
+        .modal { background: white; padding: 2rem; border-radius: var(--radius-md); width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+        
+        .hidden { display: none !important; }
+        .flex { display: flex; } .justify-between { justify-content: space-between; } .items-center { align-items: center; } .gap-2 { gap: 0.5rem; } .gap-4 { gap: 1rem; }
+        .text-success { color: var(--color-success); } .text-danger { color: var(--color-danger); }
+        .top-bar { background: white; padding: 1rem 2rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Helper */
+        .hint-text { font-size: 0.8rem; color: var(--color-accent); font-weight: 600; display: block; margin-top: 4px; }
     </style>
 </head>
 <body>
 
-<!-- 0. LOGIN SCREEN -->
+<!-- LOGIN SCREEN -->
 <div id="login-screen">
     <div class="login-box">
-        <div class="login-logo">FRESKEY<span style="color:var(--color-accent)">.</span></div>
-        <p class="text-center text-muted" style="margin-bottom: 1.5rem;">Secure Admin Access</p>
+        <h1 style="color:var(--color-primary); margin-bottom:0.5rem; font-weight:800; font-size:2rem;">FRESKEY<span style="color:var(--color-accent)">.</span></h1>
+        <p style="color:#666; margin-bottom:2rem;">Admin Control Panel</p>
         
         <div id="g_id_onload"
              data-client_id="950010994560-v7p6cem78h9fsdp102iq4immb36t95ls.apps.googleusercontent.com"
@@ -519,32 +125,26 @@
              data-auto_prompt="false">
         </div>
         
-        <!-- Custom Login Button Trigger -->
         <button class="btn btn-google" onclick="GoogleAuth.initTokenClient()">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="20" height="20">
-            <span style="flex:1; text-align:center; font-weight:600; color:#444">Sign in with Google</span>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="20">
+            <span>Sign in with Google</span>
         </button>
-
-        <p id="login-error" class="text-danger text-center font-bold" style="margin-top: 1rem; display: none;">Authentication Failed</p>
-        <p class="text-center text-muted text-xs mt-4">Note: Must run on localhost or authorized domain.</p>
+        <p id="login-status" style="margin-top:1rem; font-size:0.8rem; color:#888;">Secure Cloud Database</p>
     </div>
 </div>
 
-<!-- OVERLAY FOR MOBILE SIDEBAR -->
+<!-- MOBILE OVERLAY -->
 <div id="overlay" onclick="app.toggleSidebar()"></div>
 
-<!-- APP CONTAINER (INITIALLY HIDDEN) -->
+<!-- APP UI -->
 <div id="app-container" class="hidden">
-    
-    <!-- LEFT SIDEBAR -->
     <aside class="sidebar" id="sidebar">
         <div class="brand-section">
             <div class="flex justify-between items-center">
                 <div class="brand-title">FRESKEY</div>
-                <!-- Close btn for mobile -->
-                <div class="close-modal hide-mobile" onclick="app.toggleSidebar()" style="color:white; display:none;">×</div>
+                <div onclick="app.toggleSidebar()" style="cursor:pointer; font-size:1.5rem; display:none;" class="mobile-close">×</div>
             </div>
-            <div class="brand-subtitle">Control First</div>
+            <div style="font-size:0.75rem; opacity:0.7; letter-spacing:1px; text-transform:uppercase;">Control First</div>
         </div>
         <nav class="nav-menu">
             <div class="nav-item active" onclick="router.navigate('dashboard')">📊 Dashboard</div>
@@ -552,1010 +152,472 @@
             <div class="nav-item" onclick="router.navigate('customers')">👥 Customers</div>
             <div class="nav-item" onclick="router.navigate('deliveries')">🚚 Deliveries</div>
             <div class="nav-item" onclick="router.navigate('payments')">💰 Payments</div>
-            <div class="nav-item" onclick="router.navigate('events')">🎉 Event Orders</div>
+            <div class="nav-item" onclick="router.navigate('events')">🎉 Events</div>
             <div class="nav-item" onclick="router.navigate('inventory')">📦 Inventory</div>
             <div class="nav-item" onclick="router.navigate('reports')">📈 Reports</div>
             <div class="nav-item" onclick="router.navigate('settings')">⚙️ Settings</div>
         </nav>
         <div class="user-section">
-            <div id="user-display-email">...</div>
-            <small class="text-muted">Authenticated User</small>
+            <div id="user-display-email" style="font-weight:600;">...</div>
+            <small id="sync-status" class="text-success">● Synced</small>
         </div>
     </aside>
 
-    <!-- MAIN CONTENT -->
     <main class="main-content">
         <header class="top-bar">
             <div class="flex items-center">
                 <button id="menu-toggle" onclick="app.toggleSidebar()">☰</button>
-                <div class="screen-title" id="page-title">Dashboard</div>
+                <h2 id="page-title" style="font-size:1.25rem; font-weight:700; color:var(--text-main);">Dashboard</h2>
             </div>
-            <div class="action-butons flex items-center">
-                <span id="clock" class="text-muted font-mono" style="margin-right: 15px; display:none;"></span>
-                <button class="btn btn-outline" style="padding: 0.25rem 0.75rem; font-size:0.8rem;" onclick="GoogleAuth.logout()">Logout</button>
+            <div class="flex items-center gap-4">
+                <span id="clock" style="color:#888; font-family:monospace; display:none;"></span>
+                <button class="btn btn-outline" onclick="GoogleAuth.logout()" style="font-size:0.8rem;">Logout</button>
             </div>
         </header>
 
-        <!-- DYNAMIC CONTENT AREA -->
-        <div id="content-area" class="content-area">
-            <!-- Content injected by JS -->
-        </div>
+        <div id="content-area" class="content-area"></div>
     </main>
-
 </div>
 
-<!-- TOAST CONTAINER -->
 <div id="toast-container"></div>
-
-<!-- GENERIC MODAL -->
-<div id="modal-container" class="hidden modal-overlay">
-    <!-- Injected JS -->
-</div>
+<div id="modal-container" class="hidden modal-overlay"></div>
 
 <script>
-/**
- * =========================================================================================
- * FRESKEY ADMIN PANEL - STAND ALONE PROJECT (Detailed & Responsive)
- * =========================================================================================
- * - Google Auth Integrated
- * - Responsive Mobile Layout
- * - Drive API Backup
- * - Events Feature Activated
- * - Case Wise Calculations
- * =========================================================================================
- */
+/* =============================================================================
+   FRESKEY ENGINE: Auto-Sync Google Drive Database & PDF Reports
+   ============================================================================= */
 
-// --- 1. SETTINGS & CONSTANTS ---
 const CONSTANTS = {
     SKUS: ['200ml', '500ml', '1L'],
-    CASE_SIZE: {
-        '200ml': 24, // 24 bottles per case
-        '500ml': 20, // 20 bottles per case
-        '1L': 12     // 12 bottles per case
-    },
-    CUSTOMER_TYPES: ['Residential', 'Corporate', 'Retail', 'Event'],
+    CASE_SIZE: { '200ml': 24, '500ml': 20, '1L': 12 },
     HUBS: ['North Zone', 'South Zone', 'East Zone', 'West Hub', 'Central'],
+    CUSTOMER_TYPES: ['Residential', 'Corporate', 'Retail', 'Event'],
     PAYMENT_MODES: ['Cash', 'Online/UPI', 'Credit'],
-    STATUS: {
-        ACTIVE: 'Active',
-        BLOCKED: 'Blocked',
-        PENDING: 'Pending',
-        DELIVERED: 'Delivered',
-        FAILED: 'Failed'
-    }
+    STATUS: { ACTIVE: 'Active', BLOCKED: 'Blocked', DELIVERED: 'Delivered', PENDING: 'Pending' },
+    DB_FILENAME: 'freskey_db.json'
 };
 
 const GOOGLE_CONFIG = {
     CLIENT_ID: '950010994560-v7p6cem78h9fsdp102iq4immb36t95ls.apps.googleusercontent.com',
     API_KEY: 'AIzaSyCWo9OP6-QhyKWpfuV5oonyuC32IQHoOtE',
-    TARGET_EMAIL: 'freskeypiyo@gmail.com',
     SCOPES: 'https://www.googleapis.com/auth/drive.file',
     DISCOVERY_DOCS: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest']
 };
 
-// --- 2. GLOBAL STORE ---
-const store = {
-    settings: {
-        prices: { '200ml': 10, '500ml': 20, '1L': 40 },
-        costs: { '200ml': 4, '500ml': 8, '1L': 15 },
-        hubRadiusKm: 10,
-        creditDefaults: {
-            'Residential': 500,
-            'Retail': 2000,
-            'Corporate': 5000,
-            'Event': 0
-        }
-    },
-    inventory: {
-        '200ml': 0, '500ml': 0, '1L': 0
-    },
-    customers: [],
-    orders: [],
-    events: [],
-    currentUser: null
+let store = {
+    settings: { prices: {'200ml':10, '500ml':20, '1L':40}, costs: {'200ml':4, '500ml':8, '1L':15}, creditDefaults: {'Residential':500, 'Retail':2000, 'Corporate':5000, 'Event':0} },
+    inventory: {'200ml':0, '500ml':0, '1L':0},
+    customers: [], orders: [], events: [],
+    fileId: null // Stores the Google Drive File ID
 };
 
-// --- 3. GOOGLE INTEGRATION LOGIC ---
 let tokenClient;
 let gapiInited = false;
 let gisInited = false;
 
+/* --- GOOGLE AUTH & DRIVE SYNC --- */
 const GoogleAuth = {
     init: function() {
-        // Load GAPI
         gapi.load('client', async () => {
-            await gapi.client.init({
-                apiKey: GOOGLE_CONFIG.API_KEY,
-                discoveryDocs: GOOGLE_CONFIG.DISCOVERY_DOCS,
-            });
+            await gapi.client.init({ apiKey: GOOGLE_CONFIG.API_KEY, discoveryDocs: GOOGLE_CONFIG.DISCOVERY_DOCS });
             gapiInited = true;
         });
-
-        // Load GIS
         tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: GOOGLE_CONFIG.CLIENT_ID,
             scope: GOOGLE_CONFIG.SCOPES,
-            callback: '', // defined later on click
+            callback: '', // Set dynamic
         });
         gisInited = true;
     },
 
     initTokenClient: function() {
-        if(!gisInited) return UI.toast("Google Services loading...", "warning");
-        
+        if(!gisInited) return UI.toast("Google Services Loading... Wait", "warning");
         tokenClient.callback = async (resp) => {
-            if (resp.error !== undefined) {
-                document.getElementById('login-error').style.display = 'block';
-                document.getElementById('login-error').innerText = "Auth Error: " + resp.error;
-                throw (resp);
-            }
-            // Success
-            await this.fetchUserInfo(resp.access_token);
+            if (resp.error) throw resp;
+            await this.handleLoginSuccess(resp.access_token);
         };
-
-        if (gapi.client.getToken() === null) {
-            tokenClient.requestAccessToken({prompt: 'consent'});
-        } else {
-            tokenClient.requestAccessToken({prompt: ''});
-        }
+        tokenClient.requestAccessToken({prompt: ''});
     },
 
-    fetchUserInfo: async function(token) {
+    handleLoginSuccess: async function(token) {
+        document.getElementById('login-status').innerText = "Loading Database...";
+        
+        // 1. Get User Info
+        const userReq = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: `Bearer ${token}` }});
+        const user = await userReq.json();
+        document.getElementById('user-display-email').innerText = user.email;
+        
+        // 2. Find Database File
+        await this.findAndLoadDB();
+
+        // 3. Enter App
         document.getElementById('login-screen').classList.add('hidden');
         document.getElementById('app-container').classList.remove('hidden');
-        
-        // Use Grid/Block appropriate for viewport is handled by CSS
-        // but we removed 'hidden' class which is important.
-        
-        // Fetch User Info via API
-        fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-            headers: { Authorization: `Bearer ${token}` }
-        })
-        .then(res => res.json())
-        .then(data => {
-            store.currentUser = data;
-            document.getElementById('user-display-email').innerText = data.email;
-            UI.toast(`Welcome, ${data.name}`, "success");
-            
-            // Init App Data
-            if(store.customers.length === 0) DataGenerator.init();
-            router.navigate('dashboard');
-        })
-        .catch(err => {
+        router.navigate('dashboard');
+
+        // 4. Start Auto-Sync (Every 1 Minute)
+        setInterval(() => this.saveDB(true), 60000); 
+    },
+
+    findAndLoadDB: async function() {
+        try {
+            // Search for file
+            const q = `name = '${CONSTANTS.DB_FILENAME}' and trashed = false`;
+            const resp = await gapi.client.drive.files.list({ q: q, fields: 'files(id, name)' });
+            const files = resp.result.files;
+
+            if (files && files.length > 0) {
+                // FOUND: Load it
+                store.fileId = files[0].id;
+                UI.toast("Database Found. Loading...", "info");
+                const fileContent = await gapi.client.drive.files.get({ fileId: store.fileId, alt: 'media' });
+                // Merge loaded data into store, keeping fileId
+                const loadedData = fileContent.result;
+                store = { ...store, ...loadedData, fileId: store.fileId };
+                UI.toast("Data Loaded Successfully", "success");
+            } else {
+                // NOT FOUND: Create new with Mock Data
+                UI.toast("No Database Found. Creating New...", "warning");
+                DataGenerator.init();
+                await this.createDBFile();
+            }
+        } catch (err) {
             console.error(err);
-            // Fallback if API fails but token exists
-            document.getElementById('user-display-email').innerText = "Google User";
-            DataGenerator.init();
-            router.navigate('dashboard');
-        });
-    },
-
-    logout: function() {
-        const token = gapi.client.getToken();
-        if (token !== null) {
-            google.accounts.oauth2.revoke(token.access_token);
-            gapi.client.setToken('');
+            UI.toast("Error Loading Data. Using Offline Mode.", "danger");
+            DataGenerator.init(); // Fallback
         }
-        location.reload();
     },
 
-    uploadToDrive: async function() {
-        if(!store.currentUser) return UI.toast("Not logged in", "danger");
-
-        UI.toast("Backing up data to Drive...", "info");
-
+    createDBFile: async function() {
         const fileContent = JSON.stringify(store);
         const file = new Blob([fileContent], {type: 'application/json'});
-        const metadata = {
-            'name': `Freskey_Backup_${new Date().toISOString().split('T')[0]}.json`,
-            'mimeType': 'application/json'
-        };
+        const metadata = { 'name': CONSTANTS.DB_FILENAME, 'mimeType': 'application/json' };
 
         const accessToken = gapi.client.getToken().access_token;
         const form = new FormData();
         form.append('metadata', new Blob([JSON.stringify(metadata)], {type: 'application/json'}));
         form.append('file', file);
 
-        fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+        const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
             method: 'POST',
             headers: new Headers({ 'Authorization': 'Bearer ' + accessToken }),
             body: form
-        }).then((res) => {
-            if(res.ok) UI.toast("Backup successfully saved to Drive", "success");
-            else UI.toast("Create Backup Failed", "danger");
-        }).catch(err => UI.toast("Network Error on Backup", "danger"));
-    }
-};
-
-// --- 4. MOCK DATA GENERATOR ---
-const DataGenerator = {
-    init: function() {
-        console.log("Initializing Freskey Database...");
-        this.generateInventory();
-        this.generateCustomers(60);
-        this.generateOrders(250); 
-        this.generateEvents(5);
-        console.log("Database Ready.", store);
+        });
+        const data = await res.json();
+        store.fileId = data.id;
+        UI.toast("Database Created in Drive", "success");
     },
 
-    generateInventory: function() {
-        store.inventory = {
-            '200ml': 2400, // 100 cases
-            '500ml': 1000, // 50 cases
-            '1L': 600      // 50 cases
-        };
-    },
-
-    generateCustomers: function(count) {
-        const names = ["Apex Corp", "John Doe", "Green Cafe", "Tech Park", "Sarah Smith", "Blue Bottle", "Grand Hotel", "Villa 42", "Startup Hub", "Gym Khaana"];
-        const streets = ["MG Road", "Indira Nagar", "Whitefield", "Koramangala", "Jayanagar", "HSR Layout"];
+    saveDB: async function(isAuto = false) {
+        if (!store.fileId) return; // Can't save if no file ID
         
-        for(let i=0; i<count; i++) {
-            const type = CONSTANTS.CUSTOMER_TYPES[Math.floor(Math.random() * CONSTANTS.CUSTOMER_TYPES.length)];
-            const name = names[Math.floor(Math.random() * names.length)] + " " + (i+1);
-            const area = CONSTANTS.HUBS[Math.floor(Math.random() * CONSTANTS.HUBS.length)];
-            
-            store.customers.push({
-                id: `CUST${1000+i}`,
-                name: name,
-                type: type,
-                area: area,
-                location: `${streets[Math.floor(Math.random() * streets.length)]}, ${area}`,
-                phone: `98765${Math.floor(10000 + Math.random() * 90000)}`,
-                status: Math.random() > 0.95 ? CONSTANTS.STATUS.BLOCKED : CONSTANTS.STATUS.ACTIVE,
-                creditLimit: store.settings.creditDefaults[type] || 2000,
-                outstanding: 0, 
-                joinedDate: new Date(Date.now() - Math.floor(Math.random() * 10000000000)).toISOString()
-            });
+        document.getElementById('sync-status').innerText = "↻ Syncing...";
+        if(!isAuto) UI.toast("Syncing Data to Drive...", "info");
+
+        const fileContent = JSON.stringify(store);
+        const file = new Blob([fileContent], {type: 'application/json'});
+        
+        const accessToken = gapi.client.getToken().access_token;
+        
+        // Update existing file (PATCH)
+        const res = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${store.fileId}?uploadType=media`, {
+            method: 'PATCH',
+            headers: new Headers({ 
+                'Authorization': 'Bearer ' + accessToken,
+                'Content-Type': 'application/json'
+            }),
+            body: fileContent
+        });
+
+        if(res.ok) {
+            document.getElementById('sync-status').innerText = "● Synced";
+            if(isAuto) UI.toast("Auto-Sync: Data Saved", "success");
+            else UI.toast("Manual Sync Complete", "success");
+        } else {
+            document.getElementById('sync-status').innerText = "⚠ Error";
+            UI.toast("Sync Failed. Check Internet.", "danger");
         }
     },
 
-    generateOrders: function(count) {
-        for(let i=0; i<count; i++) {
-            const cust = store.customers[Math.floor(Math.random() * store.customers.length)];
-            const isToday = i < 15; 
-            const date = new Date();
-            date.setDate(date.getDate() - (isToday ? 0 : Math.floor(Math.random() * 30)));
-            const dateStr = date.toISOString().split('T')[0];
-
-            let items = {};
-            let totalBottles = 0;
-            let totalAmount = 0;
-            let totalCost = 0;
-
-            CONSTANTS.SKUS.forEach(sku => {
-                if(sku === '200ml' && cust.type !== 'Event' && Math.random() > 0.1) return; 
-                const caseCount = Math.floor(Math.random() * 5); 
-                const qty = caseCount * CONSTANTS.CASE_SIZE[sku];
-                if(qty > 0) {
-                    items[sku] = qty;
-                    totalBottles += qty;
-                    totalAmount += qty * store.settings.prices[sku];
-                    totalCost += qty * store.settings.costs[sku];
-                }
-            });
-
-            if(totalBottles === 0) continue; 
-
-            const paymentMode = CONSTANTS.PAYMENT_MODES[Math.floor(Math.random() * CONSTANTS.PAYMENT_MODES.length)];
-            let isPaid = true;
-            if(paymentMode === 'Credit') isPaid = Math.random() > 0.4;
-
-            const order = {
-                id: `ORD${5000+i}`,
-                customerId: cust.id,
-                customerName: cust.name,
-                area: cust.area,
-                date: dateStr,
-                items: items,
-                totalBottles: totalBottles,
-                amount: totalAmount,
-                cost: totalCost,
-                profit: totalAmount - totalCost,
-                paymentMode: paymentMode,
-                isPaid: isPaid,
-                status: isToday ? CONSTANTS.STATUS.PENDING : CONSTANTS.STATUS.DELIVERED
-            };
-            store.orders.push(order);
-            if(!isPaid) cust.outstanding += totalAmount;
-        }
-    },
-
-    generateEvents: function(count) {
-        for(let i=0; i<count; i++) {
-            store.events.push({
-                id: `EVT${i}`,
-                name: `Wedding Function ${i+1}`,
-                date: new Date(Date.now() + Math.floor(Math.random() * 86400000 * 10)).toISOString().split('T')[0],
-                bottles: 500,
-                amount: 20000,
-                status: 'Scheduled'
-            });
-        }
+    logout: function() {
+        const token = gapi.client.getToken();
+        if (token) google.accounts.oauth2.revoke(token.access_token);
+        gapi.client.setToken('');
+        location.reload();
     }
 };
 
-// --- 5. CORE ENGINE (BUSINESS LOGIC) ---
+/* --- CORE LOGIC --- */
 const Engine = {
-    checkCreditEligibility: function(customerId, newAmount) {
-        const cust = store.customers.find(c => c.id === customerId);
-        if(!cust) return false;
-        if(cust.status === CONSTANTS.STATUS.BLOCKED) return false;
-        if(cust.type === 'Event') return true; 
-        
-        const projectedTotal = cust.outstanding + newAmount;
-        return projectedTotal <= cust.creditLimit;
+    checkCredit: (id, amt) => {
+        const c = store.customers.find(x => x.id === id);
+        return c ? (c.type === 'Event' || (c.outstanding + amt <= c.creditLimit)) : false;
     },
-
-    getDashboardStats: function() {
+    getStats: () => {
         const today = new Date().toISOString().split('T')[0];
-        let revenue = 0;
-        let bottles = 0;
-        let profit = 0;
-        let pending = 0;
-        let skuCounts = { '200ml': 0, '500ml': 0, '1L': 0 };
-
+        let stats = { rev:0, btl:0, pro:0, pen:0, sku:{'200ml':0,'500ml':0,'1L':0} };
         store.orders.forEach(o => {
             if(o.date === today) {
-                revenue += o.amount;
-                bottles += o.totalBottles;
-                profit += o.profit;
-                if(!o.isPaid) pending += o.amount;
-                Object.keys(o.items).forEach(sku => { skuCounts[sku] += o.items[sku]; });
+                stats.rev += o.amount; stats.btl += o.totalBottles; stats.pro += o.profit;
+                if(!o.isPaid) stats.pen += o.amount;
+                Object.keys(o.items).forEach(k => stats.sku[k] += o.items[k]);
             }
         });
-        return { revenue, bottles, profit, pending, skuCounts };
+        return stats;
     },
-
-    blockCustomer: function(id) {
-        const c = store.customers.find(x => x.id === id);
-        if(c) c.status = CONSTANTS.STATUS.BLOCKED;
+    blockCust: (id) => { const c = store.customers.find(x=>x.id===id); if(c) c.status = CONSTANTS.STATUS.BLOCKED; },
+    updateStock: (sku, qty, op) => { op === 'add' ? store.inventory[sku] += qty : store.inventory[sku] -= qty; },
+    getCases: (sku, btl) => { 
+        const c = (btl / CONSTANTS.CASE_SIZE[sku]).toFixed(1);
+        return c.endsWith('.0') ? parseInt(c) : c;
     },
+    
+    // PDF GENERATOR
+    generateDailyPDF: function() {
+        if (!window.jspdf) return UI.toast("PDF Lib not loaded", "danger");
+        
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const today = new Date().toISOString().split('T')[0];
+        const stats = this.getStats();
 
-    updateStock: function(sku, qty, operation) {
-        if(operation === 'add') store.inventory[sku] += qty;
-        if(operation === 'sub') store.inventory[sku] -= qty;
-    },
+        // Header
+        doc.setFontSize(18);
+        doc.text("Freskey Daily Sales Report", 14, 20);
+        doc.setFontSize(10);
+        doc.text(`Date: ${today}`, 14, 28);
+        doc.text(`Generated by: ${document.getElementById('user-display-email').innerText}`, 14, 33);
 
-    getCaseCount: function(sku, bottles) {
-        const caseSize = CONSTANTS.CASE_SIZE[sku];
-        const cases = (bottles / caseSize).toFixed(1);
-        return cases.endsWith('.0') ? parseInt(cases) : cases;
-    },
+        // Summary Box
+        doc.setDrawColor(0);
+        doc.setFillColor(240, 240, 240);
+        doc.rect(14, 40, 180, 25, 'F');
+        doc.setFontSize(12);
+        doc.text(`Total Bottles: ${stats.btl}`, 20, 50);
+        doc.text(`Revenue: Rs. ${stats.rev}`, 80, 50);
+        doc.text(`Profit: Rs. ${stats.pro}`, 140, 50);
+        doc.setFontSize(10);
+        doc.text(`Pending Collections: Rs. ${stats.pen}`, 20, 60);
 
-    exportCustomerLedgerCSV: function() {
-        let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += "Customer ID,Name,Type,Area,Location,Phone,Status,Credit Limit,Outstanding Balance,Date Joined\n";
-        store.customers.forEach(function(rowArray) {
-            let row = [
-                rowArray.id, `"${rowArray.name}"`, rowArray.type, rowArray.area,
-                `"${rowArray.location}"`, rowArray.phone, rowArray.status,
-                rowArray.creditLimit, rowArray.outstanding, rowArray.joinedDate.split('T')[0]
-            ];
-            csvContent += row.join(",") + "\n";
+        // Table Data
+        const tableBody = store.orders
+            .filter(o => o.date === today)
+            .map(o => [
+                o.customerName,
+                o.area,
+                `${o.totalBottles}`,
+                `Rs. ${o.amount}`,
+                o.paymentMode,
+                o.status
+            ]);
+
+        // Generate Table
+        doc.autoTable({
+            startY: 70,
+            head: [['Customer', 'Area', 'Bottles', 'Amount', 'Mode', 'Status']],
+            body: tableBody,
+            theme: 'grid',
+            headStyles: { fillColor: [15, 23, 42] } // matching brand color
         });
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "freskey_customer_outstanding_detailed.csv");
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        UI.toast("CSV Exported Successfully", "success");
+
+        doc.save(`Freskey_Report_${today}.pdf`);
+        UI.toast("PDF Downloaded", "success");
     }
 };
 
-// --- 6. UI COMPONENTS ---
+/* --- UI HELPERS --- */
 const UI = {
-    toast: function(msg, type = 'info') {
-        const container = document.getElementById('toast-container');
+    toast: (msg, type) => {
         const el = document.createElement('div');
-        el.className = `toast toast-${type}`;
-        el.style.borderLeftColor = type === 'success' ? '#10b981' : type === 'danger' ? '#ef4444' : '#3b82f6';
-        el.innerHTML = `<span>${msg}</span> <button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer">✕</button>`;
-        container.appendChild(el);
+        el.className = `toast`; el.style.borderLeftColor = `var(--color-${type})`;
+        el.innerHTML = `<span>${msg}</span>`;
+        document.getElementById('toast-container').appendChild(el);
         setTimeout(() => el.remove(), 3000);
     },
-
-    modal: function(contentHtml) {
-        const container = document.getElementById('modal-container');
-        container.innerHTML = `
-            <div class="modal">
-                <div class="modal-header">
-                    <div class="modal-title">FRESKEY Control</div>
-                    <div class="close-modal" onclick="UI.closeModal()">×</div>
-                </div>
-                <div class="modal-body">${contentHtml}</div>
-            </div>
-        `;
-        container.classList.remove('hidden');
+    modal: (html) => {
+        const mc = document.getElementById('modal-container');
+        mc.innerHTML = `<div class="modal"><div class="modal-header"><h3 class="modal-title">Freskey Control</h3><span class="close-modal" onclick="UI.close()">×</span></div><div>${html}</div></div>`;
+        mc.classList.remove('hidden');
     },
-
-    closeModal: function() {
-        document.getElementById('modal-container').classList.add('hidden');
-    }
-};
-
-// --- 7. PAGE RENDERERS ---
-const Pages = {
-    dashboard: function() {
-        const stats = Engine.getDashboardStats();
-        const totalSku = stats.skuCounts['200ml'] + stats.skuCounts['500ml'] + stats.skuCounts['1L'] || 1;
-        const p200 = ((stats.skuCounts['200ml'] / totalSku) * 100).toFixed(0);
-        const p500 = ((stats.skuCounts['500ml'] / totalSku) * 100).toFixed(0);
-        const p1L = ((stats.skuCounts['1L'] / totalSku) * 100).toFixed(0);
-
-        return `
-            <div class="stat-grid">
-                <div class="stat-card">
-                    <div class="stat-label">Bottles Sold</div>
-                    <div class="stat-value">${stats.bottles}</div>
-                    <div class="stat-trend text-muted">Today</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Revenue Collected</div>
-                    <div class="stat-value">₹${stats.revenue}</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Est. Profit</div>
-                    <div class="stat-value text-success">₹${stats.profit}</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Pending Collection</div>
-                    <div class="stat-value text-danger">₹${stats.pending}</div>
-                </div>
-            </div>
-
-            <div class="dashboard-split">
-                <div>
-                    <div class="card" style="margin-bottom: 2rem;">
-                        <h3 class="font-bold mb-2">SKU Logic Mix (Today)</h3>
-                        <div class="sku-mix-display">
-                            <div class="sku-segment" style="width: ${p200}%; background:#94a3b8;">200ml ${p200}%</div>
-                            <div class="sku-segment" style="width: ${p500}%; background:#3b82f6;">500ml ${p500}%</div>
-                            <div class="sku-segment" style="width: ${p1L}%; background:#0f172a;">1L ${p1L}%</div>
-                        </div>
-                    </div>
-                     <div class="flex gap-4">
-                        <button class="btn btn-primary" style="flex:1; height: 60px; font-size:1.2rem;" onclick="router.navigate('new-order')">+ New Order </button>
-                        <button class="btn btn-outline" style="flex:1;" onclick="router.navigate('deliveries')">Delivery View</button>
-                    </div>
-                </div>
-                <div>
-                    <h3 class="font-bold mb-2 text-muted">SYSTEM ALERTS</h3>
-                    ${stats.pending > 2000 ? `<div class="alert-box"><strong>Warning:</strong> High Pending Collections</div>` : ''}
-                    <div class="card mt-2">
-                        <div class="stat-label">Logistics Note</div>
-                        <p class="text-sm text-muted">Vehicles are hired daily based on demand. Check delivery sheet for cases.</p>
-                    </div>
-                </div>
-            </div>
-        `;
-    },
-
-    newOrder: function() {
-        const custOptions = store.customers
-            .filter(c => c.status !== CONSTANTS.STATUS.BLOCKED)
-            .map(c => `<option value="${c.id}">${c.name} (${c.type})</option>`).join('');
-
-        return `
-            <div class="card" style="max-width: 800px; margin: 0 auto;">
-                <div class="form-group">
-                    <label class="form-label">Select Customer</label>
-                    <select id="ord-cust" class="form-select" onchange="Pages.handleOrderCustChange()">${custOptions}</select>
-                </div>
-                <div class="form-group flex justify-between gap-4">
-                    <div class="w-full">
-                        <label class="form-label">Type</label>
-                        <input id="ord-type" disabled class="form-input" style="background:#e2e8f0;">
-                    </div>
-                    <div class="w-full">
-                         <label class="form-label">Delivery Date</label>
-                        <input type="date" id="ord-date" class="form-input" value="${new Date().toISOString().split('T')[0]}">
-                    </div>
-                </div>
-                <hr style="border:0; border-top:1px solid #eee; margin: 1.5rem 0;">
-                <h4 class="font-bold mb-2">SKU Selection (Enter Bottles)</h4>
-                <div class="flex gap-4 mb-2">
-                    <div class="w-full">
-                        <label class="form-label">200ml (24/c)</label>
-                        <input type="number" id="qty-200" class="form-input" value="0" min="0" oninput="Pages.updateCaseHint('200ml', this.value, 'hint-200')">
-                        <span id="hint-200" class="hint-text">0 Cases</span>
-                    </div>
-                    <div class="w-full">
-                        <label class="form-label">500ml (20/c)</label>
-                        <input type="number" id="qty-500" class="form-input" value="0" min="0" oninput="Pages.updateCaseHint('500ml', this.value, 'hint-500')">
-                         <span id="hint-500" class="hint-text">0 Cases</span>
-                    </div>
-                    <div class="w-full">
-                        <label class="form-label">1 Litre (12/c)</label>
-                        <input type="number" id="qty-1l" class="form-input" value="0" min="0" oninput="Pages.updateCaseHint('1L', this.value, 'hint-1l')">
-                         <span id="hint-1l" class="hint-text">0 Cases</span>
-                    </div>
-                </div>
-                <hr style="border:0; border-top:1px solid #eee; margin: 1.5rem 0;">
-                <div class="flex justify-between items-center bg-gray-50 p-4 rounded mb-4">
-                    <div>
-                        <div class="text-muted text-sm">Payment Mode</div>
-                        <select id="ord-payment" class="form-select" style="min-width:120px">
-                            ${CONSTANTS.PAYMENT_MODES.map(m => `<option value="${m}">${m}</option>`).join('')}
-                        </select>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-muted">Total Amount</div>
-                        <div class="font-bold text-xl" id="ord-total">₹0</div>
-                    </div>
-                </div>
-                <button class="btn btn-primary w-full" onclick="Pages.submitOrder()">CONFIRM & SAVE ORDER</button>
-            </div>
-        `;
-    },
-
-    updateCaseHint: function(sku, val, elemId) {
-        const bottles = parseInt(val) || 0;
-        const cases = Engine.getCaseCount(sku, bottles);
-        document.getElementById(elemId).innerText = `${cases} Cases`;
-        const q200 = parseInt(document.getElementById('qty-200').value) || 0;
-        const q500 = parseInt(document.getElementById('qty-500').value) || 0;
-        const q1l = parseInt(document.getElementById('qty-1l').value) || 0;
-        const total = (q200 * store.settings.prices['200ml']) + 
-                      (q500 * store.settings.prices['500ml']) + 
-                      (q1l * store.settings.prices['1L']);
-        document.getElementById('ord-total').innerText = `₹${total}`;
-    },
-
-    handleOrderCustChange: function() {
-        const id = document.getElementById('ord-cust').value;
-        const cust = store.customers.find(c => c.id === id);
-        if(cust) {
-            document.getElementById('ord-type').value = cust.type;
-            const inp200 = document.getElementById('qty-200');
-            if(cust.type !== 'Event' && cust.type !== 'Corporate') {
-               inp200.disabled = true;
-               inp200.placeholder = "Blocked";
-               inp200.value = 0;
-            } else {
-               inp200.disabled = false;
-               inp200.placeholder = "0";
-            }
-        }
-    },
-
-    submitOrder: function() {
-        const custId = document.getElementById('ord-cust').value;
-        const cust = store.customers.find(c => c.id === custId);
-        const q200 = parseInt(document.getElementById('qty-200').value) || 0;
-        const q500 = parseInt(document.getElementById('qty-500').value) || 0;
-        const q1l = parseInt(document.getElementById('qty-1l').value) || 0;
-
-        if(q200 + q500 + q1l === 0) return UI.toast('Please add at least one item.', 'warning');
-
-        const items = {};
-        if(q200) items['200ml'] = q200;
-        if(q500) items['500ml'] = q500;
-        if(q1l) items['1L'] = q1l;
-
-        const totalBottles = q200 + q500 + q1l;
-        const totalAmount = (q200 * store.settings.prices['200ml']) + 
-                            (q500 * store.settings.prices['500ml']) + 
-                            (q1l * store.settings.prices['1L']);
-        const totalCost = (q200 * store.settings.costs['200ml']) + 
-                          (q500 * store.settings.costs['500ml']) + 
-                          (q1l * store.settings.costs['1L']);
-        const paymentMode = document.getElementById('ord-payment').value;
-
-        if(paymentMode === 'Credit') {
-            if(!Engine.checkCreditEligibility(custId, totalAmount)) {
-                UI.toast(`Credit Limit Exceeded! Limit: ₹${cust.creditLimit}, Current Out: ₹${cust.outstanding}`, 'danger');
-                return;
-            }
-        }
-
-        const order = {
-            id: `ORD${Date.now()}`,
-            customerId: cust.id,
-            customerName: cust.name,
-            area: cust.area,
-            date: document.getElementById('ord-date').value,
-            items: items,
-            totalBottles: totalBottles,
-            amount: totalAmount,
-            cost: totalCost,
-            profit: totalAmount - totalCost,
-            paymentMode: paymentMode,
-            isPaid: paymentMode !== 'Credit',
-            status: 'Pending'
-        };
-
-        store.orders.push(order);
-        if(paymentMode === 'Credit') cust.outstanding += totalAmount;
-        
-        Engine.updateStock('200ml', q200, 'sub');
-        Engine.updateStock('500ml', q500, 'sub');
-        Engine.updateStock('1L', q1l, 'sub');
-
-        UI.toast('Order Placed Successfully', 'success');
-        router.navigate('dashboard');
-    },
-
-    customers: function() {
-        const rows = store.customers.map(c => `
-            <tr>
-                <td><strong>${c.name}</strong><br><span class="text-muted text-xs">${c.id}</span></td>
-                <td>${c.area}</td>
-                <td>${c.phone}</td>
-                <td><span class="badge ${c.type === 'Corporate' ? 'badge-info' : 'badge-warning'}">${c.type}</span></td>
-                <td>₹${c.creditLimit}</td>
-                <td>₹${c.outstanding}</td>
-                <td><span class="badge ${c.status === 'Active' ? 'badge-success' : 'badge-danger'}">${c.status}</span></td>
-                <td>
-                    <button class="btn btn-outline" style="padding: 2px 8px; font-size: 10px;" onclick="Pages.editCustomerModal('${c.id}')">Edit</button>
-                    ${c.status === 'Active' ? `<button class="btn btn-danger" style="padding: 2px 8px; font-size: 10px;" onclick="Pages.blockCustomerClick('${c.id}')">Block</button>` : ''}
-                </td>
-            </tr>
-        `).join('');
-
-        return `
-            <div class="flex justify-between items-center mb-4">
-                <input type="text" placeholder="Search Customer..." class="form-input" style="width: 300px; max-width: 60%">
-                <button class="btn btn-primary" onclick="Pages.addCustomerModal()">+ Add</button>
-            </div>
-            <div class="table-container">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Name</th><th>Area/Hub</th><th>Phone</th><th>Type</th>
-                        <th>Cr. Limit</th><th>Dues (₹)</th><th>Status</th><th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>${rows}</tbody>
-            </table>
-            </div>
-        `;
-    },
-
-    blockCustomerClick: function(id) {
-        Engine.blockCustomer(id);
-        UI.toast('Customer Blocked', 'danger');
-        router.render();
-    },
-
-    addCustomerModal: function() {
-        UI.modal(`
-            <h3 class="modal-title mb-4">Add New Customer</h3>
-            <div class="form-group"><label class="form-label">Name</label><input id="new-cust-name" class="form-input"></div>
-            <div class="form-group"><label class="form-label">Phone</label><input id="new-cust-phone" class="form-input"></div>
-            <div class="form-group"><label class="form-label">Type</label>
-                <select id="new-cust-type" class="form-select">${CONSTANTS.CUSTOMER_TYPES.map(t=>`<option>${t}</option>`).join('')}</select>
-            </div>
-             <div class="form-group"><label class="form-label">Area</label>
-                <select id="new-cust-area" class="form-select">${CONSTANTS.HUBS.map(t=>`<option>${t}</option>`).join('')}</select>
-            </div>
-             <div class="form-group"><label class="form-label">Location</label><input id="new-cust-loc" class="form-input"></div>
-             <div class="form-group"><label class="form-label">Credit Limit (₹)</label><input type="number" id="new-cust-limit" class="form-input" value="1000"></div>
-            <button class="btn btn-primary w-full" onclick="Pages.saveNewCustomer()">Save Customer</button>
-        `);
-    },
-
-    saveNewCustomer: function() {
-        const name = document.getElementById('new-cust-name').value;
-        if(!name) return UI.toast("Name required", "danger");
-        store.customers.push({
-            id: `CUST${Date.now()}`,
-            name: name,
-            type: document.getElementById('new-cust-type').value,
-            area: document.getElementById('new-cust-area').value,
-            location: document.getElementById('new-cust-loc').value,
-            phone: document.getElementById('new-cust-phone').value,
-            status: 'Active',
-            creditLimit: parseInt(document.getElementById('new-cust-limit').value) || 0,
-            outstanding: 0,
-            joinedDate: new Date().toISOString()
-        });
-        UI.closeModal();
-        UI.toast('Customer Added', 'success');
-        router.render();
-    },
-
-    editCustomerModal: function(id) {
-        const c = store.customers.find(x => x.id === id);
-        if(!c) return;
-        UI.modal(`
-            <h3 class="modal-title mb-4">Edit: ${c.name}</h3>
-            <input type="hidden" id="edit-cust-id" value="${c.id}">
-            <div class="form-group"><label class="form-label">Name</label><input id="edit-cust-name" class="form-input" value="${c.name}"></div>
-            <div class="form-group"><label class="form-label">Phone</label><input id="edit-cust-phone" class="form-input" value="${c.phone}"></div>
-             <div class="form-group"><label class="form-label">Area</label>
-                <select id="edit-cust-area" class="form-select">${CONSTANTS.HUBS.map(t=>`<option ${t===c.area?'selected':''}>${t}</option>`).join('')}</select>
-            </div>
-             <div class="form-group"><label class="form-label">Location</label><input id="edit-cust-loc" class="form-input" value="${c.location || ''}"></div>
-             <div class="form-group"><label class="form-label">Credit Limit (₹)</label><input type="number" id="edit-cust-limit" class="form-input" value="${c.creditLimit}"></div>
-            <button class="btn btn-accent w-full" onclick="Pages.saveEditCustomer()">Update</button>
-        `);
-    },
-
-    saveEditCustomer: function() {
-        const id = document.getElementById('edit-cust-id').value;
-        const c = store.customers.find(x => x.id === id);
-        if(c) {
-            c.name = document.getElementById('edit-cust-name').value;
-            c.phone = document.getElementById('edit-cust-phone').value;
-            c.area = document.getElementById('edit-cust-area').value;
-            c.location = document.getElementById('edit-cust-loc').value;
-            c.creditLimit = parseInt(document.getElementById('edit-cust-limit').value);
-            UI.closeModal();
-            UI.toast('Updated Successfully', 'success');
-            router.render();
-        }
-    },
-
-    deliveries: function() {
-        const today = new Date().toISOString().split('T')[0];
-        const pendingOrders = store.orders.filter(o => o.date === today && o.status === 'Pending');
-        let totalBottles = 0;
-        const rows = pendingOrders.map(o => {
-            totalBottles += o.totalBottles;
-            const itemsStr = Object.entries(o.items).map(([k,v]) => `${k}:${v}`).join(', ');
-            return `
-                <tr>
-                    <td>${o.customerName}</td><td>${o.area}</td><td>${itemsStr}</td>
-                    <td class="font-bold">${o.totalBottles}</td>
-                    <td>
-                        <button class="btn btn-success" style="padding:4px 8px; font-size:10px;" onclick="Pages.markDelivered('${o.id}')">Done</button>
-                        <button class="btn btn-danger" style="padding:4px 8px; font-size:10px;" onclick="Pages.markFailed('${o.id}')">Fail</button>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-
-        return `
-            <div class="card mb-4" style="background:var(--color-primary); color:white;">
-                <h4 class="font-bold">Total Logistics Requirement</h4>
-                <div class="flex gap-4 mt-2">
-                    <div><span class="text-xs text-light">TOTAL BOTTLES</span><div class="text-xl font-bold">${totalBottles}</div></div>
-                </div>
-            </div>
-            <div class="flex gap-4 mb-4"><strong class="text-xl">Today's Sheets (${today})</strong></div>
-            <div class="table-container">
-            <table>
-                <thead><tr><th>Customer</th><th>Hub</th><th>SKU Mix</th><th>Total Qty</th><th>Action</th></tr></thead>
-                <tbody>${rows.length === 0 ? '<tr><td colspan="5" class="text-center text-muted">No pending deliveries for today.</td></tr>' : rows}</tbody>
-            </table></div>
-        `;
-    },
-
-    markDelivered: function(orderId) {
-        const order = store.orders.find(o => o.id === orderId);
-        if(order) {
-            order.status = CONSTANTS.STATUS.DELIVERED;
-            UI.toast(`Order ${orderId} marked Delivered`, 'success');
-            router.render();
-        }
-    },
-
-    payments: function() {
-        const debtors = store.customers.filter(c => c.outstanding > 0).sort((a,b) => b.outstanding - a.outstanding);
-        const rows = debtors.map(c => `
-             <tr>
-                <td>${c.name}</td><td class="text-danger font-bold">₹${c.outstanding}</td><td>${c.creditLimit}</td>
-                 <td><button class="btn btn-primary" style="padding:4px 8px;" onclick="Pages.settlePaymentModal('${c.id}')">Receive ₹</button></td>
-            </tr>
-        `).join('');
-        const totalOut = debtors.reduce((sum, c) => sum + c.outstanding, 0);
-
-        return `
-             <div class="stat-card mb-4" style="border-left: 5px solid red;">
-                <div class="stat-label">Total Market Outstanding</div><div class="stat-value text-danger">₹${totalOut}</div>
-            </div>
-            <div class="table-container">
-            <table><thead><tr><th>Party Name</th><th>Outstanding Amount</th><th>Credit Limit</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table>
-            </div>
-        `;
-    },
-
-    settlePaymentModal: function(custId) {
-        const c = store.customers.find(x => x.id === custId);
-        UI.modal(`
-            <h3>Receive Payment from ${c.name}</h3><p class="mb-2">Current Debt: ₹${c.outstanding}</p>
-            <div class="form-group"><label>Amount Received</label><input type="number" id="pay-amt" class="form-input" value="${c.outstanding}"></div>
-             <button class="btn btn-success w-full" onclick="Pages.processPayment('${c.id}')">Record Payment</button>
-        `);
-    },
-
-    processPayment: function(custId) {
-        const amt = parseInt(document.getElementById('pay-amt').value);
-        const c = store.customers.find(x => x.id === custId);
-        if(c && amt > 0) {
-            c.outstanding -= amt;
-            if(c.outstanding < 0) c.outstanding = 0;
-            UI.toast('Payment Recorded', 'success');
-            UI.closeModal();
-            router.render();
-        }
-    },
-
-    // --- ACTIVATED EVENTS FEATURE ---
-    events: function() {
-        const rows = store.events.map(e => `
-            <tr>
-                <td>${e.name}</td><td>${e.date}</td><td>${e.bottles}</td><td>₹${e.amount}</td>
-                <td><span class="badge badge-info">${e.status}</span></td>
-            </tr>
-        `).join('');
-
-        return `
-             <div class="flex justify-between items-center mb-4">
-                <h2 class="screen-title">Event Operations</h2>
-                <button class="btn btn-primary" onclick="Pages.addEventModal()">+ Book New Event</button>
-            </div>
-            <div class="table-container"><table><thead><tr><th>Event Name</th><th>Date</th><th>Bottles</th><th>Prepaid Amt</th><th>Status</th></tr></thead>
-            <tbody>${rows}</tbody></table></div>
-        `;
-    },
-
-    addEventModal: function() {
-        UI.modal(`
-            <h3 class="modal-title mb-4">Book New Event</h3>
-            <div class="form-group"><label class="form-label">Event Name</label><input id="evt-name" class="form-input"></div>
-            <div class="form-group"><label class="form-label">Date</label><input type="date" id="evt-date" class="form-input"></div>
-            <div class="form-group"><label class="form-label">Bottles Required</label><input type="number" id="evt-bottles" class="form-input"></div>
-            <div class="form-group"><label class="form-label">Prepaid Amount (₹)</label><input type="number" id="evt-amt" class="form-input"></div>
-            <button class="btn btn-primary w-full" onclick="Pages.saveEvent()">Confirm Booking</button>
-        `);
-    },
-
-    saveEvent: function() {
-        const name = document.getElementById('evt-name').value;
-        const date = document.getElementById('evt-date').value;
-        const btl = parseInt(document.getElementById('evt-bottles').value);
-        const amt = parseInt(document.getElementById('evt-amt').value);
-
-        if(!name || !date || !btl) return UI.toast("Missing Fields", "danger");
-
-        store.events.push({
-            id: `EVT${Date.now()}`,
-            name: name, date: date, bottles: btl, amount: amt, status: 'Scheduled'
-        });
-        UI.closeModal();
-        UI.toast("Event Booked Successfully", "success");
-        router.render();
-    },
-
-    inventory: function() {
-         const inv200 = store.inventory['200ml'];
-         const inv500 = store.inventory['500ml'];
-         const inv1l = store.inventory['1L'];
-
-        return `
-            <div class="stat-grid">
-                <div class="stat-card">
-                    <div class="stat-label">200ml Stock</div><div class="stat-value">${inv200} Btls</div>
-                    <div class="text-muted text-sm mt-1">${Engine.getCaseCount('200ml', inv200)} Cases (24/case)</div>
-                    <button class="btn btn-outline w-full mt-2" onclick="Pages.addStock('200ml')">Add Stock</button>
-                </div>
-                 <div class="stat-card">
-                    <div class="stat-label">500ml Stock</div><div class="stat-value">${inv500} Btls</div>
-                    <div class="text-muted text-sm mt-1">${Engine.getCaseCount('500ml', inv500)} Cases (20/case)</div>
-                    <button class="btn btn-outline w-full mt-2" onclick="Pages.addStock('500ml')">Add Stock</button>
-                </div>
-                 <div class="stat-card">
-                    <div class="stat-label">1L Stock</div><div class="stat-value">${inv1l} Btls</div>
-                    <div class="text-muted text-sm mt-1">${Engine.getCaseCount('1L', inv1l)} Cases (12/case)</div>
-                    <button class="btn btn-outline w-full mt-2" onclick="Pages.addStock('1L')">Add Stock</button>
-                </div>
-            </div>
-        `;
-    },
-
-    addStock: function(sku) {
-        const qty = prompt(`Add quantity (in BOTTLES) for ${sku}:`);
-        if(qty && parseInt(qty) > 0) {
-            store.inventory[sku] += parseInt(qty);
-            UI.toast('Stock Updated', 'success');
-            router.render();
-        }
-    },
-
-    reports: function() {
-        return `
-            <h3>Review Reports</h3>
-            <div class="stat-grid mt-4">
-                <div class="card cursor-pointer hover:bg-gray-50" onclick="UI.toast('Daily Sales PDF Generated','info')">
-                    <strong>Daily Sales Report</strong><br><small class="text-muted">PDF Format</small>
-                </div>
-                <!-- Functional CSV Export -->
-                <div class="card cursor-pointer hover:bg-gray-50" style="border-left:4px solid var(--color-success)" onclick="Engine.exportCustomerLedgerCSV()">
-                    <strong class="text-success">Download Customer CSV</strong><br><small class="text-muted">Detailed Excel/CSV Format</small>
-                </div>
-                <div class="card cursor-pointer hover:bg-gray-50" onclick="UI.toast('Calculating...','info')">
-                    <strong>Profitability Analysis</strong><br><small class="text-muted">View Online</small>
-                </div>
-            </div>
-        `;
-    },
-
-    settings: function() {
-        return `
-            <div class="card" style="max-width:600px">
-                <h3>System Rule Engine</h3>
-                <p class="text-muted mb-4">Changing these affects calculations immediately.</p>
-                <div class="form-group"><label class="form-label">Price 200ml (₹)</label><input type="number" class="form-input" value="${store.settings.prices['200ml']}" onchange="store.settings.prices['200ml'] = parseInt(this.value)"></div>
-                <div class="form-group"><label class="form-label">Price 500ml (₹)</label><input type="number" class="form-input" value="${store.settings.prices['500ml']}" onchange="store.settings.prices['500ml'] = parseInt(this.value)"></div>
-                <div class="form-group"><label class="form-label">Price 1L (₹)</label><input type="number" class="form-input" value="${store.settings.prices['1L']}" onchange="store.settings.prices['1L'] = parseInt(this.value)"></div>
-                <button class="btn btn-success w-full mt-2" onclick="UI.toast('Rules Updated globally','success')">Save New Rules</button>
-                
-                <hr class="my-4">
-                <h3 class="mb-2">Data Backup</h3>
-                <button class="btn btn-google w-full" onclick="GoogleAuth.uploadToDrive()">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/1/12/Google_Drive_icon_%282020%29.svg" width="20">
-                    <span style="flex:1;">Backup Data to Drive</span>
-                </button>
-            </div>
-        `;
-    }
-};
-
-// --- 8. ROUTER ---
-const router = {
-    currentPage: 'dashboard',
-    navigate: function(pageId) {
-        this.currentPage = pageId;
-        this.updateNav();
-        this.render();
-        // On mobile, auto close sidebar when navigating
-        const sidebar = document.getElementById('sidebar');
-        if(window.innerWidth <= 768 && sidebar.classList.contains('open')) {
-             app.toggleSidebar();
-        }
-    },
-    updateNav: function() { document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); },
-    render: function() {
-        const contentEl = document.getElementById('content-area');
-        const titleEl = document.getElementById('page-title');
-        let html = ''; let title = '';
-        switch(this.currentPage) {
-            case 'dashboard': title = 'Control Room'; html = Pages.dashboard(); break;
-            case 'new-order': title = 'Create New Order'; html = Pages.newOrder(); break;
-            case 'customers': title = 'Customer Management'; html = Pages.customers(); break;
-            case 'deliveries': title = 'Logistics & Deliveries'; html = Pages.deliveries(); break;
-            case 'payments': title = 'Payment Collections'; html = Pages.payments(); break;
-            case 'events': title = 'Event Orders'; html = Pages.events(); break;
-            case 'inventory': title = 'Stock Control'; html = Pages.inventory(); break;
-            case 'reports': title = 'Business Intelligence'; html = Pages.reports(); break;
-            case 'settings': title = 'Master Settings'; html = Pages.settings(); break;
-        }
-        titleEl.textContent = title; contentEl.innerHTML = html;
-        if(this.currentPage === 'new-order') Pages.handleOrderCustChange();
-    }
+    close: () => document.getElementById('modal-container').classList.add('hidden')
 };
 
 const app = {
-    init: function() {
-        setInterval(() => { 
-            const clock = document.getElementById('clock');
-            if(clock) clock.innerText = new Date().toLocaleTimeString(); 
-        }, 1000);
-        GoogleAuth.init(); // Load Google Scripts
-    },
-    
-    toggleSidebar: function() {
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('overlay');
-        sidebar.classList.toggle('open');
-        if(overlay) {
-            if (sidebar.classList.contains('open')) {
-                overlay.style.display = 'block';
-            } else {
-                overlay.style.display = 'none';
-            }
-        }
-    },
-    
-    logout: function() { GoogleAuth.logout(); }
+    toggleSidebar: () => document.getElementById('sidebar').classList.toggle('open') || document.getElementById('overlay').classList.toggle('active'),
 };
 
-// Start App
-app.init();
+/* --- DATA GENERATOR (Fallback) --- */
+const DataGenerator = {
+    init: function() {
+        store.inventory = { '200ml': 1200, '500ml': 800, '1L': 400 };
+        for(let i=0; i<30; i++) {
+            store.customers.push({
+                id: `C${i}`, name: `Customer ${i}`, type: 'Retail', area: 'North Zone', 
+                location: 'Main St', phone: '9999999999', status: 'Active', 
+                creditLimit: 2000, outstanding: 0, joinedDate: new Date().toISOString()
+            });
+        }
+    }
+};
+
+/* --- PAGES & ROUTER --- */
+const Pages = {
+    dashboard: () => {
+        const st = Engine.getStats();
+        return `
+        <div class="stat-grid">
+            <div class="card"><div class="stat-label">Sold Today</div><div class="stat-value">${st.btl}</div></div>
+            <div class="card"><div class="stat-label">Revenue</div><div class="stat-value">₹${st.rev}</div></div>
+            <div class="card"><div class="stat-label">Pending</div><div class="stat-value text-danger">₹${st.pen}</div></div>
+        </div>
+        <div class="dashboard-split">
+            <div class="card">
+                <h3>Actions</h3>
+                <div class="flex gap-4" style="margin-top:1rem;">
+                    <button class="btn btn-primary" onclick="router.navigate('new-order')" style="width:100%">+ Order</button>
+                    <button class="btn btn-outline" onclick="GoogleAuth.saveDB()" style="width:100%">Force Sync</button>
+                </div>
+            </div>
+            <div class="card"><h3>Alerts</h3>${st.pen > 1000 ? '<div class="alert-box">Collect Pending Cash</div>' : '<p class="text-muted">System Normal</p>'}</div>
+        </div>`;
+    },
+    newOrder: () => {
+        const opts = store.customers.filter(c=>c.status!=='Blocked').map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+        return `
+        <div class="card" style="max-width:600px; margin:0 auto;">
+            <div class="form-group"><label class="form-label">Customer</label><select id="n-cust" class="form-select">${opts}</select></div>
+            <div class="form-group"><label class="form-label">Date</label><input type="date" id="n-date" class="form-input" value="${new Date().toISOString().split('T')[0]}"></div>
+            <hr style="margin:1rem 0; border:0; border-top:1px solid #eee;">
+            <div class="flex gap-4">
+                <div style="flex:1"><label class="form-label">200ml</label><input type="number" id="q200" class="form-input" placeholder="0" oninput="Pages.calcTotal()"></div>
+                <div style="flex:1"><label class="form-label">500ml</label><input type="number" id="q500" class="form-input" placeholder="0" oninput="Pages.calcTotal()"></div>
+                <div style="flex:1"><label class="form-label">1L</label><input type="number" id="q1l" class="form-input" placeholder="0" oninput="Pages.calcTotal()"></div>
+            </div>
+            <div style="margin-top:1rem; text-align:right; font-weight:bold; font-size:1.2rem;" id="ord-total">₹0</div>
+            <div class="form-group mt-2">
+                <label class="form-label">Payment</label>
+                <select id="n-pay" class="form-select">${CONSTANTS.PAYMENT_MODES.map(m=>`<option>${m}</option>`).join('')}</select>
+            </div>
+            <button class="btn btn-primary" style="width:100%; margin-top:1rem;" onclick="Pages.subOrder()">Place Order</button>
+        </div>`;
+    },
+    calcTotal: () => {
+        const q2 = parseInt(document.getElementById('q200').value)||0;
+        const q5 = parseInt(document.getElementById('q500').value)||0;
+        const q1 = parseInt(document.getElementById('q1l').value)||0;
+        const t = (q2*store.settings.prices['200ml'])+(q5*store.settings.prices['500ml'])+(q1*store.settings.prices['1L']);
+        document.getElementById('ord-total').innerText = `₹${t}`;
+    },
+    subOrder: () => {
+        const cid = document.getElementById('n-cust').value;
+        const cust = store.customers.find(c=>c.id===cid);
+        const q2 = parseInt(document.getElementById('q200').value)||0;
+        const q5 = parseInt(document.getElementById('q500').value)||0;
+        const q1 = parseInt(document.getElementById('q1l').value)||0;
+        const amt = (q2*store.settings.prices['200ml'])+(q5*store.settings.prices['500ml'])+(q1*store.settings.prices['1L']);
+        const items = {}; if(q2)items['200ml']=q2; if(q5)items['500ml']=q5; if(q1)items['1L']=q1;
+
+        if(amt===0) return UI.toast("Empty Order", "warning");
+
+        const pay = document.getElementById('n-pay').value;
+        if(pay==='Credit' && !Engine.checkCredit(cid, amt)) return UI.toast("Credit Limit Exceeded", "danger");
+
+        store.orders.push({
+            id: 'ORD'+Date.now(), customerId: cid, customerName: cust.name, area: cust.area,
+            date: document.getElementById('n-date').value, items, totalBottles: q2+q5+q1, amount: amt,
+            paymentMode: pay, isPaid: pay!=='Credit', status: 'Pending', profit: amt*0.3 // approx
+        });
+        
+        if(pay==='Credit') cust.outstanding += amt;
+        Engine.updateStock('200ml', q2, 'sub'); Engine.updateStock('500ml', q5, 'sub'); Engine.updateStock('1L', q1, 'sub');
+        
+        UI.toast("Order Saved", "success");
+        router.navigate('dashboard');
+    },
+    customers: () => {
+        const rows = store.customers.map(c=>`<tr><td>${c.name}</td><td>${c.area}</td><td>${c.outstanding}</td><td><button class="btn btn-outline" style="padding:2px 5px" onclick="Pages.editCust('${c.id}')">Edit</button></td></tr>`).join('');
+        return `
+        <div class="flex justify-between items-center mb-4"><h3 style="margin:0">Customers</h3><button class="btn btn-primary" onclick="Pages.addCustModal()">+ Add</button></div>
+        <div class="table-container"><table><thead><tr><th>Name</th><th>Hub</th><th>Due</th><th>Act</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    },
+    addCustModal: () => {
+        UI.modal(`
+            <div class="form-group"><label>Name</label><input id="nc-name" class="form-input"></div>
+            <div class="form-group"><label>Area</label><select id="nc-area" class="form-select">${CONSTANTS.HUBS.map(h=>`<option>${h}</option>`).join('')}</select></div>
+            <div class="form-group"><label>Credit Limit</label><input type="number" id="nc-lim" class="form-input" value="1000"></div>
+            <button class="btn btn-primary" style="width:100%" onclick="Pages.saveCust()">Save</button>
+        `);
+    },
+    saveCust: () => {
+        const n = document.getElementById('nc-name').value;
+        if(!n) return;
+        store.customers.push({id:'C'+Date.now(), name:n, area:document.getElementById('nc-area').value, status:'Active', creditLimit:parseInt(document.getElementById('nc-lim').value), outstanding:0, type:'Retail'});
+        UI.close(); UI.toast("Added", "success"); router.render();
+    },
+    editCust: (id) => {
+        const c = store.customers.find(x=>x.id===id);
+        UI.modal(`
+            <h3>${c.name}</h3>
+            <div class="form-group"><label>Limit</label><input id="ec-lim" class="form-input" value="${c.creditLimit}"></div>
+            <button class="btn btn-primary" style="width:100%" onclick="(() => { store.customers.find(x=>x.id==='${id}').creditLimit = parseInt(document.getElementById('ec-lim').value); UI.close(); router.render(); })()">Update</button>
+        `);
+    },
+    deliveries: () => {
+        const today=new Date().toISOString().split('T')[0];
+        const rows = store.orders.filter(o=>o.date===today && o.status==='Pending').map(o=>`<tr><td>${o.customerName}</td><td>${o.area}</td><td>${o.totalBottles}</td><td><button class="btn btn-success" style="padding:2px 5px" onclick="((id)=>{store.orders.find(x=>x.id===id).status='Delivered';router.render()})('${o.id}')">Done</button></td></tr>`).join('');
+        return `<h3>Deliveries (${today})</h3><div class="table-container"><table><thead><tr><th>Cust</th><th>Loc</th><th>Btl</th><th>Ok</th></tr></thead><tbody>${rows||'<tr><td colspan="4">No pending</td></tr>'}</tbody></table></div>`;
+    },
+    payments: () => {
+        const rows = store.customers.filter(c=>c.outstanding>0).map(c=>`<tr><td>${c.name}</td><td class="text-danger">${c.outstanding}</td><td><button class="btn btn-primary" style="padding:2px 5px" onclick="Pages.getMoney('${c.id}')">Recv</button></td></tr>`).join('');
+        return `<h3>Payments</h3><div class="table-container"><table><thead><tr><th>Name</th><th>Due</th><th>Act</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    },
+    getMoney: (id) => {
+        const c = store.customers.find(x=>x.id===id);
+        UI.modal(`<h3>${c.name}</h3><p>Due: Rs. ${c.outstanding}</p><button class="btn btn-success" style="width:100%" onclick="(() => { store.customers.find(x=>x.id==='${id}').outstanding=0; UI.close(); router.render(); })()">Mark Paid (Full)</button>`);
+    },
+    events: () => {
+        const rows = store.events.map(e=>`<tr><td>${e.name}</td><td>${e.date}</td><td>${e.bottles}</td></tr>`).join('');
+        return `<div class="flex justify-between mb-4"><h3>Events</h3><button class="btn btn-primary" onclick="Pages.addEvt()">+ Book</button></div><div class="table-container"><table><thead><tr><th>Name</th><th>Date</th><th>Btl</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    },
+    addEvt: () => {
+        UI.modal(`<div class="form-group"><label>Name</label><input id="ev-n" class="form-input"></div><div class="form-group"><label>Date</label><input type="date" id="ev-d" class="form-input"></div><div class="form-group"><label>Bottles</label><input type="number" id="ev-b" class="form-input"></div><button class="btn btn-primary" style="width:100%" onclick="Pages.saveEvt()">Book</button>`);
+    },
+    saveEvt: () => {
+         store.events.push({id:'E'+Date.now(), name:document.getElementById('ev-n').value, date:document.getElementById('ev-d').value, bottles:document.getElementById('ev-b').value, status:'Scheduled'});
+         UI.close(); router.render();
+    },
+    inventory: () => {
+        return `<div class="stat-grid">
+            <div class="card"><h4>200ml</h4><h2>${store.inventory['200ml']}</h2><small>${Engine.getCases('200ml', store.inventory['200ml'])} Cases</small><button class="btn btn-outline" style="width:100%;margin-top:5px" onclick="Pages.addStk('200ml')">+</button></div>
+            <div class="card"><h4>500ml</h4><h2>${store.inventory['500ml']}</h2><small>${Engine.getCases('500ml', store.inventory['500ml'])} Cases</small><button class="btn btn-outline" style="width:100%;margin-top:5px" onclick="Pages.addStk('500ml')">+</button></div>
+            <div class="card"><h4>1L</h4><h2>${store.inventory['1L']}</h2><small>${Engine.getCases('1L', store.inventory['1L'])} Cases</small><button class="btn btn-outline" style="width:100%;margin-top:5px" onclick="Pages.addStk('1L')">+</button></div>
+        </div>`;
+    },
+    addStk: (s) => { const q=prompt('Qty Bottles:'); if(q) {store.inventory[s]+=parseInt(q); router.render();} },
+    reports: () => {
+        return `<h3>Reports</h3>
+        <div class="stat-grid" style="margin-top:1rem;">
+            <div class="card" onclick="Engine.generateDailyPDF()" style="cursor:pointer; border-left:4px solid var(--color-primary);"><h4>Daily Sales Report</h4><small>Download PDF</small></div>
+            <div class="card" onclick="Engine.exportCustomerLedgerCSV()" style="cursor:pointer; border-left:4px solid var(--color-success);"><h4>Customer CSV</h4><small>Download CSV</small></div>
+        </div>`;
+    },
+    settings: () => `<h3>Settings</h3><div class="card"><p>Prices</p>200ml: Rs.${store.settings.prices['200ml']}<br>500ml: Rs.${store.settings.prices['500ml']}<br>1L: Rs.${store.settings.prices['1L']}<hr style="margin:1rem 0; border:0; border-top:1px solid #eee;"><button class="btn btn-google" onclick="GoogleAuth.saveDB()">Force Data Sync</button></div>`
+};
+
+const router = {
+    navigate: (p) => { 
+        document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active'));
+        document.getElementById('page-title').innerText = p.charAt(0).toUpperCase() + p.slice(1);
+        document.getElementById('content-area').innerHTML = Pages[p]();
+        if(window.innerWidth<=768 && document.getElementById('sidebar').classList.contains('open')) app.toggleSidebar();
+    },
+    render: () => router.navigate(document.getElementById('page-title').innerText.toLowerCase().replace(' ','-') || 'dashboard')
+};
+
+/* Start */
+setInterval(()=>document.getElementById('clock').innerText=new Date().toLocaleTimeString(),1000);
+GoogleAuth.init();
+
 </script>
 </body>
 </html>
