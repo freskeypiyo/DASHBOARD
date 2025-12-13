@@ -3,942 +3,1534 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Freskey Admin Panel | Enterprise Edition</title>
+    <title>Freskey Enterprise Admin | Cloud ERP</title>
     
-    <!-- =========================================
-         EXTERNAL LIBRARIES
-         ========================================= -->
-    <!-- Google Identity Services -->
+    <!-- ================================================================================== 
+         EXTERNAL DEPENDENCIES
+         We use CDNs for Google Auth, PDF Generation, and Excel Generation.
+         ================================================================================== -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://apis.google.com/js/api.js"></script>
-    
-    <!-- PDF Generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    
-    <!-- Excel Generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
-    <!-- Icons -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
     <style>
-        /* =========================================
-           1. CORE STYLING & VARIABLES
-           ========================================= */
+        /* ================================================================================== 
+           1. CSS VARIABLES & RESET 
+           ================================================================================== */
         :root {
-            --primary: #0f172a;       /* Dark Slate */
-            --primary-light: #1e293b;
-            --accent: #0ea5e9;        /* Sky Blue */
-            --accent-hover: #0284c7;
-            --bg-body: #f1f5f9;
-            --bg-card: #ffffff;
-            --text-main: #334155;
-            --text-light: #64748b;
-            --border: #e2e8f0;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --radius: 8px;
-            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            /* Color Palette - Slate & Blue Theme */
+            --primary-900: #0f172a;
+            --primary-800: #1e293b;
+            --primary-700: #334155;
+            --primary-100: #f1f5f9;
+            
+            --accent-500: #0ea5e9; /* Sky Blue */
+            --accent-600: #0284c7;
+            
+            --success-500: #10b981; /* Emerald */
+            --success-bg: #dcfce7;
+            --success-text: #166534;
+            
+            --warning-500: #f59e0b; /* Amber */
+            --warning-bg: #fef3c7;
+            --warning-text: #92400e;
+            
+            --danger-500: #ef4444; /* Red */
+            --danger-bg: #fee2e2;
+            --danger-text: #991b1b;
+            
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-500: #6b7280;
+            --gray-800: #1f2937;
+            
+            --white: #ffffff;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --font-main: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --sidebar-width: 260px;
+            --header-height: 64px;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--gray-100);
+            color: var(--gray-800);
+            font-size: 14px;
+            line-height: 1.5;
+            height: 100vh;
+            overflow: hidden; /* App-like feel */
+        }
+
+        /* ================================================================================== 
+           2. LAYOUT COMPONENTS 
+           ================================================================================== */
+        #app-root {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            transition: all 0.3s ease;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background-color: var(--primary-900);
+            color: var(--white);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--primary-800);
+            flex-shrink: 0;
+            z-index: 50;
+            transition: transform 0.3s ease;
+        }
+
+        .brand-container {
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+            padding: 0 1.5rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.1);
+        }
+
+        .brand-logo {
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-container {
+            flex: 1;
+            padding: 1.5rem 0;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 0.85rem 1.5rem;
+            color: var(--gray-300);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background-color: rgba(255,255,255,0.05);
+            color: var(--white);
+        }
+
+        .nav-item.active {
+            background-color: rgba(14, 165, 233, 0.1);
+            color: var(--accent-500);
+            border-left-color: var(--accent-500);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            fill: currentColor;
+        }
+
+        .user-profile {
+            padding: 1rem 1.5rem;
+            background-color: rgba(0,0,0,0.2);
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .user-email {
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sync-status {
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--success-500);
+        }
+
+        /* Main Content Styles */
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .top-header {
+            height: var(--header-height);
+            background-color: var(--white);
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2rem;
+            box-shadow: var(--shadow-sm);
+            z-index: 40;
+        }
+
+        .header-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-900);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 2rem;
+            scroll-behavior: smooth;
+        }
+
+        /* ================================================================================== 
+           3. UI COMPONENTS 
+           ================================================================================== */
         
-        body { background: var(--bg-body); color: var(--text-main); height: 100vh; overflow: hidden; font-size: 14px; }
+        /* Cards */
+        .card {
+            background: var(--white);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--gray-200);
+            box-shadow: var(--shadow-sm);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
 
-        /* SCROLLBAR */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--gray-100);
+        }
 
-        /* =========================================
-           2. LAYOUT GRID
-           ========================================= */
-        #app { display: grid; grid-template-columns: 260px 1fr; height: 100vh; transition: 0.3s; }
-        
-        /* SIDEBAR */
-        aside { background: var(--primary); color: white; display: flex; flex-direction: column; z-index: 50; }
-        .brand { padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; }
-        .nav-scroller { flex: 1; overflow-y: auto; padding: 1rem 0; }
-        .nav-item { padding: 0.8rem 1.5rem; cursor: pointer; color: #94a3b8; display: flex; align-items: center; gap: 12px; transition: 0.2s; font-weight: 500; }
-        .nav-item:hover { color: white; background: rgba(255,255,255,0.05); }
-        .nav-item.active { color: var(--accent); background: rgba(14, 165, 233, 0.1); border-right: 3px solid var(--accent); }
-        .nav-item i { width: 20px; text-align: center; }
-        
-        .user-panel { padding: 1rem; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; background: rgba(0,0,0,0.2); }
-        .sync-indicator { display: flex; align-items: center; gap: 6px; margin-top: 5px; font-size: 0.75rem; color: var(--success); }
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary-800);
+        }
 
-        /* MAIN CONTENT */
-        main { display: flex; flex-direction: column; height: 100%; overflow: hidden; position: relative; }
-        
-        header { background: white; padding: 0.8rem 2rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); z-index: 40; }
-        .page-title { font-size: 1.25rem; font-weight: 700; color: var(--primary); }
-        .mobile-toggle { display: none; font-size: 1.5rem; cursor: pointer; color: var(--primary); margin-right: 1rem; }
-
-        .content-body { padding: 2rem; overflow-y: auto; height: 100%; flex: 1; }
-
-        /* =========================================
-           3. COMPONENTS & UTILITIES
-           ========================================= */
-        .card { background: var(--bg-card); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 1.5rem; }
-        .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; }
+        /* Grid Systems */
+        .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-        
-        .btn { padding: 0.6rem 1.2rem; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-light); }
-        .btn-accent { background: var(--accent); color: white; }
-        .btn-accent:hover { background: var(--accent-hover); }
-        .btn-success { background: var(--success); color: white; }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
-        .btn-outline:hover { background: var(--bg-body); }
 
-        /* Forms */
-        .form-group { margin-bottom: 1rem; }
-        .form-label { display: block; margin-bottom: 0.4rem; font-weight: 600; font-size: 0.85rem; color: var(--text-main); }
-        .form-control { width: 100%; padding: 0.6rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; transition: 0.2s; }
-        .form-control:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1); }
-        .input-group { display: flex; gap: 0.5rem; }
+        /* Stats Card */
+        .stat-card {
+            display: flex;
+            flex-direction: column;
+        }
+        .stat-label { font-size: 0.85rem; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+        .stat-value { font-size: 2rem; font-weight: 800; color: var(--primary-900); margin: 0.5rem 0; }
+        .stat-trend { font-size: 0.8rem; color: var(--success-500); display: flex; align-items: center; gap: 4px; }
+        
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            gap: 8px;
+        }
+        .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+        .btn-primary { background: var(--primary-900); color: var(--white); }
+        .btn-primary:hover { background: var(--primary-800); }
+        .btn-accent { background: var(--accent-500); color: var(--white); }
+        .btn-accent:hover { background: var(--accent-600); }
+        .btn-success { background: var(--success-500); color: var(--white); }
+        .btn-danger { background: var(--danger-500); color: var(--white); }
+        .btn-outline { background: transparent; border-color: var(--gray-300); color: var(--gray-800); }
+        .btn-outline:hover { background: var(--gray-100); border-color: var(--gray-400); }
 
         /* Tables */
-        .table-container { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
-        table { width: 100%; border-collapse: collapse; background: white; white-space: nowrap; }
-        th { background: #f8fafc; text-align: left; padding: 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-light); font-weight: 700; border-bottom: 1px solid var(--border); }
-        td { padding: 1rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--gray-200);
+        }
+        table { width: 100%; border-collapse: collapse; background: var(--white); white-space: nowrap; }
+        th {
+            background: var(--gray-50);
+            padding: 1rem;
+            text-align: left;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--gray-500);
+            font-weight: 700;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--gray-200);
+            color: var(--gray-800);
+        }
         tr:last-child td { border-bottom: none; }
-        tr:hover td { background: #f8fafc; }
+        tr:hover td { background-color: var(--gray-50); }
 
         /* Badges */
-        .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
-        .bg-green { background: #dcfce7; color: #166534; }
-        .bg-red { background: #fee2e2; color: #991b1b; }
-        .bg-blue { background: #e0f2fe; color: #075985; }
-        .bg-yellow { background: #fef3c7; color: #92400e; }
+        .badge {
+            display: inline-flex;
+            padding: 0.25rem 0.6rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .badge-success { background: var(--success-bg); color: var(--success-text); }
+        .badge-warning { background: var(--warning-bg); color: var(--warning-text); }
+        .badge-danger { background: var(--danger-bg); color: var(--danger-text); }
+        .badge-info { background: #e0f2fe; color: #075985; }
 
-        /* =========================================
-           4. MODALS & TOASTS
-           ========================================= */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 100; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
-        .modal-box { background: white; width: 95%; max-width: 600px; max-height: 90vh; overflow-y: auto; border-radius: var(--radius); padding: 2rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); animation: slideUp 0.3s ease; }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        /* Forms */
+        .form-group { margin-bottom: 1.25rem; }
+        .form-label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--primary-800); font-size: 0.9rem; }
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+            background: var(--white);
+        }
+        .form-control:focus { outline: none; border-color: var(--accent-500); box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1); }
+        .form-control[readonly] { background: var(--gray-100); cursor: not-allowed; }
 
-        .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 10px; }
-        .toast { background: white; padding: 1rem 1.5rem; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-left: 5px solid var(--accent); min-width: 300px; animation: slideIn 0.3s; display: flex; align-items: center; justify-content: space-between; }
-        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
-
-        /* =========================================
-           5. RESPONSIVE QUERIES
-           ========================================= */
-        @media (max-width: 768px) {
-            #app { grid-template-columns: 1fr; }
-            aside { position: fixed; left: -260px; top: 0; height: 100%; width: 260px; transition: 0.3s; }
-            aside.open { left: 0; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
-            .mobile-toggle { display: block; }
-            .content-body { padding: 1rem; }
-            .grid-2 { grid-template-columns: 1fr; }
-            .hidden-mobile { display: none; }
+        /* ================================================================================== 
+           4. MODALS & OVERLAYS 
+           ================================================================================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
         }
 
-        /* Login Screen */
-        #login-screen { position: fixed; inset: 0; background: var(--primary); z-index: 999; display: flex; justify-content: center; align-items: center; }
-        .login-box { background: white; padding: 3rem; border-radius: 12px; text-align: center; width: 90%; max-width: 400px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+
+        .modal-container {
+            background: var(--white);
+            width: 90%;
+            max-width: 650px;
+            max-height: 90vh;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            flex-direction: column;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+
+        .modal-overlay.active .modal-container { transform: translateY(0); }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title { font-size: 1.25rem; font-weight: 700; color: var(--primary-900); }
+        
+        /* CLOSE BUTTON STYLE */
+        .btn-close {
+            background: var(--gray-100);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--gray-500);
+            transition: all 0.2s;
+        }
+        .btn-close:hover { background: var(--danger-bg); color: var(--danger-text); }
+
+        .modal-body { padding: 1.5rem; overflow-y: auto; }
+        .modal-footer { padding: 1.5rem; border-top: 1px solid var(--gray-200); display: flex; justify-content: flex-end; gap: 1rem; }
+
+        /* ================================================================================== 
+           5. NOTIFICATIONS (TOASTS) 
+           ================================================================================== */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toast {
+            background: var(--white);
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            border-left: 4px solid var(--accent-500);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+            animation: slideInRight 0.3s ease forwards;
+        }
+
+        .toast.success { border-left-color: var(--success-500); }
+        .toast.error { border-left-color: var(--danger-500); }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* ================================================================================== 
+           6. MOBILE RESPONSIVENESS 
+           ================================================================================== */
+        .mobile-toggle { display: none; cursor: pointer; }
+        .mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 45; }
+
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: -100%; height: 100%; box-shadow: var(--shadow-lg); }
+            .sidebar.open { left: 0; }
+            .mobile-toggle { display: block; margin-right: 1rem; }
+            .mobile-overlay.active { display: block; }
+            .top-header { padding: 0 1rem; }
+            .content-area { padding: 1rem; }
+            .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
+        }
+
+        /* ================================================================================== 
+           7. LOGIN SCREEN 
+           ================================================================================== */
+        #login-view {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--primary-900);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .login-card {
+            background: var(--white);
+            padding: 3rem;
+            border-radius: var(--radius-lg);
+            text-align: center;
+            width: 90%;
+            max-width: 420px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
     </style>
 </head>
 <body>
 
     <!-- LOGIN SCREEN -->
-    <div id="login-screen">
-        <div class="login-box">
-            <h1 style="color:var(--primary); font-size:2.5rem; margin-bottom:0.5rem; font-weight:800;">FRESKEY<span style="color:var(--accent)">.</span></h1>
-            <p style="color:var(--text-light); margin-bottom:2rem;">Secure Admin Control Panel</p>
+    <div id="login-view">
+        <div class="login-card">
+            <h1 style="font-size: 2.5rem; font-weight: 800; color: var(--primary-900); margin-bottom: 0.5rem;">
+                FRESKEY<span style="color: var(--accent-500);">.</span>
+            </h1>
+            <p style="color: var(--gray-500); margin-bottom: 2rem;">Enterprise Resource Planning</p>
             
-            <button class="btn btn-outline" style="width:100%; justify-content:center; padding:12px;" onclick="Auth.signIn()">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="20">
-                Sign in with Google
+            <button class="btn btn-outline" style="width: 100%; padding: 1rem; justify-content: center;" onclick="AuthManager.signIn()">
+                <svg width="20" height="20" viewBox="0 0 24 24">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                Sign In with Google
             </button>
-            <p id="login-status" style="margin-top:1rem; font-size:0.8rem; color:var(--text-light)"></p>
+            <p id="login-status" style="margin-top: 1.5rem; font-size: 0.85rem; color: var(--gray-500);">Secure Cloud Access Required</p>
         </div>
     </div>
 
-    <!-- APP CONTAINER -->
-    <div id="app" style="display:none;">
+    <!-- MAIN APP STRUCTURE -->
+    <div id="app-root" style="display: none;">
         
         <!-- SIDEBAR -->
-        <aside id="sidebar">
-            <div class="brand">
-                <i class="fas fa-cubes"></i> FRESKEY
-            </div>
-            <div class="nav-scroller">
-                <div class="nav-item active" onclick="Router.go('dashboard')"><i class="fas fa-chart-pie"></i> Dashboard</div>
-                <div class="nav-item" onclick="Router.go('new-order')"><i class="fas fa-file-invoice-dollar"></i> New Order</div>
-                <div class="nav-item" onclick="Router.go('customers')"><i class="fas fa-users"></i> Customers</div>
-                <div class="nav-item" onclick="Router.go('inventory')"><i class="fas fa-boxes"></i> Inventory</div>
-                <div class="nav-item" onclick="Router.go('events')"><i class="fas fa-glass-cheers"></i> Events</div>
-                <div class="nav-item" onclick="Router.go('reports')"><i class="fas fa-chart-line"></i> Reports</div>
-                <div class="nav-item" onclick="Router.go('settings')"><i class="fas fa-cog"></i> Settings</div>
-            </div>
-            <div class="user-panel">
-                <div id="user-email" style="font-weight:600; overflow:hidden; text-overflow:ellipsis;">user@example.com</div>
-                <div class="sync-indicator">
-                    <i class="fas fa-circle" id="sync-dot"></i> <span id="sync-text">Live Sync</span>
+        <aside class="sidebar" id="sidebar">
+            <div class="brand-container">
+                <div class="brand-logo">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    </svg>
+                    FRESKEY ERP
                 </div>
-                <button class="btn btn-outline" style="width:100%; margin-top:10px; font-size:0.75rem; border-color:rgba(255,255,255,0.2); color:white;" onclick="Drive.forceSync()">
-                    <i class="fas fa-sync"></i> Force Save
-                </button>
+            </div>
+
+            <nav class="nav-container">
+                <div class="nav-item active" onclick="Router.navigate('dashboard')">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    Dashboard
+                </div>
+                <div class="nav-item" onclick="Router.navigate('new-order')">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                    New Order
+                </div>
+                <div class="nav-item" onclick="Router.navigate('orders')">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    Order History
+                </div>
+                <div class="nav-item" onclick="Router.navigate('customers')">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    Customers
+                </div>
+                <div class="nav-item" onclick="Router.navigate('inventory')">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    Inventory
+                </div>
+                <div class="nav-item" onclick="Router.navigate('events')">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    Events
+                </div>
+                <div class="nav-item" onclick="Router.navigate('reports')">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+                    Reports
+                </div>
+                <div class="nav-item" onclick="Router.navigate('settings')">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    Settings
+                </div>
+            </nav>
+
+            <div class="user-profile">
+                <div class="user-email" id="user-display">Connecting...</div>
+                <div class="sync-status">
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><circle cx="5" cy="5" r="5"></circle></svg>
+                    <span id="sync-text">System Ready</span>
+                </div>
             </div>
         </aside>
 
-        <!-- MAIN -->
-        <main>
-            <div id="mobile-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:45;" onclick="toggleSidebar()"></div>
-            
-            <header>
-                <div style="display:flex; align-items:center;">
-                    <i class="fas fa-bars mobile-toggle" onclick="toggleSidebar()"></i>
-                    <div class="page-title" id="page-title">Dashboard</div>
+        <!-- MOBILE OVERLAY -->
+        <div class="mobile-overlay" id="mobile-overlay" onclick="toggleSidebar()"></div>
+
+        <!-- MAIN WRAPPER -->
+        <div class="main-wrapper">
+            <header class="top-header">
+                <div class="header-title">
+                    <svg class="mobile-toggle nav-icon" onclick="toggleSidebar()" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                    <span id="page-title">Dashboard</span>
                 </div>
-                <div style="display:flex; gap:10px;">
-                    <button class="btn btn-outline" onclick="window.location.reload()"><i class="fas fa-power-off"></i></button>
+                <div class="header-actions">
+                    <button class="btn btn-outline btn-sm" onclick="DriveAdapter.forceSync()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path><polyline points="17 2 17 8 23 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        Force Save
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="location.reload()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    </button>
                 </div>
             </header>
 
-            <div class="content-body" id="content">
-                <!-- Content Injected via JS -->
+            <div class="content-area" id="main-content">
+                <!-- DYNAMIC CONTENT INJECTED HERE -->
             </div>
-        </main>
+        </div>
     </div>
 
-    <!-- MODAL & TOAST CONTAINERS -->
-    <div id="modal-root" class="hidden"></div>
-    <div class="toast-container" id="toast-root"></div>
+    <!-- MODAL CONTAINER (Popups) -->
+    <div id="modal-layer" class="modal-overlay">
+        <!-- Content Injected via JS -->
+    </div>
 
-<script>
-/**
- * ============================================================================
- * FRESKEY ADMIN - FULL ENTERPRISE CODEBASE
- * ============================================================================
- */
+    <!-- TOAST CONTAINER -->
+    <div id="toast-root" class="toast-container"></div>
 
-// --- 1. CONFIGURATION & STATE ---
-const CONFIG = {
-    // REPALCE THIS WITH YOUR REAL CLIENT ID
-    CLIENT_ID: '950010994560-v7p6cem78h9fsdp102iq4immb36t95ls.apps.googleusercontent.com',
-    API_KEY: '', // Optional for this flow
-    SCOPES: 'https://www.googleapis.com/auth/drive.file',
-    FILE_NAME: 'freskey_enterprise_db.json',
-    CASE_SIZE: {
-        '200ml': 24,
-        '500ml': 20,
-        '1L': 12
-    }
-};
-
-// Global Store
-let store = {
-    settings: {
-        defaultPrices: { '200ml': 12, '500ml': 25, '1L': 45 }, // Retail Rate
-        costs: { '200ml': 5, '500ml': 10, '1L': 18 },
-        companyName: "Freskey Beverages",
-        gst: "29AAAAA0000A1Z5"
-    },
-    inventory: {
-        '200ml': 0, '500ml': 0, '1L': 0
-    },
-    customers: [], // { id, companyName, contactPerson, phone, area, address, type, creditLimit, outstanding, status }
-    orders: [],    // { id, date, customerId, items: [{sku, qty, rate}], total, status, isPaid, notes }
-    events: [],    // { id, name, date, location, contact, bottles, status, notes }
-    lastUpdated: null
-};
-
-// --- 2. AUTHENTICATION & DRIVE SYNC ---
-const Auth = {
-    tokenClient: null,
-    
-    init: function() {
-        this.tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: CONFIG.CLIENT_ID,
-            scope: CONFIG.SCOPES,
-            callback: (resp) => this.handleCallback(resp),
-        });
-        gapi.load('client', () => {
-            gapi.client.init({ discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'] });
-        });
-    },
-
-    signIn: function() {
-        this.tokenClient.requestAccessToken({prompt: 'consent'});
-    },
-
-    handleCallback: async function(resp) {
-        if (resp.error) return UI.toast(resp.error, 'error');
-        
-        document.getElementById('login-status').innerText = "Authenticating with Drive...";
-        
-        // Get User Info
-        try {
-            const userReq = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { 
-                headers: { Authorization: `Bearer ${resp.access_token}` } 
-            });
-            const user = await userReq.json();
-            document.getElementById('user-email').innerText = user.email;
-            
-            // Load DB
-            await Drive.initLoad();
-            
-            // Show App
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('app').style.display = 'grid';
-            
-            // Start Auto-Sync
-            setInterval(() => Drive.save(), 60000); // 1 Minute
-            Router.go('dashboard');
-
-        } catch (e) {
-            console.error(e);
-            UI.toast("Login Failed: " + e.message, "error");
-        }
-    }
-};
-
-const Drive = {
-    fileId: null,
-
-    initLoad: async function() {
-        try {
-            const q = `name = '${CONFIG.FILE_NAME}' and trashed = false`;
-            const list = await gapi.client.drive.files.list({ q: q, fields: 'files(id, name)' });
-            
-            if (list.result.files.length > 0) {
-                this.fileId = list.result.files[0].id;
-                const file = await gapi.client.drive.files.get({ fileId: this.fileId, alt: 'media' });
-                store = file.result;
-                UI.toast("Database Loaded from Cloud", "success");
-            } else {
-                UI.toast("Creating new Database...", "info");
-                this.save(true); // Create new
+    <!-- ================================================================================== 
+         JAVASCRIPT APPLICATION LOGIC
+         ================================================================================== -->
+    <script>
+        /**
+         * ================================================================================== 
+         * 1. CONFIGURATION & CONSTANTS 
+         * ================================================================================== 
+         */
+        const CONFIG = {
+            // TODO: REPLACE THIS WITH YOUR ACTUAL GOOGLE CLOUD CLIENT ID
+            CLIENT_ID: '950010994560-v7p6cem78h9fsdp102iq4immb36t95ls.apps.googleusercontent.com', 
+            API_KEY: '', // Not strictly needed for Drive File Scope access via GIS
+            SCOPES: 'https://www.googleapis.com/auth/drive.file',
+            FILE_NAME: 'freskey_erp_v1.json',
+            CASE_SIZE: {
+                '200ml': 24,
+                '500ml': 20,
+                '1L': 12
             }
-        } catch (e) {
-            UI.toast("Drive Error: " + e.message, "error");
+        };
+
+        const SKUS = ['200ml', '500ml', '1L'];
+
+        /**
+         * ================================================================================== 
+         * 2. UTILITY CLASSES 
+         * ================================================================================== 
+         */
+        class Utils {
+            static generateId(prefix = 'ID') {
+                return prefix + '-' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+            }
+
+            static formatCurrency(amount) {
+                return '₹' + parseFloat(amount || 0).toFixed(2);
+            }
+
+            static formatDate(dateString) {
+                if(!dateString) return '-';
+                const d = new Date(dateString);
+                return d.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+            }
+
+            static deepClone(obj) {
+                return JSON.parse(JSON.stringify(obj));
+            }
+
+            static getCasesAndBottles(sku, totalBottles) {
+                const caseSize = CONFIG.CASE_SIZE[sku];
+                const cases = Math.floor(totalBottles / caseSize);
+                const loose = totalBottles % caseSize;
+                return { cases, loose, text: `${cases} Cases + ${loose} Btls` };
+            }
         }
-    },
 
-    save: async function(isNew = false) {
-        document.getElementById('sync-dot').style.color = 'orange';
-        document.getElementById('sync-text').innerText = "Syncing...";
-        store.lastUpdated = new Date().toISOString();
+        class ToastManager {
+            static show(message, type = 'info') {
+                const root = document.getElementById('toast-root');
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                
+                let icon = '';
+                if(type === 'success') icon = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                else if(type === 'error') icon = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12" y2="16"></line></svg>';
+                else icon = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="8"></line></svg>';
 
-        const fileData = JSON.stringify(store);
-        const metadata = { name: CONFIG.FILE_NAME, mimeType: 'application/json' };
-        const form = new FormData();
-        form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-        form.append('file', new Blob([fileData], { type: 'application/json' }));
+                toast.innerHTML = `${icon} <span>${message}</span>`;
+                root.appendChild(toast);
 
-        const token = gapi.client.getToken().access_token;
-        const method = this.fileId ? 'PATCH' : 'POST';
-        const url = this.fileId 
-            ? `https://www.googleapis.com/upload/drive/v3/files/${this.fileId}?uploadType=media`
-            : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
-
-        const headers = this.fileId 
-            ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
-            : { 'Authorization': `Bearer ${token}` };
-            
-        const body = this.fileId ? fileData : form;
-
-        try {
-            const req = await fetch(url, { method, headers, body });
-            const res = await req.json();
-            if (!this.fileId) this.fileId = res.id;
-            
-            document.getElementById('sync-dot').style.color = '#10b981';
-            document.getElementById('sync-text').innerText = "Synced " + new Date().toLocaleTimeString();
-        } catch (e) {
-            document.getElementById('sync-dot').style.color = 'red';
-            UI.toast("Sync Failed", "error");
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
         }
-    },
 
-    forceSync: function() {
-        this.save();
-        UI.toast("Force Sync Initiated", "info");
-    }
-};
+        class ModalManager {
+            static show(title, contentHTML) {
+                const layer = document.getElementById('modal-layer');
+                layer.innerHTML = `
+                    <div class="modal-container">
+                        <div class="modal-header">
+                            <h3 class="modal-title">${title}</h3>
+                            <button class="btn-close" onclick="ModalManager.close()">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            </button>
+                        </div>
+                        <div class="modal-body">${contentHTML}</div>
+                    </div>
+                `;
+                layer.classList.add('active');
+            }
 
-// --- 3. BUSINESS LOGIC ENGINE ---
-const Engine = {
-    getStats: function() {
-        const today = new Date().toISOString().split('T')[0];
-        let stats = { revenue: 0, profit: 0, pending: 0, bottles: 0 };
-        
-        store.orders.forEach(o => {
-            if(o.date === today) {
-                stats.revenue += o.total;
-                stats.pending += o.isPaid ? 0 : o.total;
-                o.items.forEach(i => {
-                    stats.bottles += i.qty;
-                    stats.profit += (i.qty * i.rate) - (i.qty * store.settings.costs[i.sku]);
+            static close() {
+                const layer = document.getElementById('modal-layer');
+                layer.classList.remove('active');
+                setTimeout(() => layer.innerHTML = '', 300);
+            }
+        }
+
+        /**
+         * ================================================================================== 
+         * 3. DATA STORE & STATE MANAGEMENT 
+         * ================================================================================== 
+         */
+        class Store {
+            constructor() {
+                this.data = {
+                    settings: {
+                        prices: { '200ml': 10, '500ml': 20, '1L': 40 }
+                    },
+                    inventory: { '200ml': 0, '500ml': 0, '1L': 0 },
+                    customers: [], // { id, name, company, phone, address, limit, balance }
+                    orders: [],    // { id, date, custId, items: [{sku, qty, rate}], total, status, paymentMode }
+                    events: [],    // { id, name, date, bottles, status }
+                    auditLog: []
+                };
+            }
+
+            load(jsonData) {
+                this.data = { ...this.data, ...jsonData };
+            }
+
+            get() { return this.data; }
+
+            // Operations
+            addCustomer(customer) {
+                this.data.customers.push(customer);
+                this.log('Added Customer: ' + customer.company);
+            }
+
+            updateCustomer(id, updates) {
+                const idx = this.data.customers.findIndex(c => c.id === id);
+                if (idx > -1) {
+                    this.data.customers[idx] = { ...this.data.customers[idx], ...updates };
+                    this.log('Updated Customer: ' + this.data.customers[idx].company);
+                }
+            }
+
+            adjustInventory(sku, qty, operation) {
+                if (operation === 'add') this.data.inventory[sku] += qty;
+                else this.data.inventory[sku] -= qty;
+                
+                // Prevent negative inventory visual glitch (logic allows it but we log warning)
+                if(this.data.inventory[sku] < 0) this.log(`Warning: Negative Inventory for ${sku}`);
+            }
+
+            addOrder(order) {
+                this.data.orders.push(order);
+                
+                // Deduct Inventory
+                order.items.forEach(item => {
+                    this.adjustInventory(item.sku, item.qty, 'sub');
+                });
+
+                // Update Customer Balance if Credit
+                if(order.paymentMode === 'Credit') {
+                    const cust = this.data.customers.find(c => c.id === order.custId);
+                    if(cust) cust.balance += order.total;
+                }
+
+                this.log(`Created Order ${order.id}`);
+            }
+
+            voidOrder(orderId) {
+                const idx = this.data.orders.findIndex(o => o.id === orderId);
+                if(idx === -1) return;
+                
+                const order = this.data.orders[idx];
+                
+                // Rollback Inventory
+                order.items.forEach(item => {
+                    this.adjustInventory(item.sku, item.qty, 'add');
+                });
+
+                // Rollback Balance
+                if(order.paymentMode === 'Credit') {
+                    const cust = this.data.customers.find(c => c.id === order.custId);
+                    if(cust) cust.balance -= order.total;
+                }
+
+                this.data.orders.splice(idx, 1);
+                this.log(`Voided Order ${orderId}`);
+            }
+
+            log(action) {
+                this.data.auditLog.unshift({ time: new Date().toISOString(), action });
+                if(this.data.auditLog.length > 50) this.data.auditLog.pop();
+            }
+        }
+
+        const appStore = new Store();
+
+        /**
+         * ================================================================================== 
+         * 4. GOOGLE DRIVE ADAPTER 
+         * ================================================================================== 
+         */
+        class DriveAdapter {
+            static fileId = null;
+            static tokenClient = null;
+
+            static init() {
+                this.tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: CONFIG.CLIENT_ID,
+                    scope: CONFIG.SCOPES,
+                    callback: (resp) => this.handleAuthResponse(resp),
+                });
+                
+                gapi.load('client', async () => {
+                    await gapi.client.init({
+                        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+                    });
                 });
             }
-        });
-        return stats;
-    },
 
-    addStock: function(sku, cases) {
-        const bottles = cases * CONFIG.CASE_SIZE[sku];
-        store.inventory[sku] += bottles;
-        Drive.save();
-    },
-
-    createOrder: function(data) {
-        // data = { customerId, date, items: [{sku, qty, rate}], paymentMode, notes }
-        // Validation
-        const cust = store.customers.find(c => c.id === data.customerId);
-        let total = 0;
-        
-        // Stock Check & Total Calc
-        for (let item of data.items) {
-            if (store.inventory[item.sku] < item.qty) throw new Error(`Insufficient Stock: ${item.sku}`);
-            total += (item.qty * item.rate);
-        }
-
-        // Credit Check
-        if (data.paymentMode === 'Credit') {
-            if ((cust.outstanding + total) > cust.creditLimit) {
-                if(!confirm(`Credit Limit Exceeded! Limit: ${cust.creditLimit}, Current: ${cust.outstanding + total}. Continue?`)) return;
+            static handleAuthResponse(resp) {
+                if (resp.error) {
+                    document.getElementById('login-status').innerText = "Access Denied: " + resp.error;
+                    return;
+                }
+                this.onLoginSuccess();
             }
-            cust.outstanding += total;
-        }
 
-        // Deduct Stock
-        data.items.forEach(i => store.inventory[i.sku] -= i.qty);
+            static async onLoginSuccess() {
+                document.getElementById('login-status').innerText = "Loading Database from Cloud...";
+                
+                // Fetch User Info
+                const token = gapi.client.getToken().access_token;
+                fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: `Bearer ${token}` }})
+                .then(r => r.json())
+                .then(u => {
+                    document.getElementById('user-display').innerText = u.email;
+                });
 
-        const order = {
-            id: 'ORD-' + Date.now(),
-            ...data,
-            total,
-            isPaid: data.paymentMode !== 'Credit',
-            status: 'Pending'
-        };
-        store.orders.push(order);
-        Drive.save();
-        return order;
-    },
+                await this.loadDatabase();
+                
+                // UI Transition
+                document.getElementById('login-view').style.display = 'none';
+                document.getElementById('app-root').style.display = 'flex';
+                Router.navigate('dashboard');
 
-    exportExcel: function(month) { // YYYY-MM
-        const data = store.orders.filter(o => o.date.startsWith(month)).map(o => ({
-            ID: o.id,
-            Date: o.date,
-            Customer: store.customers.find(c => c.id === o.customerId)?.companyName,
-            Amount: o.total,
-            Paid: o.isPaid ? 'Yes' : 'No',
-            Items: o.items.map(i => `${i.sku}:${i.qty}`).join(', ')
-        }));
-        
-        const ws = XLSX.utils.json_to_sheet(data);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Sales");
-        XLSX.writeFile(wb, `Freskey_Sales_${month}.xlsx`);
-    },
+                // Start Auto Sync
+                setInterval(() => this.saveDatabase(true), 60000); 
+            }
 
-    exportPDF: function() {
-        const doc = new window.jspdf.jsPDF();
-        doc.text("Freskey Daily Report: " + new Date().toLocaleDateString(), 14, 20);
-        
-        const today = new Date().toISOString().split('T')[0];
-        const rows = store.orders.filter(o => o.date === today).map(o => [
-            o.id, 
-            store.customers.find(c => c.id === o.customerId)?.companyName,
-            o.total,
-            o.isPaid ? 'Paid' : 'Due'
-        ]);
-
-        doc.autoTable({
-            head: [['ID', 'Customer', 'Amount', 'Status']],
-            body: rows,
-            startY: 30
-        });
-        doc.save(`daily_report_${today}.pdf`);
-    }
-};
-
-// --- 4. UI ROUTER & PAGES ---
-const Router = {
-    go: function(page) {
-        document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
-        document.querySelector(`.nav-item[onclick*="${page}"]`)?.classList.add('active');
-        document.getElementById('page-title').innerText = page.charAt(0).toUpperCase() + page.slice(1).replace('-', ' ');
-        document.getElementById('content').innerHTML = Pages[page]();
-        
-        // Close Mobile Menu
-        document.getElementById('sidebar').classList.remove('open');
-        document.getElementById('mobile-overlay').style.display = 'none';
-
-        if(page === 'new-order') Pages.bindOrderEvents();
-    }
-};
-
-const Pages = {
-    dashboard: function() {
-        const s = Engine.getStats();
-        return `
-            <div class="grid-4">
-                <div class="card">
-                    <div class="form-label text-light">Revenue (Today)</div>
-                    <div style="font-size:2rem; font-weight:700;">₹${s.revenue}</div>
-                </div>
-                <div class="card">
-                    <div class="form-label text-light">Bottles Sold</div>
-                    <div style="font-size:2rem; font-weight:700;">${s.bottles}</div>
-                </div>
-                <div class="card">
-                    <div class="form-label text-light">Est. Profit</div>
-                    <div style="font-size:2rem; font-weight:700; color:var(--success)">₹${s.profit}</div>
-                </div>
-                <div class="card">
-                    <div class="form-label text-light">Pending Collection</div>
-                    <div style="font-size:2rem; font-weight:700; color:var(--danger)">₹${s.pending}</div>
-                </div>
-            </div>
-            
-            <div class="grid-2 mt-4" style="margin-top:20px;">
-                <div class="card">
-                    <h3>Recent Orders</h3>
-                    <table>
-                        <thead><tr><th>ID</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead>
-                        <tbody>
-                            ${store.orders.slice(-5).reverse().map(o => `
-                                <tr>
-                                    <td>${o.id.split('-')[1]}</td>
-                                    <td>${store.customers.find(c=>c.id===o.customerId)?.companyName || 'Unknown'}</td>
-                                    <td>₹${o.total}</td>
-                                    <td><span class="badge ${o.isPaid?'bg-green':'bg-red'}">${o.isPaid?'Paid':'Credit'}</span></td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-                 <div class="card">
-                    <h3>Pending Events</h3>
-                    <table>
-                        <thead><tr><th>Event</th><th>Date</th><th>Status</th></tr></thead>
-                        <tbody>
-                            ${store.events.filter(e => e.status === 'Scheduled').map(e => `
-                                <tr>
-                                    <td>${e.name}</td>
-                                    <td>${e.date}</td>
-                                    <td><span class="badge bg-blue">${e.status}</span></td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        `;
-    },
-
-    customers: function() {
-        const rows = store.customers.map(c => `
-            <tr>
-                <td>
-                    <strong>${c.companyName}</strong><br>
-                    <small class="text-muted">${c.contactPerson}</small>
-                </td>
-                <td>${c.phone}</td>
-                <td>${c.area}</td>
-                <td>₹${c.creditLimit}</td>
-                <td style="color:${c.outstanding > 0 ? 'red':'green'}">₹${c.outstanding}</td>
-                <td>
-                    <button class="btn btn-outline" style="padding:4px;" onclick="Pages.editCust('${c.id}')"><i class="fas fa-edit"></i></button>
-                </td>
-            </tr>
-        `).join('');
-
-        return `
-            <div class="card">
-                <div style="display:flex; justify-content:space-between; margin-bottom:1rem;">
-                    <input type="text" placeholder="Search customer..." class="form-control" style="width:250px" onkeyup="UI.filterTable(this, 1)">
-                    <button class="btn btn-primary" onclick="Pages.addCustomerModal()">+ Add Customer</button>
-                </div>
-                <div class="table-container">
-                    <table>
-                        <thead><tr><th>Company / Person</th><th>Phone</th><th>Area</th><th>Limit</th><th>Outstanding</th><th>Action</th></tr></thead>
-                        <tbody>${rows}</tbody>
-                    </table>
-                </div>
-            </div>
-        `;
-    },
-
-    addCustomerModal: function() {
-        UI.modal(`
-            <h3>Add New Customer</h3>
-            <div class="grid-2">
-                <div class="form-group"><label class="form-label">Company Name</label><input id="c-comp" class="form-control"></div>
-                <div class="form-group"><label class="form-label">Contact Person</label><input id="c-person" class="form-control"></div>
-            </div>
-            <div class="grid-2">
-                <div class="form-group"><label class="form-label">Phone</label><input id="c-phone" class="form-control"></div>
-                <div class="form-group"><label class="form-label">Area</label><input id="c-area" class="form-control"></div>
-            </div>
-            <div class="form-group"><label class="form-label">Address</label><input id="c-addr" class="form-control"></div>
-            <div class="grid-2">
-                <div class="form-group"><label class="form-label">Credit Limit (₹)</label><input type="number" id="c-limit" class="form-control" value="2000"></div>
-                <div class="form-group"><label class="form-label">Type</label><select id="c-type" class="form-control"><option>Retail</option><option>Corporate</option><option>Residential</option></select></div>
-            </div>
-            <button class="btn btn-primary w-full" onclick="Pages.saveCustomer()">Save Database</button>
-        `);
-    },
-
-    saveCustomer: function() {
-        const c = {
-            id: 'C-' + Date.now(),
-            companyName: document.getElementById('c-comp').value,
-            contactPerson: document.getElementById('c-person').value,
-            phone: document.getElementById('c-phone').value,
-            area: document.getElementById('c-area').value,
-            address: document.getElementById('c-addr').value,
-            creditLimit: parseFloat(document.getElementById('c-limit').value) || 0,
-            type: document.getElementById('c-type').value,
-            outstanding: 0,
-            status: 'Active'
-        };
-        if(!c.companyName) return UI.toast("Company Name Required", "error");
-        
-        store.customers.push(c);
-        Drive.save();
-        UI.closeModal();
-        Router.go('customers');
-    },
-
-    inventory: function() {
-        const inv = store.inventory;
-        const caseCount = (sku) => Math.floor(inv[sku] / CONFIG.CASE_SIZE[sku]);
-        const remCount = (sku) => inv[sku] % CONFIG.CASE_SIZE[sku];
-
-        return `
-            <div class="grid-4">
-                ${Object.keys(inv).map(sku => `
-                    <div class="card">
-                        <h3>${sku}</h3>
-                        <div style="font-size:2rem; font-weight:700;">${inv[sku]} <small style="font-size:1rem; color:#999">btls</small></div>
-                        <div class="text-light" style="font-size:0.9rem; margin-top:5px;">
-                            ${caseCount(sku)} Cases + ${remCount(sku)} Loose
-                        </div>
-                        <button class="btn btn-outline w-full mt-3" onclick="Pages.addStockModal('${sku}')">+ Add Stock</button>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-    },
-
-    addStockModal: function(sku) {
-        UI.modal(`
-            <h3>Add Stock: ${sku}</h3>
-            <p class="text-light mb-3">1 Case = ${CONFIG.CASE_SIZE[sku]} Bottles</p>
-            <div class="form-group">
-                <label class="form-label">Enter Quantity in CASES</label>
-                <input type="number" id="stock-cases" class="form-control" placeholder="e.g. 10">
-            </div>
-            <button class="btn btn-success w-full" onclick="Pages.saveStock('${sku}')">Update Inventory</button>
-        `);
-    },
-
-    saveStock: function(sku) {
-        const cases = parseInt(document.getElementById('stock-cases').value);
-        if(!cases) return;
-        Engine.addStock(sku, cases);
-        UI.closeModal();
-        UI.toast("Stock Updated", "success");
-        Router.go('inventory');
-    },
-
-    newOrder: function() {
-        const custOptions = store.customers.map(c => `<option value="${c.id}">${c.companyName} (${c.area})</option>`).join('');
-        
-        return `
-            <div class="card" style="max-width:900px; margin:0 auto;">
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label class="form-label">Select Customer</label>
-                        <select id="ord-cust" class="form-control" onchange="Pages.orderCustChange()">${custOptions}</select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Order Date</label>
-                        <input type="date" id="ord-date" class="form-control" value="${new Date().toISOString().split('T')[0]}">
-                    </div>
-                </div>
-
-                <div style="background:#f8fafc; padding:1.5rem; border-radius:8px; border:1px solid var(--border); margin: 1.5rem 0;">
-                    <h4 style="margin-bottom:1rem;">Items & Custom Rates</h4>
+            static async loadDatabase() {
+                try {
+                    const q = `name = '${CONFIG.FILE_NAME}' and trashed = false`;
+                    const list = await gapi.client.drive.files.list({ q: q, fields: 'files(id, name)' });
                     
-                    <div class="grid-4" style="align-items:end; margin-bottom:10px;">
-                        <label class="form-label">SKU</label>
-                        <label class="form-label">Stock Avail.</label>
-                        <label class="form-label">Rate (₹)</label>
-                        <label class="form-label">Qty (Btls)</label>
-                    </div>
-
-                    <!-- 200ml Row -->
-                    <div class="grid-4 mb-2" style="align-items:center;">
-                        <strong>200ml</strong>
-                        <span class="badge bg-blue">${store.inventory['200ml']}</span>
-                        <input type="number" id="rate-200" class="form-control" value="${store.settings.defaultPrices['200ml']}" onchange="Pages.calcOrderTotal()">
-                        <input type="number" id="qty-200" class="form-control" placeholder="0" onkeyup="Pages.calcOrderTotal()">
-                    </div>
-
-                    <!-- 500ml Row -->
-                    <div class="grid-4 mb-2" style="align-items:center;">
-                        <strong>500ml</strong>
-                        <span class="badge bg-blue">${store.inventory['500ml']}</span>
-                        <input type="number" id="rate-500" class="form-control" value="${store.settings.defaultPrices['500ml']}" onchange="Pages.calcOrderTotal()">
-                        <input type="number" id="qty-500" class="form-control" placeholder="0" onkeyup="Pages.calcOrderTotal()">
-                    </div>
-
-                    <!-- 1L Row -->
-                    <div class="grid-4 mb-2" style="align-items:center;">
-                        <strong>1 Litre</strong>
-                        <span class="badge bg-blue">${store.inventory['1L']}</span>
-                        <input type="number" id="rate-1l" class="form-control" value="${store.settings.defaultPrices['1L']}" onchange="Pages.calcOrderTotal()">
-                        <input type="number" id="qty-1l" class="form-control" placeholder="0" onkeyup="Pages.calcOrderTotal()">
-                    </div>
-                </div>
-
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-                     <div class="form-group" style="width:200px;">
-                        <label class="form-label">Payment Mode</label>
-                        <select id="ord-pay" class="form-control"><option>Cash</option><option>Online/UPI</option><option>Credit</option></select>
-                    </div>
-                    <div style="text-align:right;">
-                        <div class="text-light">Grand Total</div>
-                        <div style="font-size:2rem; font-weight:800; color:var(--primary);" id="ord-grand-total">₹0</div>
-                    </div>
-                </div>
-
-                <button class="btn btn-primary w-full" style="padding:15px; font-size:1.1rem;" onclick="Pages.submitOrder()">CONFIRM & GENERATE INVOICE</button>
-            </div>
-        `;
-    },
-
-    bindOrderEvents: function() {
-        // Trigger calc initially
-        this.calcOrderTotal();
-    },
-
-    calcOrderTotal: function() {
-        const q2 = parseInt(document.getElementById('qty-200').value) || 0;
-        const r2 = parseFloat(document.getElementById('rate-200').value) || 0;
-        
-        const q5 = parseInt(document.getElementById('qty-500').value) || 0;
-        const r5 = parseFloat(document.getElementById('rate-500').value) || 0;
-        
-        const q1 = parseInt(document.getElementById('qty-1l').value) || 0;
-        const r1 = parseFloat(document.getElementById('rate-1l').value) || 0;
-
-        const total = (q2*r2) + (q5*r5) + (q1*r1);
-        document.getElementById('ord-grand-total').innerText = "₹" + total;
-    },
-
-    submitOrder: function() {
-        const custId = document.getElementById('ord-cust').value;
-        const date = document.getElementById('ord-date').value;
-        const items = [];
-        
-        const q2 = parseInt(document.getElementById('qty-200').value) || 0;
-        if(q2 > 0) items.push({sku: '200ml', qty: q2, rate: parseFloat(document.getElementById('rate-200').value)});
-        
-        const q5 = parseInt(document.getElementById('qty-500').value) || 0;
-        if(q5 > 0) items.push({sku: '500ml', qty: q5, rate: parseFloat(document.getElementById('rate-500').value)});
-        
-        const q1 = parseInt(document.getElementById('qty-1l').value) || 0;
-        if(q1 > 0) items.push({sku: '1L', qty: q1, rate: parseFloat(document.getElementById('rate-1l').value)});
-
-        if(items.length === 0) return UI.toast("Please add items", "error");
-
-        try {
-            Engine.createOrder({
-                customerId: custId,
-                date: date,
-                items: items,
-                paymentMode: document.getElementById('ord-pay').value
-            });
-            UI.toast("Order Created Successfully", "success");
-            Router.go('dashboard');
-        } catch(e) {
-            UI.toast(e.message, "error");
-        }
-    },
-
-    events: function() {
-        const rows = store.events.map(e => `
-            <tr>
-                <td><strong>${e.name}</strong></td>
-                <td>${e.date}</td>
-                <td>${e.bottles} Btls</td>
-                <td><span class="badge ${e.status === 'Scheduled' ? 'bg-blue' : e.status === 'Done' ? 'bg-green' : 'bg-red'}">${e.status}</span></td>
-                <td>
-                    ${e.status === 'Scheduled' ? `
-                    <button class="btn btn-success" style="padding:4px;" onclick="Pages.eventAction('${e.id}', 'Done')"><i class="fas fa-check"></i></button>
-                    <button class="btn btn-danger" style="padding:4px;" onclick="Pages.eventAction('${e.id}', 'Cancelled')"><i class="fas fa-times"></i></button>
-                    ` : '-'}
-                </td>
-            </tr>
-        `).join('');
-
-        return `
-            <div class="card">
-                <div style="display:flex; justify-content:space-between; margin-bottom:1rem;">
-                    <h3>Event Manager</h3>
-                    <button class="btn btn-primary" onclick="Pages.addEventModal()">+ Schedule Event</button>
-                </div>
-                <table>
-                    <thead><tr><th>Event Name</th><th>Date</th><th>Est. Qty</th><th>Status</th><th>Actions</th></tr></thead>
-                    <tbody>${rows}</tbody>
-                </table>
-            </div>
-        `;
-    },
-
-    addEventModal: function() {
-        UI.modal(`
-            <h3>Schedule New Event</h3>
-            <div class="form-group"><label class="form-label">Event Name</label><input id="evt-name" class="form-control"></div>
-            <div class="grid-2">
-                <div class="form-group"><label class="form-label">Date</label><input type="date" id="evt-date" class="form-control"></div>
-                <div class="form-group"><label class="form-label">Est. Bottles</label><input type="number" id="evt-btl" class="form-control"></div>
-            </div>
-            <div class="form-group"><label class="form-label">Location/Notes</label><textarea id="evt-note" class="form-control"></textarea></div>
-            <button class="btn btn-primary w-full" onclick="Pages.saveEvent()">Book Event</button>
-        `);
-    },
-
-    saveEvent: function() {
-        store.events.push({
-            id: 'EVT-' + Date.now(),
-            name: document.getElementById('evt-name').value,
-            date: document.getElementById('evt-date').value,
-            bottles: parseInt(document.getElementById('evt-btl').value),
-            notes: document.getElementById('evt-note').value,
-            status: 'Scheduled'
-        });
-        Drive.save();
-        UI.closeModal();
-        Router.go('events');
-    },
-
-    eventAction: function(id, status) {
-        const e = store.events.find(x => x.id === id);
-        if(!e) return;
-        
-        if (status === 'Done') {
-            // Deduct stock if done? For simplicity, we assume events are special orders.
-            // In a complex app, we'd open an order form. Here we just mark done.
-            if(confirm("Mark event as done? (Stock won't be auto-deducted here, create an Order for strict inventory)")) {
-                e.status = status;
-                Drive.save();
-                Router.go('events');
+                    if (list.result.files.length > 0) {
+                        this.fileId = list.result.files[0].id;
+                        const file = await gapi.client.drive.files.get({ fileId: this.fileId, alt: 'media' });
+                        appStore.load(file.result);
+                        ToastManager.show("Database Loaded Successfully", "success");
+                    } else {
+                        ToastManager.show("Creating New Database...", "info");
+                        await this.saveDatabase(false); // Create new file
+                    }
+                } catch (e) {
+                    console.error(e);
+                    ToastManager.show("Error Loading Data", "error");
+                }
             }
-        } else {
-            e.status = status;
-            Drive.save();
-            Router.go('events');
-        }
-    },
 
-    reports: function() {
-        return `
-            <div class="grid-2">
-                <div class="card">
-                    <h3><i class="fas fa-file-pdf" style="color:red"></i> Daily Sales Report</h3>
-                    <p class="text-light mb-3">Generates a PDF summary of today's revenue and orders.</p>
-                    <button class="btn btn-outline" onclick="Engine.exportPDF()">Download PDF</button>
-                </div>
-                <div class="card">
-                    <h3><i class="fas fa-file-excel" style="color:green"></i> Monthly Ledger</h3>
-                    <p class="text-light mb-3">Export detailed sales data for Excel.</p>
-                    <div style="display:flex; gap:10px;">
-                        <input type="month" id="rep-month" class="form-control">
-                        <button class="btn btn-success" onclick="Engine.exportExcel(document.getElementById('rep-month').value)">Download XLS</button>
-                    </div>
-                </div>
-            </div>
-        `;
-    },
+            static async saveDatabase(silent = false) {
+                const content = JSON.stringify(appStore.get());
+                const metadata = { name: CONFIG.FILE_NAME, mimeType: 'application/json' };
+                
+                const form = new FormData();
+                form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+                form.append('file', new Blob([content], { type: 'application/json' }));
 
-    settings: function() {
-        return `
-            <div class="card">
-                <h3>Global Configuration</h3>
-                <div class="grid-2 mt-4">
-                    <div class="form-group">
-                        <label class="form-label">Base Rate 200ml</label>
-                        <input type="number" class="form-control" value="${store.settings.defaultPrices['200ml']}" onchange="store.settings.defaultPrices['200ml'] = parseFloat(this.value)">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Base Rate 500ml</label>
-                        <input type="number" class="form-control" value="${store.settings.defaultPrices['500ml']}" onchange="store.settings.defaultPrices['500ml'] = parseFloat(this.value)">
-                    </div>
-                     <div class="form-group">
-                        <label class="form-label">Base Rate 1L</label>
-                        <input type="number" class="form-control" value="${store.settings.defaultPrices['1L']}" onchange="store.settings.defaultPrices['1L'] = parseFloat(this.value)">
-                    </div>
-                </div>
-                <button class="btn btn-primary mt-3" onclick="Drive.save(); UI.toast('Settings Saved','success')">Save Settings</button>
-            </div>
-        `;
-    }
-};
-
-// --- 5. UI UTILITIES ---
-const UI = {
-    modal: function(html) {
-        const root = document.getElementById('modal-root');
-        root.innerHTML = `<div class="modal-overlay" onclick="UI.closeModal(event)"><div class="modal-box">${html}</div></div>`;
-        root.classList.remove('hidden');
-    },
-    
-    closeModal: function(e) {
-        if (!e || e.target.classList.contains('modal-overlay')) {
-            document.getElementById('modal-root').classList.add('hidden');
-        }
-    },
-
-    toast: function(msg, type = 'info') {
-        const c = document.getElementById('toast-root');
-        const t = document.createElement('div');
-        t.className = 'toast';
-        t.style.borderLeftColor = type === 'error' ? 'var(--danger)' : type === 'success' ? 'var(--success)' : 'var(--accent)';
-        t.innerHTML = `<span>${msg}</span>`;
-        c.appendChild(t);
-        setTimeout(() => t.remove(), 3000);
-    },
-
-    filterTable: function(input, colIndex) {
-        const filter = input.value.toUpperCase();
-        const trs = document.querySelectorAll('tbody tr');
-        trs.forEach(tr => {
-            const td = tr.getElementsByTagName('td')[0]; // Searching Name
-            if (td) {
-                const txt = td.textContent || td.innerText;
-                tr.style.display = txt.toUpperCase().indexOf(filter) > -1 ? "" : "none";
+                const token = gapi.client.getToken().access_token;
+                
+                try {
+                    if (!this.fileId) {
+                        // Create
+                        const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                            method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: form
+                        });
+                        const val = await res.json();
+                        this.fileId = val.id;
+                    } else {
+                        // Update
+                        await fetch(`https://www.googleapis.com/upload/drive/v3/files/${this.fileId}?uploadType=media`, {
+                            method: 'PATCH',
+                            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                            body: content
+                        });
+                    }
+                    
+                    const time = new Date().toLocaleTimeString();
+                    document.getElementById('sync-text').innerText = "Synced: " + time;
+                    if(!silent) ToastManager.show("Data Saved to Drive", "success");
+                } catch(e) {
+                    if(!silent) ToastManager.show("Sync Failed", "error");
+                }
             }
-        });
-    }
-};
 
-function toggleSidebar() {
-    document.getElementById('sidebar').classList.toggle('open');
-    const overlay = document.getElementById('mobile-overlay');
-    overlay.style.display = overlay.style.display === 'none' ? 'block' : 'none';
-}
+            static forceSync() { this.saveDatabase(false); }
+        }
 
-// Init
-window.onload = function() {
-    Auth.init();
-};
+        class AuthManager {
+            static signIn() { DriveAdapter.tokenClient.requestAccessToken({prompt: 'consent'}); }
+        }
 
-</script>
+        /**
+         * ================================================================================== 
+         * 5. VIEW CONTROLLERS (PAGES) 
+         * ================================================================================== 
+         */
+        const Views = {
+            dashboard: function() {
+                const data = appStore.get();
+                const today = new Date().toISOString().split('T')[0];
+                const todayOrders = data.orders.filter(o => o.date === today);
+                
+                const revenue = todayOrders.reduce((sum, o) => sum + o.total, 0);
+                const bottles = todayOrders.reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.qty, 0), 0);
+                const customers = data.customers.length;
+                const outstanding = data.customers.reduce((sum, c) => sum + c.balance, 0);
+
+                return `
+                    <div class="grid-4">
+                        <div class="card stat-card">
+                            <span class="stat-label">Today's Revenue</span>
+                            <div class="stat-value">${Utils.formatCurrency(revenue)}</div>
+                            <div class="stat-trend">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                                <span>Based on ${todayOrders.length} orders</span>
+                            </div>
+                        </div>
+                        <div class="card stat-card">
+                            <span class="stat-label">Bottles Sold</span>
+                            <div class="stat-value">${bottles}</div>
+                            <div class="stat-trend" style="color:var(--accent-500)">Volume Movement</div>
+                        </div>
+                        <div class="card stat-card">
+                            <span class="stat-label">Total Customers</span>
+                            <div class="stat-value">${customers}</div>
+                            <div class="stat-trend">Active Database</div>
+                        </div>
+                        <div class="card stat-card">
+                            <span class="stat-label">Market Outstanding</span>
+                            <div class="stat-value" style="color:var(--danger-500)">${Utils.formatCurrency(outstanding)}</div>
+                            <div class="stat-trend" style="color:var(--danger-500)">Credit Collections Pending</div>
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="card">
+                            <div class="card-header"><h3 class="card-title">Recent Activity</h3></div>
+                            ${this._renderRecentOrdersTable(data.orders.slice().reverse().slice(0, 5))}
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><h3 class="card-title">Inventory Overview</h3></div>
+                            ${this._renderStockPreview(data.inventory)}
+                        </div>
+                    </div>
+                `;
+            },
+
+            newOrder: function() {
+                const customers = appStore.get().customers;
+                if(customers.length === 0) return `<div class="card text-center"><h3>No Customers Found</h3><p class="text-gray-500 my-4">Please add customers before creating an order.</p><button class="btn btn-primary" onclick="Router.navigate('customers')">Go to Customers</button></div>`;
+
+                const custOptions = customers.map(c => `<option value="${c.id}">${c.company} (${c.name})</option>`).join('');
+
+                return `
+                    <div class="card" style="max-width: 900px; margin: 0 auto;">
+                        <div class="card-header"><h3 class="card-title">Create New Order</h3></div>
+                        
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Select Customer</label>
+                                <select id="ord-cust" class="form-control">${custOptions}</select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Order Date</label>
+                                <input type="date" id="ord-date" class="form-control" value="${new Date().toISOString().split('T')[0]}">
+                            </div>
+                        </div>
+
+                        <div style="background: var(--gray-50); padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--gray-200); margin-bottom: 1.5rem;">
+                            <h4 class="form-label" style="margin-bottom: 1rem;">Order Items</h4>
+                            
+                            <div class="grid-3" style="font-size: 0.85rem; color: var(--gray-500); margin-bottom: 0.5rem; font-weight: 700;">
+                                <div>PRODUCT SKU</div>
+                                <div>RATE (₹)</div>
+                                <div>QUANTITY (Bottles)</div>
+                            </div>
+
+                            ${SKUS.map(sku => `
+                                <div class="grid-3" style="align-items: center; margin-bottom: 1rem;">
+                                    <div>
+                                        <strong>${sku}</strong>
+                                        <div style="font-size: 0.75rem; color: var(--gray-500);">Stock: ${appStore.get().inventory[sku]}</div>
+                                    </div>
+                                    <input type="number" id="rate-${sku}" class="form-control" value="${appStore.get().settings.prices[sku]}" oninput="Logic.calcOrderTotal()">
+                                    <input type="number" id="qty-${sku}" class="form-control" placeholder="0" oninput="Logic.calcOrderTotal()">
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <div class="grid-2" style="align-items: center;">
+                            <div class="form-group">
+                                <label class="form-label">Payment Method</label>
+                                <select id="ord-pay" class="form-control">
+                                    <option value="Cash">Cash</option>
+                                    <option value="Online">Online / UPI</option>
+                                    <option value="Credit">Credit (Add to Balance)</option>
+                                </select>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.9rem; color: var(--gray-500);">Grand Total</div>
+                                <div id="ord-total-disp" style="font-size: 2rem; font-weight: 800; color: var(--primary-900);">₹0.00</div>
+                            </div>
+                        </div>
+
+                        <hr style="border:0; border-top: 1px solid var(--gray-200); margin: 1.5rem 0;">
+
+                        <div style="display: flex; justify-content: flex-end;">
+                            <button class="btn btn-success" style="padding: 1rem 2rem; font-size: 1rem;" onclick="Logic.submitOrder()">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                Confirm Order
+                            </button>
+                        </div>
+                    </div>
+                `;
+            },
+
+            orders: function() {
+                const orders = appStore.get().orders.slice().reverse();
+                return `
+                    <div class="card">
+                        <div class="card-header"><h3 class="card-title">Order Management</h3></div>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Date</th>
+                                        <th>Customer</th>
+                                        <th>Items Summary</th>
+                                        <th>Total</th>
+                                        <th>Payment</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${orders.map(o => {
+                                        const c = appStore.get().customers.find(cx => cx.id === o.custId);
+                                        const summary = o.items.map(i => `${i.qty}x ${i.sku}`).join(', ');
+                                        return `
+                                            <tr>
+                                                <td class="font-mono text-xs">${o.id.split('-')[1]}</td>
+                                                <td>${Utils.formatDate(o.date)}</td>
+                                                <td>${c ? c.company : 'Unknown'}</td>
+                                                <td>${summary}</td>
+                                                <td style="font-weight: 700;">${Utils.formatCurrency(o.total)}</td>
+                                                <td><span class="badge ${o.paymentMode==='Credit'?'badge-danger':'badge-success'}">${o.paymentMode}</span></td>
+                                                <td>
+                                                    <button class="btn btn-outline btn-sm" onclick="Logic.editOrder('${o.id}')">Edit / Void</button>
+                                                </td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                    ${orders.length === 0 ? '<tr><td colspan="7" style="text-align:center; padding: 2rem;">No orders found.</td></tr>' : ''}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            },
+
+            customers: function() {
+                const customers = appStore.get().customers;
+                return `
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Customer Database</h3>
+                            <button class="btn btn-primary btn-sm" onclick="Logic.openAddCustomerModal()">+ Add Customer</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table>
+                                <thead><tr><th>Company</th><th>Contact Person</th><th>Phone</th><th>Area</th><th>Credit Limit</th><th>Balance</th><th>Actions</th></tr></thead>
+                                <tbody>
+                                    ${customers.map(c => `
+                                        <tr>
+                                            <td style="font-weight:600;">${c.company}</td>
+                                            <td>${c.name}</td>
+                                            <td>${c.phone}</td>
+                                            <td>${c.address}</td>
+                                            <td>${Utils.formatCurrency(c.limit)}</td>
+                                            <td style="color:${c.balance > 0 ? 'var(--danger-500)' : 'var(--success-500)'}; font-weight:700;">${Utils.formatCurrency(c.balance)}</td>
+                                            <td><button class="btn btn-outline btn-sm" onclick="Logic.editCustomer('${c.id}')">Edit</button></td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            },
+
+            inventory: function() {
+                const inv = appStore.get().inventory;
+                return `
+                    <div class="grid-3">
+                        ${SKUS.map(sku => {
+                            const stockInfo = Utils.getCasesAndBottles(sku, inv[sku]);
+                            return `
+                                <div class="card" style="text-align:center;">
+                                    <h3 style="color:var(--gray-500); font-size: 0.9rem; margin-bottom: 0.5rem;">${sku} SKU</h3>
+                                    <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary-900);">${inv[sku]} <span style="font-size: 1rem; color: var(--gray-400);">btls</span></div>
+                                    <div class="badge badge-info" style="margin: 0.5rem 0;">${stockInfo.text}</div>
+                                    <p style="font-size: 0.8rem; color: var(--gray-500); margin-bottom: 1.5rem;">1 Case = ${CONFIG.CASE_SIZE[sku]} Bottles</p>
+                                    <button class="btn btn-primary w-full" onclick="Logic.openAddStockModal('${sku}')">Add Stock</button>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            },
+
+            events: function() {
+                const events = appStore.get().events;
+                return `
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Event Schedule</h3>
+                            <button class="btn btn-primary btn-sm" onclick="Logic.openAddEventModal()">+ Schedule Event</button>
+                        </div>
+                        <div class="table-responsive">
+                            <table>
+                                <thead><tr><th>Event Name</th><th>Date</th><th>Est. Bottles</th><th>Status</th><th>Actions</th></tr></thead>
+                                <tbody>
+                                    ${events.map(e => `
+                                        <tr>
+                                            <td><strong>${e.name}</strong></td>
+                                            <td>${Utils.formatDate(e.date)}</td>
+                                            <td>${e.bottles}</td>
+                                            <td><span class="badge ${e.status==='Scheduled'?'badge-warning':e.status==='Done'?'badge-success':'badge-danger'}">${e.status}</span></td>
+                                            <td>
+                                                ${e.status === 'Scheduled' ? `
+                                                    <button class="btn btn-success btn-sm" onclick="Logic.updateEventStatus('${e.id}', 'Done')">Done</button>
+                                                    <button class="btn btn-danger btn-sm" onclick="Logic.updateEventStatus('${e.id}', 'Cancelled')">Cancel</button>
+                                                ` : '-'}
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            },
+
+            reports: function() {
+                return `
+                    <div class="grid-2">
+                        <div class="card">
+                            <div class="card-header"><h3 class="card-title">Daily Sales PDF</h3></div>
+                            <p style="color: var(--gray-500); margin-bottom: 1rem;">Generate a printable PDF report of today's sales including items sold, revenue, and payment breakdowns.</p>
+                            <button class="btn btn-primary" onclick="Logic.generatePDF()">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                Download Today's Report
+                            </button>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><h3 class="card-title">Monthly Excel Export</h3></div>
+                            <p style="color: var(--gray-500); margin-bottom: 1rem;">Export all order data for a specific month to Excel for accounting purposes.</p>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="month" id="report-month" class="form-control">
+                                <button class="btn btn-success" onclick="Logic.generateExcel()">Export XLSX</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+            
+            settings: function() {
+                const prices = appStore.get().settings.prices;
+                return `
+                    <div class="card" style="max-width: 600px;">
+                        <div class="card-header"><h3 class="card-title">System Settings</h3></div>
+                        <h4 class="form-label" style="margin-top: 1rem;">Default Pricing (Per Bottle)</h4>
+                        <div class="grid-3" style="margin-bottom: 1rem;">
+                            ${SKUS.map(sku => `
+                                <div class="form-group">
+                                    <label class="form-label">${sku}</label>
+                                    <input type="number" id="set-price-${sku}" class="form-control" value="${prices[sku]}">
+                                </div>
+                            `).join('')}
+                        </div>
+                        <button class="btn btn-primary" onclick="Logic.saveSettings()">Save Configuration</button>
+                    </div>
+                `;
+            },
+
+            // Helper Views
+            _renderRecentOrdersTable: function(orders) {
+                if(orders.length === 0) return '<p style="padding: 1rem; color: var(--gray-500);">No activity yet.</p>';
+                return `
+                    <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>Customer</th><th>Amount</th><th>Status</th></tr></thead>
+                        <tbody>
+                            ${orders.map(o => {
+                                const c = appStore.get().customers.find(cx => cx.id === o.custId);
+                                return `<tr>
+                                    <td>${c ? c.company : 'N/A'}</td>
+                                    <td style="font-weight:700">${Utils.formatCurrency(o.total)}</td>
+                                    <td><span class="badge ${o.paymentMode==='Credit'?'badge-danger':'badge-success'}">${o.paymentMode}</span></td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                    </div>
+                `;
+            },
+
+            _renderStockPreview: function(inv) {
+                return `
+                    <div style="padding: 1rem;">
+                        ${SKUS.map(sku => {
+                             const pct = (inv[sku] / 500) * 100; // Mock max for bar
+                             return `
+                                <div style="margin-bottom: 1rem;">
+                                    <div style="display:flex; justify-content:space-between; font-size: 0.85rem; margin-bottom: 4px;">
+                                        <strong>${sku}</strong>
+                                        <span>${inv[sku]} btls</span>
+                                    </div>
+                                    <div style="height: 8px; background: var(--gray-200); border-radius: 4px; overflow: hidden;">
+                                        <div style="height: 100%; width: ${Math.min(pct, 100)}%; background: var(--accent-500);"></div>
+                                    </div>
+                                </div>
+                             `;
+                        }).join('')}
+                    </div>
+                `;
+            }
+        };
+
+        /**
+         * ================================================================================== 
+         * 6. CONTROLLER & BUSINESS LOGIC 
+         * ================================================================================== 
+         */
+        const Logic = {
+            // --- Customer Logic ---
+            openAddCustomerModal: function() {
+                ModalManager.show("Add New Customer", `
+                    <div class="grid-2">
+                        <div class="form-group"><label class="form-label">Company Name</label><input id="new-c-comp" class="form-control"></div>
+                        <div class="form-group"><label class="form-label">Contact Person</label><input id="new-c-name" class="form-control"></div>
+                    </div>
+                    <div class="form-group"><label class="form-label">Phone</label><input id="new-c-phone" class="form-control"></div>
+                    <div class="form-group"><label class="form-label">Area / Address</label><input id="new-c-addr" class="form-control"></div>
+                    <div class="form-group"><label class="form-label">Credit Limit (₹)</label><input type="number" id="new-c-limit" class="form-control" value="5000"></div>
+                    <button class="btn btn-primary w-full" onclick="Logic.saveNewCustomer()">Save Customer</button>
+                `);
+            },
+
+            saveNewCustomer: function() {
+                const comp = document.getElementById('new-c-comp').value;
+                if(!comp) return ToastManager.show("Company Name Required", "error");
+
+                appStore.addCustomer({
+                    id: Utils.generateId('CUST'),
+                    company: comp,
+                    name: document.getElementById('new-c-name').value,
+                    phone: document.getElementById('new-c-phone').value,
+                    address: document.getElementById('new-c-addr').value,
+                    limit: parseFloat(document.getElementById('new-c-limit').value) || 0,
+                    balance: 0
+                });
+
+                ModalManager.close();
+                ToastManager.show("Customer Added", "success");
+                Router.refresh();
+            },
+            
+            editCustomer: function(id) {
+                const c = appStore.get().customers.find(x => x.id === id);
+                if(!c) return;
+                ModalManager.show("Edit Customer", `
+                    <div class="form-group"><label class="form-label">Company</label><input id="edit-c-comp" class="form-control" value="${c.company}"></div>
+                    <div class="form-group"><label class="form-label">Limit</label><input type="number" id="edit-c-limit" class="form-control" value="${c.limit}"></div>
+                    <button class="btn btn-primary w-full" onclick="Logic.updateCustomer('${id}')">Update</button>
+                `);
+            },
+
+            updateCustomer: function(id) {
+                appStore.updateCustomer(id, {
+                    company: document.getElementById('edit-c-comp').value,
+                    limit: parseFloat(document.getElementById('edit-c-limit').value)
+                });
+                ModalManager.close();
+                Router.refresh();
+            },
+
+            // --- Order Logic ---
+            calcOrderTotal: function() {
+                let total = 0;
+                SKUS.forEach(sku => {
+                    const r = parseFloat(document.getElementById(`rate-${sku}`).value) || 0;
+                    const q = parseFloat(document.getElementById(`qty-${sku}`).value) || 0;
+                    total += (r * q);
+                });
+                document.getElementById('ord-total-disp').innerText = Utils.formatCurrency(total);
+            },
+
+            submitOrder: function() {
+                const custId = document.getElementById('ord-cust').value;
+                const date = document.getElementById('ord-date').value;
+                const pay = document.getElementById('ord-pay').value;
+
+                const items = [];
+                let total = 0;
+
+                // Inventory Check Loop
+                for(let sku of SKUS) {
+                    const q = parseFloat(document.getElementById(`qty-${sku}`).value) || 0;
+                    const r = parseFloat(document.getElementById(`rate-${sku}`).value) || 0;
+                    
+                    if(q > 0) {
+                        const currentStock = appStore.get().inventory[sku];
+                        if(currentStock < q) {
+                            if(!confirm(`Low Inventory for ${sku}. Available: ${currentStock}. Proceed anyway?`)) return;
+                        }
+                        items.push({ sku, qty: q, rate: r });
+                        total += (q * r);
+                    }
+                }
+
+                if(items.length === 0) return ToastManager.show("Please add at least one item", "error");
+
+                // Credit Limit Check
+                const cust = appStore.get().customers.find(c => c.id === custId);
+                if(pay === 'Credit' && (cust.balance + total > cust.limit)) {
+                    if(!confirm(`Credit Limit Exceeded! Current Balance: ${cust.balance}, Limit: ${cust.limit}. Add Order anyway?`)) return;
+                }
+
+                const order = {
+                    id: Utils.generateId('ORD'),
+                    date, custId, items, total, paymentMode: pay, status: 'Completed'
+                };
+
+                appStore.addOrder(order);
+                ToastManager.show("Order Created Successfully", "success");
+                Router.navigate('orders');
+            },
+
+            editOrder: function(id) {
+                // To allow robust inventory rollback, "Editing" in this strict version works by Voiding the old one 
+                // and allowing the user to create a new one, or simply changing payment mode.
+                const order = appStore.get().orders.find(o => o.id === id);
+                ModalManager.show(`Manage Order ${id.split('-')[1]}`, `
+                    <p style="margin-bottom:1rem;">To modify items, please void this order and create a new one to ensure inventory accuracy.</p>
+                    <div class="grid-2">
+                        <button class="btn btn-danger w-full" onclick="Logic.voidOrder('${id}')">Void & Refund Inventory</button>
+                        <button class="btn btn-outline w-full" onclick="ModalManager.close()">Cancel</button>
+                    </div>
+                `);
+            },
+
+            voidOrder: function(id) {
+                if(confirm("Are you sure? This will return items to stock and adjust customer balance.")) {
+                    appStore.voidOrder(id);
+                    ModalManager.close();
+                    ToastManager.show("Order Voided", "success");
+                    Router.refresh();
+                }
+            },
+
+            // --- Inventory Logic ---
+            openAddStockModal: function(sku) {
+                ModalManager.show(`Add Stock: ${sku}`, `
+                    <p style="margin-bottom:1rem; color:var(--gray-500);">1 Case = ${CONFIG.CASE_SIZE[sku]} Bottles</p>
+                    <div class="form-group">
+                        <label class="form-label">Add Quantity (CASES)</label>
+                        <input type="number" id="add-stock-cases" class="form-control" placeholder="0">
+                    </div>
+                    <button class="btn btn-success w-full" onclick="Logic.saveStock('${sku}')">Update Stock</button>
+                `);
+            },
+
+            saveStock: function(sku) {
+                const cases = parseInt(document.getElementById('add-stock-cases').value) || 0;
+                const bottles = cases * CONFIG.CASE_SIZE[sku];
+                if(bottles > 0) {
+                    appStore.adjustInventory(sku, bottles, 'add');
+                    ToastManager.show(`Added ${bottles} bottles`, "success");
+                    ModalManager.close();
+                    Router.refresh();
+                }
+            },
+
+            // --- Event Logic ---
+            openAddEventModal: function() {
+                ModalManager.show("Schedule Event", `
+                    <div class="form-group"><label class="form-label">Event Name</label><input id="evt-name" class="form-control"></div>
+                    <div class="form-group"><label class="form-label">Date</label><input type="date" id="evt-date" class="form-control"></div>
+                    <div class="form-group"><label class="form-label">Est. Bottles</label><input type="number" id="evt-btl" class="form-control"></div>
+                    <button class="btn btn-primary w-full" onclick="Logic.saveEvent()">Schedule</button>
+                `);
+            },
+
+            saveEvent: function() {
+                appStore.get().events.push({
+                    id: Utils.generateId('EVT'),
+                    name: document.getElementById('evt-name').value,
+                    date: document.getElementById('evt-date').value,
+                    bottles: document.getElementById('evt-btl').value,
+                    status: 'Scheduled'
+                });
+                ModalManager.close();
+                Router.refresh();
+            },
+
+            updateEventStatus: function(id, status) {
+                const e = appStore.get().events.find(x => x.id === id);
+                if(e) e.status = status;
+                Router.refresh();
+            },
+
+            // --- Reports ---
+            generatePDF: function() {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                doc.setFontSize(18);
+                doc.text("Freskey Daily Sales Report", 14, 20);
+                doc.setFontSize(10);
+                doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 28);
+
+                const today = new Date().toISOString().split('T')[0];
+                const orders = appStore.get().orders.filter(o => o.date === today);
+
+                const tableData = orders.map(o => {
+                    const c = appStore.get().customers.find(cx => cx.id === o.custId);
+                    return [o.id.split('-')[1], c?.company, Utils.formatCurrency(o.total), o.paymentMode];
+                });
+
+                doc.autoTable({
+                    head: [['ID', 'Customer', 'Amount', 'Payment']],
+                    body: tableData,
+                    startY: 35
+                });
+
+                const total = orders.reduce((sum, o) => sum + o.total, 0);
+                doc.text(`Total Revenue Today: ${Utils.formatCurrency(total)}`, 14, doc.lastAutoTable.finalY + 10);
+
+                doc.save(`daily_report_${today}.pdf`);
+            },
+
+            generateExcel: function() {
+                const month = document.getElementById('report-month').value;
+                if(!month) return ToastManager.show("Please select a month", "error");
+
+                const orders = appStore.get().orders.filter(o => o.date.startsWith(month));
+                const data = orders.map(o => {
+                    const c = appStore.get().customers.find(cx => cx.id === o.custId);
+                    return {
+                        Date: o.date,
+                        OrderID: o.id,
+                        Customer: c ? c.company : 'Unknown',
+                        Total: o.total,
+                        Payment: o.paymentMode,
+                        Items: o.items.map(i => `${i.qty} ${i.sku}`).join('; ')
+                    };
+                });
+
+                const ws = XLSX.utils.json_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Sales");
+                XLSX.writeFile(wb, `Sales_${month}.xlsx`);
+            },
+            
+            saveSettings: function() {
+                 SKUS.forEach(sku => {
+                     appStore.get().settings.prices[sku] = parseFloat(document.getElementById(`set-price-${sku}`).value) || 0;
+                 });
+                 ToastManager.show("Settings Saved", "success");
+            }
+        };
+
+        /**
+         * ================================================================================== 
+         * 7. ROUTING & NAVIGATION 
+         * ================================================================================== 
+         */
+        const Router = {
+            currentPage: 'dashboard',
+            
+            navigate: function(pageId) {
+                this.currentPage = pageId;
+                
+                // Update Nav UI
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                const activeNav = document.querySelector(`.nav-item[onclick="Router.navigate('${pageId}')"]`);
+                if(activeNav) activeNav.classList.add('active');
+
+                // Render Content
+                document.getElementById('page-title').innerText = pageId.charAt(0).toUpperCase() + pageId.slice(1).replace('-', ' ');
+                document.getElementById('main-content').innerHTML = Views[pageId] ? Views[pageId]() : '<h1>404 Page Not Found</h1>';
+
+                // Close Mobile Sidebar
+                document.getElementById('sidebar').classList.remove('open');
+                document.getElementById('mobile-overlay').classList.remove('active');
+            },
+
+            refresh: function() {
+                this.navigate(this.currentPage);
+            }
+        };
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('mobile-overlay').classList.toggle('active');
+        }
+
+        /**
+         * ================================================================================== 
+         * 8. INITIALIZATION 
+         * ================================================================================== 
+         */
+        window.onload = function() {
+            DriveAdapter.init(); // Init Google Auth scripts
+        };
+
+    </script>
 </body>
 </html>
