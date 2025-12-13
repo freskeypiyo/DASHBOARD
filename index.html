@@ -3,732 +3,570 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Freskey Admin Panel | Cloud Sync</title>
+    <title>Freskey Admin Panel | Enterprise Edition</title>
     
-    <!-- Google API Scripts -->
+    <!-- =========================================
+         EXTERNAL LIBRARIES
+         ========================================= -->
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://apis.google.com/js/api.js"></script>
-    <script src="https://accounts.google.com/gsi/client"></script>
     
-    <!-- Reporting Libraries (PDF & Excel) -->
+    <!-- PDF Generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    
+    <!-- Excel Generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <!-- Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
     <style>
         /* =========================================
-           1. CSS VARIABLES & RESET
+           1. CORE STYLING & VARIABLES
            ========================================= */
         :root {
-            /* Brand Colors */
-            --color-primary: #0f172a; 
-            --color-primary-light: #1e293b;
-            --color-accent: #0ea5e9; 
-            --color-accent-hover: #0284c7;
-            
-            /* Status Colors */
-            --color-success: #10b981; 
-            --color-warning: #f59e0b; 
-            --color-danger: #ef4444; 
-            --color-info: #3b82f6;
-
-            /* Backgrounds */
+            --primary: #0f172a;       /* Dark Slate */
+            --primary-light: #1e293b;
+            --accent: #0ea5e9;        /* Sky Blue */
+            --accent-hover: #0284c7;
             --bg-body: #f1f5f9;
             --bg-card: #ffffff;
-            --bg-input: #f8fafc;
-
-            /* Text */
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --text-light: #94a3b8;
-            --text-white: #ffffff;
-
-            /* Borders */
-            --border-color: #e2e8f0;
-            --radius-sm: 4px;
-            --radius-md: 8px;
-            --radius-lg: 12px;
-
-            /* Shadows */
-            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            --text-main: #334155;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --radius: 8px;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        
+        body { background: var(--bg-body); color: var(--text-main); height: 100vh; overflow: hidden; font-size: 14px; }
 
-        body {
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            font-size: 14px;
-            line-height: 1.5;
-            height: 100vh;
-            overflow: hidden;
-        }
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
         /* =========================================
-           2. RESPONSIVE LAYOUT & UTILITIES
+           2. LAYOUT GRID
            ========================================= */
-        .flex { display: flex; }
-        .flex-col { flex-direction: column; }
-        .justify-between { justify-content: space-between; }
-        .items-center { align-items: center; }
-        .gap-2 { gap: 0.5rem; }
-        .gap-4 { gap: 1rem; }
-        .w-full { width: 100%; }
-        .hidden { display: none !important; }
-        .text-center { text-align: center; }
-        .text-right { text-align: right; }
-        .font-bold { font-weight: 700; }
-        .text-success { color: var(--color-success); }
-        .text-danger { color: var(--color-danger); }
-        .text-muted { color: var(--text-muted); }
-
-        /* Buttons */
-        .btn {
-            display: inline-flex; align-items: center; justify-content: center;
-            padding: 0.5rem 1rem; border-radius: var(--radius-sm);
-            font-weight: 600; cursor: pointer; border: 1px solid transparent;
-            transition: all 0.2s; font-size: 0.875rem;
-        }
-        .btn-primary { background-color: var(--color-primary); color: white; }
-        .btn-primary:hover { background-color: var(--color-primary-light); }
-        .btn-accent { background-color: var(--color-accent); color: white; }
-        .btn-danger { background-color: var(--color-danger); color: white; }
-        .btn-success { background-color: var(--color-success); color: white; }
-        .btn-outline { background-color: transparent; border-color: var(--border-color); color: var(--text-main); }
-        .btn-google { background-color: white; color: #757575; border: 1px solid #ddd; display: flex; gap: 10px; width: 100%; justify-content: center; padding: 12px; }
-
-        /* App Container */
-        #app-container {
-            display: grid;
-            grid-template-columns: 240px 1fr;
-            height: 100vh;
-            transition: all 0.3s;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            background-color: var(--color-primary);
-            color: var(--text-white);
-            display: flex; flex-direction: column;
-            border-right: 1px solid var(--color-primary-light);
-            z-index: 50;
-        }
-        .brand-section { padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .brand-title { font-size: 1.5rem; font-weight: bold; }
-        .nav-menu { flex: 1; padding: 1rem 0; overflow-y: auto; }
-        .nav-item {
-            padding: 0.75rem 1.5rem; cursor: pointer; color: var(--text-light);
-            transition: all 0.2s; display: flex; align-items: center; gap: 10px; font-weight: 500;
-        }
-        .nav-item:hover { color: white; background-color: rgba(255,255,255,0.05); }
-        .nav-item.active { color: var(--color-accent); background-color: rgba(14, 165, 233, 0.1); border-left: 3px solid var(--color-accent); }
-        .user-section { padding: 1rem 1.5rem; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.8rem; }
-
-        /* Main Content */
-        .main-content { background-color: var(--bg-body); overflow-y: auto; display: flex; flex-direction: column; position: relative; }
-        .top-bar {
-            background: white; padding: 1rem 2rem; border-bottom: 1px solid var(--border-color);
-            display: flex; justify-content: space-between; align-items: center;
-            position: sticky; top: 0; z-index: 40;
-        }
-        .screen-title { font-size: 1.25rem; font-weight: 700; color: var(--color-primary); }
-        .content-area { padding: 2rem; max-width: 1400px; margin: 0 auto; width: 100%; }
-
-        /* Mobile Toggle */
-        .mobile-toggle { display: none; font-size: 1.5rem; cursor: pointer; margin-right: 1rem; }
-
-        /* Responsive Media Queries */
-        @media (max-width: 768px) {
-            #app-container { grid-template-columns: 1fr; }
-            .sidebar {
-                position: fixed; top: 0; left: -240px; width: 240px; height: 100%;
-                transition: left 0.3s ease;
-            }
-            .sidebar.open { left: 0; }
-            .mobile-toggle { display: block; }
-            .content-area { padding: 1rem; }
-            .dashboard-split { grid-template-columns: 1fr !important; }
-            .top-bar { padding: 0.5rem 1rem; }
-            .stat-grid { grid-template-columns: 1fr 1fr; } 
-        }
-
-        /* Cards & Forms */
-        .card { background: var(--bg-card); border-radius: var(--radius-md); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); padding: 1.5rem; }
-        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
-        .dashboard-split { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
-        .form-group { margin-bottom: 1rem; }
-        .form-label { display: block; margin-bottom: 0.5rem; font-weight: 500; font-size: 0.875rem; }
-        .form-input, .form-select {
-            width: 100%; padding: 0.625rem; border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm); background: var(--bg-input); font-size: 0.9rem;
-        }
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: var(--radius-md); overflow: hidden; margin-top: 1rem; }
-        th { text-align: left; padding: 1rem; background: var(--bg-body); font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); }
-        td { padding: 1rem; border-top: 1px solid var(--border-color); font-size: 0.9rem; }
+        #app { display: grid; grid-template-columns: 260px 1fr; height: 100vh; transition: 0.3s; }
         
+        /* SIDEBAR */
+        aside { background: var(--primary); color: white; display: flex; flex-direction: column; z-index: 50; }
+        .brand { padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px; }
+        .nav-scroller { flex: 1; overflow-y: auto; padding: 1rem 0; }
+        .nav-item { padding: 0.8rem 1.5rem; cursor: pointer; color: #94a3b8; display: flex; align-items: center; gap: 12px; transition: 0.2s; font-weight: 500; }
+        .nav-item:hover { color: white; background: rgba(255,255,255,0.05); }
+        .nav-item.active { color: var(--accent); background: rgba(14, 165, 233, 0.1); border-right: 3px solid var(--accent); }
+        .nav-item i { width: 20px; text-align: center; }
+        
+        .user-panel { padding: 1rem; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; background: rgba(0,0,0,0.2); }
+        .sync-indicator { display: flex; align-items: center; gap: 6px; margin-top: 5px; font-size: 0.75rem; color: var(--success); }
+
+        /* MAIN CONTENT */
+        main { display: flex; flex-direction: column; height: 100%; overflow: hidden; position: relative; }
+        
+        header { background: white; padding: 0.8rem 2rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.05); z-index: 40; }
+        .page-title { font-size: 1.25rem; font-weight: 700; color: var(--primary); }
+        .mobile-toggle { display: none; font-size: 1.5rem; cursor: pointer; color: var(--primary); margin-right: 1rem; }
+
+        .content-body { padding: 2rem; overflow-y: auto; height: 100%; flex: 1; }
+
+        /* =========================================
+           3. COMPONENTS & UTILITIES
+           ========================================= */
+        .card { background: var(--bg-card); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); border: 1px solid var(--border); margin-bottom: 1.5rem; }
+        .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        
+        .btn { padding: 0.6rem 1.2rem; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-light); }
+        .btn-accent { background: var(--accent); color: white; }
+        .btn-accent:hover { background: var(--accent-hover); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-main); }
+        .btn-outline:hover { background: var(--bg-body); }
+
+        /* Forms */
+        .form-group { margin-bottom: 1rem; }
+        .form-label { display: block; margin-bottom: 0.4rem; font-weight: 600; font-size: 0.85rem; color: var(--text-main); }
+        .form-control { width: 100%; padding: 0.6rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; transition: 0.2s; }
+        .form-control:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1); }
+        .input-group { display: flex; gap: 0.5rem; }
+
+        /* Tables */
+        .table-container { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+        table { width: 100%; border-collapse: collapse; background: white; white-space: nowrap; }
+        th { background: #f8fafc; text-align: left; padding: 1rem; font-size: 0.75rem; text-transform: uppercase; color: var(--text-light); font-weight: 700; border-bottom: 1px solid var(--border); }
+        td { padding: 1rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #f8fafc; }
+
         /* Badges */
-        .badge { padding: 0.25rem 0.6rem; border-radius: 99px; font-size: 0.75rem; font-weight: 600; }
-        .badge-success { background: #dcfce7; color: #166534; }
-        .badge-warning { background: #fef3c7; color: #92400e; }
-        .badge-danger { background: #fee2e2; color: #991b1b; }
-        .badge-info { background: #e0f2fe; color: #075985; }
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+        .bg-green { background: #dcfce7; color: #166534; }
+        .bg-red { background: #fee2e2; color: #991b1b; }
+        .bg-blue { background: #e0f2fe; color: #075985; }
+        .bg-yellow { background: #fef3c7; color: #92400e; }
+
+        /* =========================================
+           4. MODALS & TOASTS
+           ========================================= */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 100; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(2px); }
+        .modal-box { background: white; width: 95%; max-width: 600px; max-height: 90vh; overflow-y: auto; border-radius: var(--radius); padding: 2rem; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 200; display: flex; flex-direction: column; gap: 10px; }
+        .toast { background: white; padding: 1rem 1.5rem; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border-left: 5px solid var(--accent); min-width: 300px; animation: slideIn 0.3s; display: flex; align-items: center; justify-content: space-between; }
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+        /* =========================================
+           5. RESPONSIVE QUERIES
+           ========================================= */
+        @media (max-width: 768px) {
+            #app { grid-template-columns: 1fr; }
+            aside { position: fixed; left: -260px; top: 0; height: 100%; width: 260px; transition: 0.3s; }
+            aside.open { left: 0; box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+            .mobile-toggle { display: block; }
+            .content-body { padding: 1rem; }
+            .grid-2 { grid-template-columns: 1fr; }
+            .hidden-mobile { display: none; }
+        }
 
         /* Login Screen */
-        #login-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--color-primary); display: flex; align-items: center; justify-content: center; z-index: 9999;
-        }
-        .login-box { background: white; padding: 2.5rem; border-radius: var(--radius-lg); width: 90%; max-width: 400px; box-shadow: var(--shadow-md); }
-
-        /* Toasts & Modals */
-        #toast-container { position: fixed; bottom: 2rem; right: 2rem; z-index: 10000; display: flex; flex-direction: column; gap: 1rem; }
-        .toast { padding: 1rem; background: white; border-radius: var(--radius-md); box-shadow: var(--shadow-md); border-left: 4px solid var(--color-info); animation: slideIn 0.3s; }
-        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
-        
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);
-            display: flex; align-items: center; justify-content: center; z-index: 5000; backdrop-filter: blur(2px);
-        }
-        .modal { background: white; padding: 2rem; border-radius: var(--radius-md); width: 95%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
-        
-        /* Loaders */
-        .sync-badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background: #333; color: #fff; margin-left: 10px; }
-        .sync-badge.syncing { background: var(--color-warning); color: black; }
+        #login-screen { position: fixed; inset: 0; background: var(--primary); z-index: 999; display: flex; justify-content: center; align-items: center; }
+        .login-box { background: white; padding: 3rem; border-radius: 12px; text-align: center; width: 90%; max-width: 400px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
     </style>
 </head>
 <body>
 
-<!-- 0. LOGIN SCREEN -->
-<div id="login-screen">
-    <div class="login-box">
-        <div class="text-center mb-4">
-            <h1 style="font-size:2rem; font-weight:800; color:var(--color-primary)">FRESKEY<span style="color:var(--color-accent)">.</span></h1>
-            <p class="text-muted">Cloud Admin Control</p>
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen">
+        <div class="login-box">
+            <h1 style="color:var(--primary); font-size:2.5rem; margin-bottom:0.5rem; font-weight:800;">FRESKEY<span style="color:var(--accent)">.</span></h1>
+            <p style="color:var(--text-light); margin-bottom:2rem;">Secure Admin Control Panel</p>
+            
+            <button class="btn btn-outline" style="width:100%; justify-content:center; padding:12px;" onclick="Auth.signIn()">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="20">
+                Sign in with Google
+            </button>
+            <p id="login-status" style="margin-top:1rem; font-size:0.8rem; color:var(--text-light)"></p>
         </div>
-        
-        <button class="btn btn-google" onclick="GoogleAuth.handleAuthClick()">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="20" height="20">
-            <span>Sign in with Google</span>
-        </button>
-        <p id="login-msg" class="text-center text-muted mt-4" style="font-size: 0.8rem;">Requires Google Drive Permissions</p>
     </div>
-</div>
 
-<!-- APP CONTAINER -->
-<div id="app-container" class="hidden">
-    <!-- MOBILE OVERLAY -->
-    <div id="sidebar-overlay" onclick="toggleSidebar()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:45; background:rgba(0,0,0,0.5);"></div>
-
-    <!-- SIDEBAR -->
-    <aside class="sidebar" id="sidebar">
-        <div class="brand-section flex justify-between items-center">
-            <div>
-                <div class="brand-title">FRESKEY</div>
-                <div class="brand-subtitle" style="font-size:0.7rem; opacity:0.7;">CONTROL CENTER</div>
+    <!-- APP CONTAINER -->
+    <div id="app" style="display:none;">
+        
+        <!-- SIDEBAR -->
+        <aside id="sidebar">
+            <div class="brand">
+                <i class="fas fa-cubes"></i> FRESKEY
             </div>
-            <div onclick="toggleSidebar()" class="hidden" style="cursor:pointer; font-size:1.5rem;">×</div>
-        </div>
-        <nav class="nav-menu">
-            <div class="nav-item active" onclick="router.navigate('dashboard')">📊 Dashboard</div>
-            <div class="nav-item" onclick="router.navigate('new-order')">📝 New Order</div>
-            <div class="nav-item" onclick="router.navigate('customers')">👥 Customers</div>
-            <div class="nav-item" onclick="router.navigate('deliveries')">🚚 Deliveries</div>
-            <div class="nav-item" onclick="router.navigate('payments')">💰 Payments</div>
-            <div class="nav-item" onclick="router.navigate('events')">🎉 Events</div>
-            <div class="nav-item" onclick="router.navigate('inventory')">📦 Inventory</div>
-            <div class="nav-item" onclick="router.navigate('reports')">📈 Reports & Data</div>
-            <div class="nav-item" onclick="router.navigate('settings')">⚙️ Settings</div>
-        </nav>
-        <div class="user-section">
-            <div id="user-display-email" style="font-weight:bold;">...</div>
-            <div class="flex items-center mt-1">
-                <div style="width:8px; height:8px; background:#10b981; border-radius:50%; margin-right:5px;"></div>
-                <span id="sync-status">Connected</span>
+            <div class="nav-scroller">
+                <div class="nav-item active" onclick="Router.go('dashboard')"><i class="fas fa-chart-pie"></i> Dashboard</div>
+                <div class="nav-item" onclick="Router.go('new-order')"><i class="fas fa-file-invoice-dollar"></i> New Order</div>
+                <div class="nav-item" onclick="Router.go('customers')"><i class="fas fa-users"></i> Customers</div>
+                <div class="nav-item" onclick="Router.go('inventory')"><i class="fas fa-boxes"></i> Inventory</div>
+                <div class="nav-item" onclick="Router.go('events')"><i class="fas fa-glass-cheers"></i> Events</div>
+                <div class="nav-item" onclick="Router.go('reports')"><i class="fas fa-chart-line"></i> Reports</div>
+                <div class="nav-item" onclick="Router.go('settings')"><i class="fas fa-cog"></i> Settings</div>
             </div>
-        </div>
-    </aside>
-
-    <!-- MAIN -->
-    <main class="main-content">
-        <header class="top-bar">
-            <div class="flex items-center">
-                <span class="mobile-toggle" onclick="toggleSidebar()">☰</span>
-                <div class="screen-title" id="page-title">Dashboard</div>
-            </div>
-            <div class="flex items-center gap-2">
-                <span id="last-sync-time" class="text-muted" style="font-size:0.75rem;">Synced: Just now</span>
-                <button class="btn btn-primary" style="font-size:0.8rem; padding: 0.3rem 0.8rem;" onclick="GoogleDriveService.saveToDrive(true)">
-                    ☁️ Force Save
+            <div class="user-panel">
+                <div id="user-email" style="font-weight:600; overflow:hidden; text-overflow:ellipsis;">user@example.com</div>
+                <div class="sync-indicator">
+                    <i class="fas fa-circle" id="sync-dot"></i> <span id="sync-text">Live Sync</span>
+                </div>
+                <button class="btn btn-outline" style="width:100%; margin-top:10px; font-size:0.75rem; border-color:rgba(255,255,255,0.2); color:white;" onclick="Drive.forceSync()">
+                    <i class="fas fa-sync"></i> Force Save
                 </button>
-                <button class="btn btn-outline" style="font-size:0.8rem; padding: 0.3rem 0.8rem;" onclick="location.reload()">Exit</button>
             </div>
-        </header>
+        </aside>
 
-        <div id="content-area" class="content-area"></div>
-    </main>
-</div>
+        <!-- MAIN -->
+        <main>
+            <div id="mobile-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:45;" onclick="toggleSidebar()"></div>
+            
+            <header>
+                <div style="display:flex; align-items:center;">
+                    <i class="fas fa-bars mobile-toggle" onclick="toggleSidebar()"></i>
+                    <div class="page-title" id="page-title">Dashboard</div>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-outline" onclick="window.location.reload()"><i class="fas fa-power-off"></i></button>
+                </div>
+            </header>
 
-<!-- UTILS -->
-<div id="toast-container"></div>
-<div id="modal-container" class="hidden modal-overlay"></div>
+            <div class="content-body" id="content">
+                <!-- Content Injected via JS -->
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL & TOAST CONTAINERS -->
+    <div id="modal-root" class="hidden"></div>
+    <div class="toast-container" id="toast-root"></div>
 
 <script>
 /**
  * ============================================================================
- * FRESKEY APP - COMPLETE SOLUTION (DRIVE SYNC + REPORTS + RESPONSIVE)
+ * FRESKEY ADMIN - FULL ENTERPRISE CODEBASE
  * ============================================================================
  */
 
-// --- CONFIGURATION ---
-// IMPORTANT: REPLACE THIS WITH YOUR OWN CLIENT ID FROM GOOGLE CLOUD CONSOLE
-const CLIENT_ID = '950010994560-v7p6cem78h9fsdp102iq4immb36t95ls.apps.googleusercontent.com'; 
-const API_KEY = ''; // Optional if using GIS for Token only, but good to have if using GAPI discovery
-const SCOPES = 'https://www.googleapis.com/auth/drive.file';
-const DB_FILENAME = 'freskey_db.json';
+// --- 1. CONFIGURATION & STATE ---
+const CONFIG = {
+    // REPALCE THIS WITH YOUR REAL CLIENT ID
+    CLIENT_ID: '950010994560-v7p6cem78h9fsdp102iq4immb36t95ls.apps.googleusercontent.com',
+    API_KEY: '', // Optional for this flow
+    SCOPES: 'https://www.googleapis.com/auth/drive.file',
+    FILE_NAME: 'freskey_enterprise_db.json',
+    CASE_SIZE: {
+        '200ml': 24,
+        '500ml': 20,
+        '1L': 12
+    }
+};
 
-// --- DATA STORE ---
+// Global Store
 let store = {
     settings: {
-        prices: { '200ml': 10, '500ml': 20, '1L': 40 },
-        costs: { '200ml': 4, '500ml': 8, '1L': 15 },
-        creditDefaults: { 'Residential': 500, 'Corporate': 5000, 'Retail': 2000, 'Event': 0 }
+        defaultPrices: { '200ml': 12, '500ml': 25, '1L': 45 }, // Retail Rate
+        costs: { '200ml': 5, '500ml': 10, '1L': 18 },
+        companyName: "Freskey Beverages",
+        gst: "29AAAAA0000A1Z5"
     },
-    inventory: { '200ml': 0, '500ml': 0, '1L': 0 },
-    customers: [],
-    orders: [],
-    events: [],
+    inventory: {
+        '200ml': 0, '500ml': 0, '1L': 0
+    },
+    customers: [], // { id, companyName, contactPerson, phone, area, address, type, creditLimit, outstanding, status }
+    orders: [],    // { id, date, customerId, items: [{sku, qty, rate}], total, status, isPaid, notes }
+    events: [],    // { id, name, date, location, contact, bottles, status, notes }
     lastUpdated: null
 };
 
-// --- 1. GOOGLE DRIVE SERVICE (SYNC ENGINE) ---
-let tokenClient;
-let gapiInited = false;
-let gisInited = false;
-let driveFileId = null; // Stores the ID of the file in Drive
-let autoSyncInterval = null;
-
-const GoogleAuth = {
+// --- 2. AUTHENTICATION & DRIVE SYNC ---
+const Auth = {
+    tokenClient: null,
+    
     init: function() {
-        gapi.load('client', async () => {
-            await gapi.client.init({
-                discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
-            });
-            gapiInited = true;
-            this.checkLoad();
+        this.tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: CONFIG.CLIENT_ID,
+            scope: CONFIG.SCOPES,
+            callback: (resp) => this.handleCallback(resp),
         });
-        tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: CLIENT_ID,
-            scope: SCOPES,
-            callback: (resp) => this.handleTokenResponse(resp),
+        gapi.load('client', () => {
+            gapi.client.init({ discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'] });
         });
-        gisInited = true;
-        this.checkLoad();
     },
 
-    checkLoad: function() {
-        if (gapiInited && gisInited) {
-            console.log("Google Services Ready");
-        }
+    signIn: function() {
+        this.tokenClient.requestAccessToken({prompt: 'consent'});
     },
 
-    handleAuthClick: function() {
-        tokenClient.requestAccessToken({prompt: 'consent'});
-    },
-
-    handleTokenResponse: async function(resp) {
-        if (resp.error) {
-            UI.toast("Auth Error: " + resp.error, "danger");
-            return;
-        }
-        document.getElementById('login-screen').classList.add('hidden');
-        document.getElementById('app-container').classList.remove('hidden');
+    handleCallback: async function(resp) {
+        if (resp.error) return UI.toast(resp.error, 'error');
         
-        // Get User Email (Basic decode)
-        const token = gapi.client.getToken().access_token;
-        fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: `Bearer ${token}` } })
-            .then(r => r.json())
-            .then(user => {
-                document.getElementById('user-display-email').innerText = user.email;
-                UI.toast(`Logged in as ${user.given_name}`, "success");
+        document.getElementById('login-status').innerText = "Authenticating with Drive...";
+        
+        // Get User Info
+        try {
+            const userReq = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { 
+                headers: { Authorization: `Bearer ${resp.access_token}` } 
             });
+            const user = await userReq.json();
+            document.getElementById('user-email').innerText = user.email;
+            
+            // Load DB
+            await Drive.initLoad();
+            
+            // Show App
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app').style.display = 'grid';
+            
+            // Start Auto-Sync
+            setInterval(() => Drive.save(), 60000); // 1 Minute
+            Router.go('dashboard');
 
-        // Initialize Drive Sync
-        await GoogleDriveService.initSync();
+        } catch (e) {
+            console.error(e);
+            UI.toast("Login Failed: " + e.message, "error");
+        }
     }
 };
 
-const GoogleDriveService = {
-    initSync: async function() {
-        UI.toast("Checking Drive for Database...", "info");
-        try {
-            // 1. Search for file
-            const response = await gapi.client.drive.files.list({
-                q: `name = '${DB_FILENAME}' and trashed = false`,
-                fields: 'files(id, name)',
-                spaces: 'drive'
-            });
+const Drive = {
+    fileId: null,
 
-            const files = response.result.files;
-            if (files && files.length > 0) {
-                // File exists - Download it
-                driveFileId = files[0].id;
-                await this.downloadData(driveFileId);
+    initLoad: async function() {
+        try {
+            const q = `name = '${CONFIG.FILE_NAME}' and trashed = false`;
+            const list = await gapi.client.drive.files.list({ q: q, fields: 'files(id, name)' });
+            
+            if (list.result.files.length > 0) {
+                this.fileId = list.result.files[0].id;
+                const file = await gapi.client.drive.files.get({ fileId: this.fileId, alt: 'media' });
+                store = file.result;
+                UI.toast("Database Loaded from Cloud", "success");
             } else {
-                // File does not exist - Use Mock Data & Create File
-                UI.toast("New Database Created", "info");
-                DataGenerator.init(); // Load defaults
-                await this.createFile();
+                UI.toast("Creating new Database...", "info");
+                this.save(true); // Create new
             }
-
-            // Start Auto Sync (Every 60 Seconds)
-            this.startAutoSync();
-            router.navigate('dashboard');
-
-        } catch (err) {
-            console.error(err);
-            UI.toast("Drive Sync Error: " + err.message, "danger");
-            // Fallback to local
-            DataGenerator.init();
-            router.navigate('dashboard');
-        }
-    },
-
-    downloadData: async function(fileId) {
-        try {
-            const response = await gapi.client.drive.files.get({
-                fileId: fileId,
-                alt: 'media'
-            });
-            store = response.result; // Update local store from cloud
-            UI.toast("Data Synced from Drive", "success");
-            Engine.refreshLastSyncTime();
         } catch (e) {
-            UI.toast("Error downloading data", "danger");
+            UI.toast("Drive Error: " + e.message, "error");
         }
     },
 
-    createFile: async function() {
-        const fileContent = JSON.stringify(store);
-        const metadata = { name: DB_FILENAME, mimeType: 'application/json' };
-        
+    save: async function(isNew = false) {
+        document.getElementById('sync-dot').style.color = 'orange';
+        document.getElementById('sync-text').innerText = "Syncing...";
+        store.lastUpdated = new Date().toISOString();
+
+        const fileData = JSON.stringify(store);
+        const metadata = { name: CONFIG.FILE_NAME, mimeType: 'application/json' };
         const form = new FormData();
         form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-        form.append('file', new Blob([fileContent], { type: 'application/json' }));
+        form.append('file', new Blob([fileData], { type: 'application/json' }));
 
-        const accessToken = gapi.client.getToken().access_token;
-        
-        fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-            method: 'POST',
-            headers: new Headers({ 'Authorization': 'Bearer ' + accessToken }),
-            body: form
-        }).then(res => res.json()).then(val => {
-            driveFileId = val.id; // Save new ID
-            Engine.refreshLastSyncTime();
-        });
-    },
+        const token = gapi.client.getToken().access_token;
+        const method = this.fileId ? 'PATCH' : 'POST';
+        const url = this.fileId 
+            ? `https://www.googleapis.com/upload/drive/v3/files/${this.fileId}?uploadType=media`
+            : 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
 
-    saveToDrive: async function(manual = false) {
-        if (!driveFileId) {
-            if(manual) this.createFile();
-            return;
+        const headers = this.fileId 
+            ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+            : { 'Authorization': `Bearer ${token}` };
+            
+        const body = this.fileId ? fileData : form;
+
+        try {
+            const req = await fetch(url, { method, headers, body });
+            const res = await req.json();
+            if (!this.fileId) this.fileId = res.id;
+            
+            document.getElementById('sync-dot').style.color = '#10b981';
+            document.getElementById('sync-text').innerText = "Synced " + new Date().toLocaleTimeString();
+        } catch (e) {
+            document.getElementById('sync-dot').style.color = 'red';
+            UI.toast("Sync Failed", "error");
         }
-
-        store.lastUpdated = new Date().toISOString();
-        const fileContent = JSON.stringify(store);
-
-        // Update existing file
-        fetch(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`, {
-            method: 'PATCH',
-            headers: new Headers({ 
-                'Authorization': 'Bearer ' + gapi.client.getToken().access_token,
-                'Content-Type': 'application/json'
-            }),
-            body: fileContent
-        }).then(res => {
-            if(res.ok) {
-                Engine.refreshLastSyncTime();
-                if(manual) UI.toast("Data Saved to Drive", "success");
-            }
-        }).catch(err => {
-            if(manual) UI.toast("Upload Failed", "danger");
-        });
     },
 
-    startAutoSync: function() {
-        if(autoSyncInterval) clearInterval(autoSyncInterval);
-        autoSyncInterval = setInterval(() => {
-            this.saveToDrive(false);
-        }, 60000); // 1 Minute
+    forceSync: function() {
+        this.save();
+        UI.toast("Force Sync Initiated", "info");
     }
 };
 
-// --- 2. LOGIC ENGINE ---
+// --- 3. BUSINESS LOGIC ENGINE ---
 const Engine = {
-    refreshLastSyncTime: function() {
-        const time = new Date().toLocaleTimeString();
-        document.getElementById('last-sync-time').innerText = `Synced: ${time}`;
-        document.getElementById('sync-status').innerText = "Live Sync Active";
-    },
-    
-    getDashboardStats: function() {
+    getStats: function() {
         const today = new Date().toISOString().split('T')[0];
-        let stats = { revenue: 0, bottles: 0, profit: 0, pending: 0, sku: {'200ml':0,'500ml':0,'1L':0} };
+        let stats = { revenue: 0, profit: 0, pending: 0, bottles: 0 };
         
         store.orders.forEach(o => {
             if(o.date === today) {
-                stats.revenue += o.amount;
-                stats.bottles += o.totalBottles;
-                stats.profit += (o.amount - o.cost);
-                if(!o.isPaid) stats.pending += o.amount;
-                Object.keys(o.items).forEach(k => stats.sku[k] += o.items[k]);
+                stats.revenue += o.total;
+                stats.pending += o.isPaid ? 0 : o.total;
+                o.items.forEach(i => {
+                    stats.bottles += i.qty;
+                    stats.profit += (i.qty * i.rate) - (i.qty * store.settings.costs[i.sku]);
+                });
             }
         });
         return stats;
     },
 
-    generateDailyReportPDF: function() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        const today = new Date().toISOString().split('T')[0];
-        
-        // Title
-        doc.setFontSize(18);
-        doc.text("FRESKEY - Daily Sales Report", 14, 20);
-        doc.setFontSize(10);
-        doc.text(`Date: ${today}`, 14, 28);
-        doc.text(`Generated By: Admin`, 14, 33);
-
-        // Summary
-        const stats = this.getDashboardStats();
-        doc.setFontSize(12);
-        doc.text("Summary:", 14, 45);
-        doc.setFontSize(10);
-        doc.text(`Total Revenue: Rs. ${stats.revenue}`, 14, 52);
-        doc.text(`Bottles Sold: ${stats.bottles}`, 14, 58);
-        doc.text(`Pending Collections: Rs. ${stats.pending}`, 14, 64);
-
-        // Table
-        const tableData = store.orders
-            .filter(o => o.date === today)
-            .map(o => [o.id, o.customerName, o.totalBottles, `Rs. ${o.amount}`, o.paymentMode]);
-
-        doc.autoTable({
-            startY: 70,
-            head: [['Order ID', 'Customer', 'Bottles', 'Amount', 'Payment']],
-            body: tableData,
-        });
-
-        doc.save(`Freskey_Daily_Report_${today}.pdf`);
-        UI.toast("PDF Report Downloaded", "success");
+    addStock: function(sku, cases) {
+        const bottles = cases * CONFIG.CASE_SIZE[sku];
+        store.inventory[sku] += bottles;
+        Drive.save();
     },
 
-    generateMonthlyExcel: function(monthStr) {
-        // monthStr format "YYYY-MM"
-        if(!monthStr) return UI.toast("Please select a month", "warning");
-
-        const filteredOrders = store.orders.filter(o => o.date.startsWith(monthStr));
+    createOrder: function(data) {
+        // data = { customerId, date, items: [{sku, qty, rate}], paymentMode, notes }
+        // Validation
+        const cust = store.customers.find(c => c.id === data.customerId);
+        let total = 0;
         
-        if(filteredOrders.length === 0) return UI.toast("No records found for this month", "info");
+        // Stock Check & Total Calc
+        for (let item of data.items) {
+            if (store.inventory[item.sku] < item.qty) throw new Error(`Insufficient Stock: ${item.sku}`);
+            total += (item.qty * item.rate);
+        }
 
-        // Format data for Excel
-        const data = filteredOrders.map(o => ({
-            "Date": o.date,
-            "Order ID": o.id,
-            "Customer Name": o.customerName,
-            "Type": store.customers.find(c=>c.id === o.customerId)?.type || 'N/A',
-            "200ml Qty": o.items['200ml'] || 0,
-            "500ml Qty": o.items['500ml'] || 0,
-            "1L Qty": o.items['1L'] || 0,
-            "Total Bottles": o.totalBottles,
-            "Total Amount": o.amount,
-            "Cost": o.cost,
-            "Profit": o.amount - o.cost,
-            "Payment Mode": o.paymentMode,
-            "Status": o.isPaid ? "Paid" : "Pending"
+        // Credit Check
+        if (data.paymentMode === 'Credit') {
+            if ((cust.outstanding + total) > cust.creditLimit) {
+                if(!confirm(`Credit Limit Exceeded! Limit: ${cust.creditLimit}, Current: ${cust.outstanding + total}. Continue?`)) return;
+            }
+            cust.outstanding += total;
+        }
+
+        // Deduct Stock
+        data.items.forEach(i => store.inventory[i.sku] -= i.qty);
+
+        const order = {
+            id: 'ORD-' + Date.now(),
+            ...data,
+            total,
+            isPaid: data.paymentMode !== 'Credit',
+            status: 'Pending'
+        };
+        store.orders.push(order);
+        Drive.save();
+        return order;
+    },
+
+    exportExcel: function(month) { // YYYY-MM
+        const data = store.orders.filter(o => o.date.startsWith(month)).map(o => ({
+            ID: o.id,
+            Date: o.date,
+            Customer: store.customers.find(c => c.id === o.customerId)?.companyName,
+            Amount: o.total,
+            Paid: o.isPaid ? 'Yes' : 'No',
+            Items: o.items.map(i => `${i.sku}:${i.qty}`).join(', ')
         }));
-
+        
         const ws = XLSX.utils.json_to_sheet(data);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Monthly Sales");
-        XLSX.writeFile(wb, `Freskey_Sales_${monthStr}.xlsx`);
-        UI.toast("Excel Sheet Downloaded", "success");
+        XLSX.utils.book_append_sheet(wb, ws, "Sales");
+        XLSX.writeFile(wb, `Freskey_Sales_${month}.xlsx`);
+    },
+
+    exportPDF: function() {
+        const doc = new window.jspdf.jsPDF();
+        doc.text("Freskey Daily Report: " + new Date().toLocaleDateString(), 14, 20);
+        
+        const today = new Date().toISOString().split('T')[0];
+        const rows = store.orders.filter(o => o.date === today).map(o => [
+            o.id, 
+            store.customers.find(c => c.id === o.customerId)?.companyName,
+            o.total,
+            o.isPaid ? 'Paid' : 'Due'
+        ]);
+
+        doc.autoTable({
+            head: [['ID', 'Customer', 'Amount', 'Status']],
+            body: rows,
+            startY: 30
+        });
+        doc.save(`daily_report_${today}.pdf`);
     }
 };
 
-// --- 3. UI HANDLERS ---
-const UI = {
-    toast: function(msg, type='info') {
-        const box = document.createElement('div');
-        box.className = `toast`;
-        box.style.borderLeftColor = type==='danger' ? 'red' : type==='success' ? 'green' : 'blue';
-        box.innerHTML = `<strong>${type.toUpperCase()}</strong>: ${msg}`;
-        document.getElementById('toast-container').appendChild(box);
-        setTimeout(() => box.remove(), 3000);
-    },
-    modal: function(html) {
-        const c = document.getElementById('modal-container');
-        c.innerHTML = `<div class="modal"><div class="text-right mb-2"><button class="btn btn-outline" onclick="UI.closeModal()">✕</button></div>${html}</div>`;
-        c.classList.remove('hidden');
-    },
-    closeModal: function() { document.getElementById('modal-container').classList.add('hidden'); }
-};
-
-function toggleSidebar() {
-    document.querySelector('.sidebar').classList.toggle('open');
-    const overlay = document.getElementById('sidebar-overlay');
-    overlay.style.display = overlay.style.display === 'none' ? 'block' : 'none';
-}
-
-// --- 4. MOCK GENERATOR (Only runs if Drive Empty) ---
-const DataGenerator = {
-    init: function() {
-        console.log("Generating Mock Data...");
-        store.inventory = { '200ml': 2000, '500ml': 1000, '1L': 500 };
-        const types = ['Residential', 'Corporate', 'Retail'];
-        for(let i=1; i<=20; i++) {
-            store.customers.push({
-                id: `C${100+i}`, name: `Customer ${i}`, type: types[i%3],
-                phone: '9999999999', area: 'Central Hub', creditLimit: 2000, outstanding: 0, status: 'Active'
-            });
-        }
-    }
-};
-
-// --- 5. ROUTER & PAGES ---
-const router = {
-    navigate: function(page) {
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        document.querySelector(`.nav-item[onclick*='${page}']`)?.classList.add('active');
-        document.getElementById('page-title').innerText = page.charAt(0).toUpperCase() + page.slice(1);
+// --- 4. UI ROUTER & PAGES ---
+const Router = {
+    go: function(page) {
+        document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
+        document.querySelector(`.nav-item[onclick*="${page}"]`)?.classList.add('active');
+        document.getElementById('page-title').innerText = page.charAt(0).toUpperCase() + page.slice(1).replace('-', ' ');
+        document.getElementById('content').innerHTML = Pages[page]();
         
-        // Close sidebar on mobile nav
-        document.querySelector('.sidebar').classList.remove('open');
-        document.getElementById('sidebar-overlay').style.display = 'none';
+        // Close Mobile Menu
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('mobile-overlay').style.display = 'none';
 
-        const content = document.getElementById('content-area');
-        content.innerHTML = Pages[page] ? Pages[page]() : '<h1>404</h1>';
-        
-        if(page === 'new-order') this.bindNewOrderEvents();
-    },
-
-    bindNewOrderEvents: function() {
-        // Helper to calc totals
-        window.calcOrder = () => {
-            const p = store.settings.prices;
-            const q200 = parseInt(document.getElementById('q200').value) || 0;
-            const q500 = parseInt(document.getElementById('q500').value) || 0;
-            const q1l = parseInt(document.getElementById('q1l').value) || 0;
-            const total = (q200*p['200ml']) + (q500*p['500ml']) + (q1l*p['1L']);
-            document.getElementById('ord-total').innerText = '₹' + total;
-        };
+        if(page === 'new-order') Pages.bindOrderEvents();
     }
 };
 
 const Pages = {
     dashboard: function() {
-        const stats = Engine.getDashboardStats();
+        const s = Engine.getStats();
         return `
-            <div class="stat-grid">
-                <div class="card text-center"><h3 class="text-muted">Today's Sales</h3><h1 class="font-bold">₹${stats.revenue}</h1></div>
-                <div class="card text-center"><h3 class="text-muted">Bottles</h3><h1 class="font-bold">${stats.bottles}</h1></div>
-                <div class="card text-center"><h3 class="text-muted">Est. Profit</h3><h1 class="text-success font-bold">₹${stats.profit}</h1></div>
-                <div class="card text-center"><h3 class="text-muted">Pending</h3><h1 class="text-danger font-bold">₹${stats.pending}</h1></div>
-            </div>
-            <div class="dashboard-split">
+            <div class="grid-4">
                 <div class="card">
-                    <h3 class="font-bold mb-4">Quick Actions</h3>
-                    <div class="flex gap-4">
-                        <button class="btn btn-primary w-full" onclick="router.navigate('new-order')">New Order</button>
-                        <button class="btn btn-accent w-full" onclick="router.navigate('deliveries')">Logistics</button>
-                    </div>
+                    <div class="form-label text-light">Revenue (Today)</div>
+                    <div style="font-size:2rem; font-weight:700;">₹${s.revenue}</div>
                 </div>
                 <div class="card">
-                    <h3 class="font-bold mb-2">Sync Status</h3>
-                    <p class="text-muted text-sm">Auto-upload active (60s interval).</p>
-                    <div class="sync-badge syncing mt-2">Drive Connected</div>
+                    <div class="form-label text-light">Bottles Sold</div>
+                    <div style="font-size:2rem; font-weight:700;">${s.bottles}</div>
+                </div>
+                <div class="card">
+                    <div class="form-label text-light">Est. Profit</div>
+                    <div style="font-size:2rem; font-weight:700; color:var(--success)">₹${s.profit}</div>
+                </div>
+                <div class="card">
+                    <div class="form-label text-light">Pending Collection</div>
+                    <div style="font-size:2rem; font-weight:700; color:var(--danger)">₹${s.pending}</div>
+                </div>
+            </div>
+            
+            <div class="grid-2 mt-4" style="margin-top:20px;">
+                <div class="card">
+                    <h3>Recent Orders</h3>
+                    <table>
+                        <thead><tr><th>ID</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead>
+                        <tbody>
+                            ${store.orders.slice(-5).reverse().map(o => `
+                                <tr>
+                                    <td>${o.id.split('-')[1]}</td>
+                                    <td>${store.customers.find(c=>c.id===o.customerId)?.companyName || 'Unknown'}</td>
+                                    <td>₹${o.total}</td>
+                                    <td><span class="badge ${o.isPaid?'bg-green':'bg-red'}">${o.isPaid?'Paid':'Credit'}</span></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                 <div class="card">
+                    <h3>Pending Events</h3>
+                    <table>
+                        <thead><tr><th>Event</th><th>Date</th><th>Status</th></tr></thead>
+                        <tbody>
+                            ${store.events.filter(e => e.status === 'Scheduled').map(e => `
+                                <tr>
+                                    <td>${e.name}</td>
+                                    <td>${e.date}</td>
+                                    <td><span class="badge bg-blue">${e.status}</span></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         `;
-    },
-
-    newOrder: function() {
-        const options = store.customers.map(c => `<option value="${c.id}">${c.name} (${c.type})</option>`).join('');
-        return `
-            <div class="card" style="max-width: 800px; margin:0 auto;">
-                <div class="form-group"><label class="form-label">Customer</label><select id="ord-cust" class="form-select">${options}</select></div>
-                <div class="form-group"><label class="form-label">Date</label><input type="date" id="ord-date" class="form-input" value="${new Date().toISOString().split('T')[0]}"></div>
-                <hr class="my-4">
-                <div class="flex gap-2">
-                    <div class="w-full"><label class="form-label">200ml</label><input type="number" id="q200" class="form-input" placeholder="0" oninput="calcOrder()"></div>
-                    <div class="w-full"><label class="form-label">500ml</label><input type="number" id="q500" class="form-input" placeholder="0" oninput="calcOrder()"></div>
-                    <div class="w-full"><label class="form-label">1 Litre</label><input type="number" id="q1l" class="form-input" placeholder="0" oninput="calcOrder()"></div>
-                </div>
-                <div class="flex justify-between items-center mt-4 bg-gray-50 p-4 rounded">
-                    <strong>Total Amount</strong>
-                    <span id="ord-total" class="font-bold text-xl">₹0</span>
-                </div>
-                <div class="form-group mt-2">
-                    <label class="form-label">Payment</label>
-                    <select id="ord-pay" class="form-select">
-                        <option>Cash</option><option>Online</option><option>Credit</option>
-                    </select>
-                </div>
-                <button class="btn btn-success w-full mt-4" onclick="Pages.submitOrder()">Confirm Order</button>
-            </div>
-        `;
-    },
-
-    submitOrder: function() {
-        const custId = document.getElementById('ord-cust').value;
-        const cust = store.customers.find(c => c.id === custId);
-        const q200 = parseInt(document.getElementById('q200').value) || 0;
-        const q500 = parseInt(document.getElementById('q500').value) || 0;
-        const q1l = parseInt(document.getElementById('q1l').value) || 0;
-        
-        if(q200+q500+q1l === 0) return UI.toast("Empty Order", "danger");
-
-        const amt = (q200*10) + (q500*20) + (q1l*40);
-        const cost = (q200*4) + (q500*8) + (q1l*15);
-        const pay = document.getElementById('ord-pay').value;
-
-        const order = {
-            id: 'ORD'+Date.now(),
-            customerId: custId,
-            customerName: cust.name,
-            date: document.getElementById('ord-date').value,
-            items: { '200ml': q200, '500ml': q500, '1L': q1l },
-            totalBottles: q200+q500+q1l,
-            amount: amt,
-            cost: cost,
-            paymentMode: pay,
-            isPaid: pay !== 'Credit',
-            status: 'Pending'
-        };
-
-        if(pay === 'Credit') cust.outstanding += amt;
-        
-        // Deduct Inventory
-        store.inventory['200ml'] -= q200;
-        store.inventory['500ml'] -= q500;
-        store.inventory['1L'] -= q1l;
-
-        store.orders.push(order);
-        UI.toast("Order Placed", "success");
-        router.navigate('dashboard');
     },
 
     customers: function() {
-        const rows = store.customers.map(c => 
-            `<tr><td>${c.name}</td><td>${c.type}</td><td>₹${c.outstanding}</td><td><span class="badge badge-success">${c.status}</span></td></tr>`
-        ).join('');
+        const rows = store.customers.map(c => `
+            <tr>
+                <td>
+                    <strong>${c.companyName}</strong><br>
+                    <small class="text-muted">${c.contactPerson}</small>
+                </td>
+                <td>${c.phone}</td>
+                <td>${c.area}</td>
+                <td>₹${c.creditLimit}</td>
+                <td style="color:${c.outstanding > 0 ? 'red':'green'}">₹${c.outstanding}</td>
+                <td>
+                    <button class="btn btn-outline" style="padding:4px;" onclick="Pages.editCust('${c.id}')"><i class="fas fa-edit"></i></button>
+                </td>
+            </tr>
+        `).join('');
+
         return `
             <div class="card">
-                <div class="flex justify-between items-center mb-2">
-                    <h3>Customer Database</h3>
-                    <button class="btn btn-primary" onclick="Pages.addCustomerModal()">+ Add</button>
+                <div style="display:flex; justify-content:space-between; margin-bottom:1rem;">
+                    <input type="text" placeholder="Search customer..." class="form-control" style="width:250px" onkeyup="UI.filterTable(this, 1)">
+                    <button class="btn btn-primary" onclick="Pages.addCustomerModal()">+ Add Customer</button>
                 </div>
-                <div style="overflow-x:auto">
-                    <table><thead><tr><th>Name</th><th>Type</th><th>Dues</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>
+                <div class="table-container">
+                    <table>
+                        <thead><tr><th>Company / Person</th><th>Phone</th><th>Area</th><th>Limit</th><th>Outstanding</th><th>Action</th></tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
                 </div>
             </div>
         `;
@@ -736,105 +574,371 @@ const Pages = {
 
     addCustomerModal: function() {
         UI.modal(`
-            <h3>Add Customer</h3>
-            <input id="new-name" class="form-input mb-2" placeholder="Name">
-            <select id="new-type" class="form-select mb-2"><option>Residential</option><option>Retail</option><option>Corporate</option></select>
-            <button class="btn btn-primary w-full" onclick="Pages.saveCustomer()">Save</button>
+            <h3>Add New Customer</h3>
+            <div class="grid-2">
+                <div class="form-group"><label class="form-label">Company Name</label><input id="c-comp" class="form-control"></div>
+                <div class="form-group"><label class="form-label">Contact Person</label><input id="c-person" class="form-control"></div>
+            </div>
+            <div class="grid-2">
+                <div class="form-group"><label class="form-label">Phone</label><input id="c-phone" class="form-control"></div>
+                <div class="form-group"><label class="form-label">Area</label><input id="c-area" class="form-control"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Address</label><input id="c-addr" class="form-control"></div>
+            <div class="grid-2">
+                <div class="form-group"><label class="form-label">Credit Limit (₹)</label><input type="number" id="c-limit" class="form-control" value="2000"></div>
+                <div class="form-group"><label class="form-label">Type</label><select id="c-type" class="form-control"><option>Retail</option><option>Corporate</option><option>Residential</option></select></div>
+            </div>
+            <button class="btn btn-primary w-full" onclick="Pages.saveCustomer()">Save Database</button>
         `);
     },
 
     saveCustomer: function() {
-        const name = document.getElementById('new-name').value;
-        const type = document.getElementById('new-type').value;
-        if(!name) return;
-        store.customers.push({ id: 'C'+Date.now(), name, type, outstanding: 0, status: 'Active' });
+        const c = {
+            id: 'C-' + Date.now(),
+            companyName: document.getElementById('c-comp').value,
+            contactPerson: document.getElementById('c-person').value,
+            phone: document.getElementById('c-phone').value,
+            area: document.getElementById('c-area').value,
+            address: document.getElementById('c-addr').value,
+            creditLimit: parseFloat(document.getElementById('c-limit').value) || 0,
+            type: document.getElementById('c-type').value,
+            outstanding: 0,
+            status: 'Active'
+        };
+        if(!c.companyName) return UI.toast("Company Name Required", "error");
+        
+        store.customers.push(c);
+        Drive.save();
         UI.closeModal();
-        router.navigate('customers');
-    },
-
-    deliveries: function() {
-        const today = new Date().toISOString().split('T')[0];
-        const list = store.orders.filter(o => o.date === today && o.status === 'Pending').map(o => 
-            `<tr><td>${o.customerName}</td><td>${o.totalBottles} btls</td><td><button class="btn btn-outline" onclick="Pages.markDelivered('${o.id}')">Done</button></td></tr>`
-        ).join('');
-        return `<div class="card"><h3>Logistics (${today})</h3><table><thead><tr><th>Client</th><th>Qty</th><th>Action</th></tr></thead><tbody>${list || '<tr><td colspan="3">No Pending Deliveries</td></tr>'}</tbody></table></div>`;
-    },
-
-    markDelivered: function(id) {
-        const o = store.orders.find(x => x.id === id);
-        if(o) o.status = 'Delivered';
-        router.navigate('deliveries');
-    },
-
-    payments: function() {
-        const dues = store.customers.filter(c => c.outstanding > 0).map(c => 
-            `<tr><td>${c.name}</td><td class="text-danger">₹${c.outstanding}</td><td><button class="btn btn-success" onclick="Pages.payModal('${c.id}')">Collect</button></td></tr>`
-        ).join('');
-        return `<div class="card"><h3>Collections</h3><table><thead><tr><th>Client</th><th>Due</th><th>Action</th></tr></thead><tbody>${dues}</tbody></table></div>`;
-    },
-
-    payModal: function(id) {
-        const c = store.customers.find(x => x.id === id);
-        UI.modal(`
-            <h3>Collect from ${c.name}</h3>
-            <p>Current Due: ₹${c.outstanding}</p>
-            <input type="number" id="pay-amt" class="form-input mb-2" value="${c.outstanding}">
-            <button class="btn btn-success w-full" onclick="Pages.processPay('${id}')">Record Payment</button>
-        `);
-    },
-
-    processPay: function(id) {
-        const amt = parseInt(document.getElementById('pay-amt').value);
-        const c = store.customers.find(x => x.id === id);
-        c.outstanding -= amt;
-        UI.closeModal();
-        router.navigate('payments');
+        Router.go('customers');
     },
 
     inventory: function() {
+        const inv = store.inventory;
+        const caseCount = (sku) => Math.floor(inv[sku] / CONFIG.CASE_SIZE[sku]);
+        const remCount = (sku) => inv[sku] % CONFIG.CASE_SIZE[sku];
+
         return `
-            <div class="stat-grid">
-                <div class="card"><h3>200ml Stock</h3><h1>${store.inventory['200ml']}</h1></div>
-                <div class="card"><h3>500ml Stock</h3><h1>${store.inventory['500ml']}</h1></div>
-                <div class="card"><h3>1L Stock</h3><h1>${store.inventory['1L']}</h1></div>
+            <div class="grid-4">
+                ${Object.keys(inv).map(sku => `
+                    <div class="card">
+                        <h3>${sku}</h3>
+                        <div style="font-size:2rem; font-weight:700;">${inv[sku]} <small style="font-size:1rem; color:#999">btls</small></div>
+                        <div class="text-light" style="font-size:0.9rem; margin-top:5px;">
+                            ${caseCount(sku)} Cases + ${remCount(sku)} Loose
+                        </div>
+                        <button class="btn btn-outline w-full mt-3" onclick="Pages.addStockModal('${sku}')">+ Add Stock</button>
+                    </div>
+                `).join('')}
             </div>
-            <button class="btn btn-primary" onclick="UI.toast('Stock Update UI not active in demo','info')">Add Stock</button>
         `;
+    },
+
+    addStockModal: function(sku) {
+        UI.modal(`
+            <h3>Add Stock: ${sku}</h3>
+            <p class="text-light mb-3">1 Case = ${CONFIG.CASE_SIZE[sku]} Bottles</p>
+            <div class="form-group">
+                <label class="form-label">Enter Quantity in CASES</label>
+                <input type="number" id="stock-cases" class="form-control" placeholder="e.g. 10">
+            </div>
+            <button class="btn btn-success w-full" onclick="Pages.saveStock('${sku}')">Update Inventory</button>
+        `);
+    },
+
+    saveStock: function(sku) {
+        const cases = parseInt(document.getElementById('stock-cases').value);
+        if(!cases) return;
+        Engine.addStock(sku, cases);
+        UI.closeModal();
+        UI.toast("Stock Updated", "success");
+        Router.go('inventory');
+    },
+
+    newOrder: function() {
+        const custOptions = store.customers.map(c => `<option value="${c.id}">${c.companyName} (${c.area})</option>`).join('');
+        
+        return `
+            <div class="card" style="max-width:900px; margin:0 auto;">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Select Customer</label>
+                        <select id="ord-cust" class="form-control" onchange="Pages.orderCustChange()">${custOptions}</select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Order Date</label>
+                        <input type="date" id="ord-date" class="form-control" value="${new Date().toISOString().split('T')[0]}">
+                    </div>
+                </div>
+
+                <div style="background:#f8fafc; padding:1.5rem; border-radius:8px; border:1px solid var(--border); margin: 1.5rem 0;">
+                    <h4 style="margin-bottom:1rem;">Items & Custom Rates</h4>
+                    
+                    <div class="grid-4" style="align-items:end; margin-bottom:10px;">
+                        <label class="form-label">SKU</label>
+                        <label class="form-label">Stock Avail.</label>
+                        <label class="form-label">Rate (₹)</label>
+                        <label class="form-label">Qty (Btls)</label>
+                    </div>
+
+                    <!-- 200ml Row -->
+                    <div class="grid-4 mb-2" style="align-items:center;">
+                        <strong>200ml</strong>
+                        <span class="badge bg-blue">${store.inventory['200ml']}</span>
+                        <input type="number" id="rate-200" class="form-control" value="${store.settings.defaultPrices['200ml']}" onchange="Pages.calcOrderTotal()">
+                        <input type="number" id="qty-200" class="form-control" placeholder="0" onkeyup="Pages.calcOrderTotal()">
+                    </div>
+
+                    <!-- 500ml Row -->
+                    <div class="grid-4 mb-2" style="align-items:center;">
+                        <strong>500ml</strong>
+                        <span class="badge bg-blue">${store.inventory['500ml']}</span>
+                        <input type="number" id="rate-500" class="form-control" value="${store.settings.defaultPrices['500ml']}" onchange="Pages.calcOrderTotal()">
+                        <input type="number" id="qty-500" class="form-control" placeholder="0" onkeyup="Pages.calcOrderTotal()">
+                    </div>
+
+                    <!-- 1L Row -->
+                    <div class="grid-4 mb-2" style="align-items:center;">
+                        <strong>1 Litre</strong>
+                        <span class="badge bg-blue">${store.inventory['1L']}</span>
+                        <input type="number" id="rate-1l" class="form-control" value="${store.settings.defaultPrices['1L']}" onchange="Pages.calcOrderTotal()">
+                        <input type="number" id="qty-1l" class="form-control" placeholder="0" onkeyup="Pages.calcOrderTotal()">
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                     <div class="form-group" style="width:200px;">
+                        <label class="form-label">Payment Mode</label>
+                        <select id="ord-pay" class="form-control"><option>Cash</option><option>Online/UPI</option><option>Credit</option></select>
+                    </div>
+                    <div style="text-align:right;">
+                        <div class="text-light">Grand Total</div>
+                        <div style="font-size:2rem; font-weight:800; color:var(--primary);" id="ord-grand-total">₹0</div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary w-full" style="padding:15px; font-size:1.1rem;" onclick="Pages.submitOrder()">CONFIRM & GENERATE INVOICE</button>
+            </div>
+        `;
+    },
+
+    bindOrderEvents: function() {
+        // Trigger calc initially
+        this.calcOrderTotal();
+    },
+
+    calcOrderTotal: function() {
+        const q2 = parseInt(document.getElementById('qty-200').value) || 0;
+        const r2 = parseFloat(document.getElementById('rate-200').value) || 0;
+        
+        const q5 = parseInt(document.getElementById('qty-500').value) || 0;
+        const r5 = parseFloat(document.getElementById('rate-500').value) || 0;
+        
+        const q1 = parseInt(document.getElementById('qty-1l').value) || 0;
+        const r1 = parseFloat(document.getElementById('rate-1l').value) || 0;
+
+        const total = (q2*r2) + (q5*r5) + (q1*r1);
+        document.getElementById('ord-grand-total').innerText = "₹" + total;
+    },
+
+    submitOrder: function() {
+        const custId = document.getElementById('ord-cust').value;
+        const date = document.getElementById('ord-date').value;
+        const items = [];
+        
+        const q2 = parseInt(document.getElementById('qty-200').value) || 0;
+        if(q2 > 0) items.push({sku: '200ml', qty: q2, rate: parseFloat(document.getElementById('rate-200').value)});
+        
+        const q5 = parseInt(document.getElementById('qty-500').value) || 0;
+        if(q5 > 0) items.push({sku: '500ml', qty: q5, rate: parseFloat(document.getElementById('rate-500').value)});
+        
+        const q1 = parseInt(document.getElementById('qty-1l').value) || 0;
+        if(q1 > 0) items.push({sku: '1L', qty: q1, rate: parseFloat(document.getElementById('rate-1l').value)});
+
+        if(items.length === 0) return UI.toast("Please add items", "error");
+
+        try {
+            Engine.createOrder({
+                customerId: custId,
+                date: date,
+                items: items,
+                paymentMode: document.getElementById('ord-pay').value
+            });
+            UI.toast("Order Created Successfully", "success");
+            Router.go('dashboard');
+        } catch(e) {
+            UI.toast(e.message, "error");
+        }
+    },
+
+    events: function() {
+        const rows = store.events.map(e => `
+            <tr>
+                <td><strong>${e.name}</strong></td>
+                <td>${e.date}</td>
+                <td>${e.bottles} Btls</td>
+                <td><span class="badge ${e.status === 'Scheduled' ? 'bg-blue' : e.status === 'Done' ? 'bg-green' : 'bg-red'}">${e.status}</span></td>
+                <td>
+                    ${e.status === 'Scheduled' ? `
+                    <button class="btn btn-success" style="padding:4px;" onclick="Pages.eventAction('${e.id}', 'Done')"><i class="fas fa-check"></i></button>
+                    <button class="btn btn-danger" style="padding:4px;" onclick="Pages.eventAction('${e.id}', 'Cancelled')"><i class="fas fa-times"></i></button>
+                    ` : '-'}
+                </td>
+            </tr>
+        `).join('');
+
+        return `
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; margin-bottom:1rem;">
+                    <h3>Event Manager</h3>
+                    <button class="btn btn-primary" onclick="Pages.addEventModal()">+ Schedule Event</button>
+                </div>
+                <table>
+                    <thead><tr><th>Event Name</th><th>Date</th><th>Est. Qty</th><th>Status</th><th>Actions</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
+        `;
+    },
+
+    addEventModal: function() {
+        UI.modal(`
+            <h3>Schedule New Event</h3>
+            <div class="form-group"><label class="form-label">Event Name</label><input id="evt-name" class="form-control"></div>
+            <div class="grid-2">
+                <div class="form-group"><label class="form-label">Date</label><input type="date" id="evt-date" class="form-control"></div>
+                <div class="form-group"><label class="form-label">Est. Bottles</label><input type="number" id="evt-btl" class="form-control"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Location/Notes</label><textarea id="evt-note" class="form-control"></textarea></div>
+            <button class="btn btn-primary w-full" onclick="Pages.saveEvent()">Book Event</button>
+        `);
+    },
+
+    saveEvent: function() {
+        store.events.push({
+            id: 'EVT-' + Date.now(),
+            name: document.getElementById('evt-name').value,
+            date: document.getElementById('evt-date').value,
+            bottles: parseInt(document.getElementById('evt-btl').value),
+            notes: document.getElementById('evt-note').value,
+            status: 'Scheduled'
+        });
+        Drive.save();
+        UI.closeModal();
+        Router.go('events');
+    },
+
+    eventAction: function(id, status) {
+        const e = store.events.find(x => x.id === id);
+        if(!e) return;
+        
+        if (status === 'Done') {
+            // Deduct stock if done? For simplicity, we assume events are special orders.
+            // In a complex app, we'd open an order form. Here we just mark done.
+            if(confirm("Mark event as done? (Stock won't be auto-deducted here, create an Order for strict inventory)")) {
+                e.status = status;
+                Drive.save();
+                Router.go('events');
+            }
+        } else {
+            e.status = status;
+            Drive.save();
+            Router.go('events');
+        }
     },
 
     reports: function() {
         return `
-            <div class="card">
-                <h3 class="mb-4">Business Reports</h3>
-                
-                <div class="flex flex-col gap-4">
-                    <!-- Daily Report -->
-                    <div style="border:1px solid #eee; padding:15px; border-radius:8px;">
-                        <h4 class="font-bold">Daily Sales Report (PDF)</h4>
-                        <p class="text-muted text-sm mb-2">Generates receipt for today's transactions.</p>
-                        <button class="btn btn-primary" onclick="Engine.generateDailyReportPDF()">📄 Download PDF</button>
-                    </div>
-
-                    <!-- Monthly Excel -->
-                    <div style="border:1px solid #eee; padding:15px; border-radius:8px;">
-                        <h4 class="font-bold">Monthly Master Sheet (Excel)</h4>
-                        <p class="text-muted text-sm mb-2">Export complete sales record for a specific month.</p>
-                        <div class="flex gap-2">
-                            <input type="month" id="report-month" class="form-input" style="width:200px">
-                            <button class="btn btn-success" onclick="Engine.generateMonthlyExcel(document.getElementById('report-month').value)">📊 Download Excel</button>
-                        </div>
+            <div class="grid-2">
+                <div class="card">
+                    <h3><i class="fas fa-file-pdf" style="color:red"></i> Daily Sales Report</h3>
+                    <p class="text-light mb-3">Generates a PDF summary of today's revenue and orders.</p>
+                    <button class="btn btn-outline" onclick="Engine.exportPDF()">Download PDF</button>
+                </div>
+                <div class="card">
+                    <h3><i class="fas fa-file-excel" style="color:green"></i> Monthly Ledger</h3>
+                    <p class="text-light mb-3">Export detailed sales data for Excel.</p>
+                    <div style="display:flex; gap:10px;">
+                        <input type="month" id="rep-month" class="form-control">
+                        <button class="btn btn-success" onclick="Engine.exportExcel(document.getElementById('rep-month').value)">Download XLS</button>
                     </div>
                 </div>
             </div>
         `;
     },
 
-    events: function() { return '<div class="card"><h3>Event Management</h3><p>Module active.</p></div>'; },
-    settings: function() { return '<div class="card"><h3>Settings</h3><p>System Config.</p></div>'; }
+    settings: function() {
+        return `
+            <div class="card">
+                <h3>Global Configuration</h3>
+                <div class="grid-2 mt-4">
+                    <div class="form-group">
+                        <label class="form-label">Base Rate 200ml</label>
+                        <input type="number" class="form-control" value="${store.settings.defaultPrices['200ml']}" onchange="store.settings.defaultPrices['200ml'] = parseFloat(this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Base Rate 500ml</label>
+                        <input type="number" class="form-control" value="${store.settings.defaultPrices['500ml']}" onchange="store.settings.defaultPrices['500ml'] = parseFloat(this.value)">
+                    </div>
+                     <div class="form-group">
+                        <label class="form-label">Base Rate 1L</label>
+                        <input type="number" class="form-control" value="${store.settings.defaultPrices['1L']}" onchange="store.settings.defaultPrices['1L'] = parseFloat(this.value)">
+                    </div>
+                </div>
+                <button class="btn btn-primary mt-3" onclick="Drive.save(); UI.toast('Settings Saved','success')">Save Settings</button>
+            </div>
+        `;
+    }
 };
 
-// Initialize Google Scripts
-GoogleAuth.init();
+// --- 5. UI UTILITIES ---
+const UI = {
+    modal: function(html) {
+        const root = document.getElementById('modal-root');
+        root.innerHTML = `<div class="modal-overlay" onclick="UI.closeModal(event)"><div class="modal-box">${html}</div></div>`;
+        root.classList.remove('hidden');
+    },
+    
+    closeModal: function(e) {
+        if (!e || e.target.classList.contains('modal-overlay')) {
+            document.getElementById('modal-root').classList.add('hidden');
+        }
+    },
+
+    toast: function(msg, type = 'info') {
+        const c = document.getElementById('toast-root');
+        const t = document.createElement('div');
+        t.className = 'toast';
+        t.style.borderLeftColor = type === 'error' ? 'var(--danger)' : type === 'success' ? 'var(--success)' : 'var(--accent)';
+        t.innerHTML = `<span>${msg}</span>`;
+        c.appendChild(t);
+        setTimeout(() => t.remove(), 3000);
+    },
+
+    filterTable: function(input, colIndex) {
+        const filter = input.value.toUpperCase();
+        const trs = document.querySelectorAll('tbody tr');
+        trs.forEach(tr => {
+            const td = tr.getElementsByTagName('td')[0]; // Searching Name
+            if (td) {
+                const txt = td.textContent || td.innerText;
+                tr.style.display = txt.toUpperCase().indexOf(filter) > -1 ? "" : "none";
+            }
+        });
+    }
+};
+
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    const overlay = document.getElementById('mobile-overlay');
+    overlay.style.display = overlay.style.display === 'none' ? 'block' : 'none';
+}
+
+// Init
+window.onload = function() {
+    Auth.init();
+};
+
 </script>
 </body>
 </html>
