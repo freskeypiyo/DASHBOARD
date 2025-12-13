@@ -961,70 +961,73 @@
                 `;
             },
 
-           newOrder: function() {
-        const customers = appStore.get().customers;
-        // Check if customers exist
-        if(customers.length === 0) return `<div class="card text-center"><h3>No Customers</h3><p style="margin:1rem 0; color:#666;">You must add customers before creating an order.</p><button class="btn btn-primary" onclick="Router.navigate('customers')">Go to Customers</button></div>`;
+           // CHANGE "newOrder" to "'new-order'" (with quotes)
+            'new-order': function() {
+                const customers = appStore.get().customers;
+                // Check if customers exist
+                if(customers.length === 0) return `<div class="card text-center"><h3>No Customers</h3><p style="margin:1rem 0; color:#666;">You must add customers before creating an order.</p><button class="btn btn-primary" onclick="Router.navigate('customers')">Go to Customers</button></div>`;
 
-        const custOptions = customers.map(c => `<option value="${c.id}">${c.company} (${c.name})</option>`).join('');
-        const skus = ['200ml', '500ml', '1L'];
-        const prices = appStore.get().settings.prices;
-        const inventory = appStore.get().inventory;
+                const custOptions = customers.map(c => `<option value="${c.id}">${c.company} (${c.name})</option>`).join('');
+                const skus = ['200ml', '500ml', '1L'];
+                const prices = appStore.get().settings.prices;
+                const inventory = appStore.get().inventory;
 
-        return `
-            <div class="card" style="max-width: 800px; margin: 0 auto;">
-                <div class="card-header"><h3 class="card-title">Create New Order</h3></div>
-                
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label class="form-label">Select Customer</label>
-                        <select id="ord-cust" class="form-control">${custOptions}</select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Date</label>
-                        <input type="date" id="ord-date" class="form-control" value="${new Date().toISOString().split('T')[0]}">
-                    </div>
-                </div>
-
-                <div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
-                    <h4 class="form-label" style="margin-bottom: 1rem;">Order Items</h4>
-                    <div class="grid-3" style="font-weight:700; color:#64748b; font-size:0.8rem; margin-bottom:0.5rem;">
-                        <div>ITEM & STOCK</div>
-                        <div>RATE (₹)</div>
-                        <div>QUANTITY</div>
-                    </div>
-                    ${skus.map(sku => `
-                        <div class="grid-3" style="align-items: center; margin-bottom: 1rem;">
-                            <div>
-                                <strong>${sku}</strong>
-                                <div style="font-size: 0.75rem; color: #64748b;">Avail: ${inventory[sku]}</div>
+                return `
+                    <div class="card" style="max-width: 800px; margin: 0 auto;">
+                        <div class="card-header"><h3 class="card-title">Create New Order</h3></div>
+                        
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Select Customer</label>
+                                <select id="ord-cust" class="form-control">${custOptions}</select>
                             </div>
-                            <input type="number" id="rate-${sku}" class="form-control" value="${prices[sku]}" oninput="Logic.calcOrderTotal()">
-                            <input type="number" id="qty-${sku}" class="form-control" placeholder="0" oninput="Logic.calcOrderTotal()">
+                            <div class="form-group">
+                                <label class="form-label">Date</label>
+                                <input type="date" id="ord-date" class="form-control" value="${new Date().toISOString().split('T')[0]}">
+                            </div>
                         </div>
-                    `).join('')}
-                </div>
 
-                <div class="grid-2" style="align-items: center;">
-                    <div class="form-group">
-                        <label class="form-label">Payment Mode</label>
-                        <select id="ord-pay" class="form-control">
-                            <option value="Cash">Cash</option>
-                            <option value="Online">Online / UPI</option>
-                            <option value="Credit">Credit (Add to Balance)</option>
-                        </select>
-                    </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 0.9rem; color: #64748b;">Grand Total</div>
-                        <div id="ord-total-disp" style="font-size: 2rem; font-weight: 800; color: #0f172a;">₹0.00</div>
-                    </div>
-                </div>
+                        <div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
+                            <h4 class="form-label" style="margin-bottom: 1rem;">Order Items</h4>
+                            <div class="grid-3" style="font-weight:700; color:#64748b; font-size:0.8rem; margin-bottom:0.5rem;">
+                                <div>ITEM & STOCK</div>
+                                <div>RATE (₹)</div>
+                                <div>QUANTITY</div>
+                            </div>
+                            ${skus.map(sku => `
+                                <div class="grid-3" style="align-items: center; margin-bottom: 1rem;">
+                                    <div>
+                                        <strong>${sku}</strong>
+                                        <div style="font-size: 0.75rem; color: #64748b;">Avail: ${inventory[sku]}</div>
+                                    </div>
+                                    <input type="number" id="rate-${sku}" class="form-control" value="${prices[sku]}" oninput="Logic.calcOrderTotal()">
+                                    <input type="number" id="qty-${sku}" class="form-control" placeholder="0" oninput="Logic.calcOrderTotal()">
+                                </div>
+                            `).join('')}
+                        </div>
 
-                <hr style="border:0; border-top: 1px solid #e2e8f0; margin: 1.5rem 0;">
-                <button class="btn btn-success" style="width:100%; padding: 1rem;" onclick="Logic.submitOrder()">Confirm & Save Order</button>
-            </div>
-        `;
-    },
+                        <div class="grid-2" style="align-items: center;">
+                            <div class="form-group">
+                                <label class="form-label">Payment Mode</label>
+                                <select id="ord-pay" class="form-control">
+                                    <option value="Cash">Cash</option>
+                                    <option value="Online">Online / UPI</option>
+                                    <option value="Credit">Credit (Add to Balance)</option>
+                                </select>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.9rem; color: #64748b;">Grand Total</div>
+                                <div id="ord-total-disp" style="font-size: 2rem; font-weight: 800; color: #0f172a;">₹0.00</div>
+                            </div>
+                        </div>
+
+                        <hr style="border:0; border-top: 1px solid #e2e8f0; margin: 1.5rem 0;">
+                        <button class="btn btn-success" style="width:100%; padding: 1rem;" onclick="Logic.submitOrder()">Confirm & Save Order</button>
+                    </div>
+                `;
+            },
+
+            
             orders: function() {
         const orders = appStore.get().orders.slice().reverse();
         return `
