@@ -324,6 +324,34 @@
         .badge-danger { background: var(--danger-bg); color: var(--danger-text); }
         .badge-info { background: #e0f2fe; color: #075985; }
 
+
+        /* TRACKING STYLES */
+.track-stepper {
+    display: flex;
+    justify-content: space-between;
+    margin: 1.5rem 0;
+    position: relative;
+}
+.track-stepper::before {
+    content: ''; position: absolute; top: 15px; left: 0; width: 100%; height: 2px;
+    background: var(--gray-200); z-index: 1;
+}
+.step-item {
+    position: relative; z-index: 2; text-align: center; background: var(--white); padding: 0 10px;
+}
+.step-circle {
+    width: 32px; height: 32px; border-radius: 50%; background: var(--gray-200); color: var(--gray-500);
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-weight: bold;
+    border: 2px solid var(--white);
+}
+.step-item.active .step-circle { color: white; }
+.step-item.active.s1 .step-circle { background: var(--warning-500); } /* Order Made - Orange */
+.step-item.active.s2 .step-circle { background: var(--accent-500); }  /* Dispatch - Blue */
+.step-item.active.s3 .step-circle { background: var(--success-500); } /* Delivered - Green */
+
+.pay-progress { height: 8px; background: var(--gray-200); border-radius: 4px; overflow: hidden; margin-top: 5px; }
+.pay-bar { height: 100%; background: var(--success-500); }
+
         /* Forms */
         .form-group { margin-bottom: 1.25rem; }
         .form-label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--primary-800); font-size: 0.9rem; }
@@ -534,6 +562,16 @@
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                     Customers
                 </div>
+                <!-- ADD THIS AFTER THE 'NEW ORDER' NAV ITEM -->
+<div class="nav-item" onclick="Router.navigate('tracking')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="1" y="3" width="15" height="13"></rect>
+        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+        <circle cx="5.5" cy="18.5" r="2.5"></circle>
+        <circle cx="18.5" cy="18.5" r="2.5"></circle>
+    </svg>
+    Tracking & Pay
+</div>
                 <div class="nav-item" onclick="Router.navigate('inventory')">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
                     Inventory
@@ -961,6 +999,85 @@
                 `;
             },
 
+            // ADD THIS NEW VIEW
+    tracking: function() {
+        const orders = appStore.get().orders.filter(o => o.trackingStep < 4).reverse(); // Show active orders
+        if(orders.length === 0) return '<div class="card text-center"><h3>No Active Orders</h3><p>All orders are delivered.</p></div>';
+
+        return `
+            <div class="grid-2">
+                ${orders.map(o => {
+                    const c = appStore.get().customers.find(cx => cx.id === o.custId);
+                    const due = o.total - (o.paidAmount || 0);
+                    const pct = (o.paidAmount / o.total) * 100;
+                    
+                    // Step Logic
+                    const s1 = o.trackingStep >= 1 ? 'active s1' : '';
+                    const s2 = o.trackingStep >= 2 ? 'active s2' : '';
+                    const s3 = o.trackingStep >= 3 ? 'active s3' : '';
+
+                    return `
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">${c ? c.company : 'Unknown'}</h3>
+                                <div style="font-size:0.8rem; color:var(--gray-500)">${o.id} • ${o.date}</div>
+                            </div>
+                            <span class="badge badge-info">${Utils.formatCurrency(o.total)}</span>
+                        </div>
+
+                        <!-- 3-PHASE TRACKING -->
+                        <div class="track-stepper">
+                            <div class="step-item ${s1}">
+                                <div class="step-circle">1</div>
+                                <div style="font-size:0.75rem;">Ordered</div>
+                            </div>
+                            <div class="step-item ${s2}">
+                                <div class="step-circle">2</div>
+                                <div style="font-size:0.75rem;">Dispatched</div>
+                            </div>
+                            <div class="step-item ${s3}">
+                                <div class="step-circle">3</div>
+                                <div style="font-size:0.75rem;">Delivered</div>
+                            </div>
+                        </div>
+
+                        <!-- ACTIONS -->
+                        <div style="display:flex; gap:10px; margin-bottom: 1rem;">
+                            ${o.trackingStep === 1 ? 
+                                `<button class="btn btn-accent w-full" onclick="Logic.updateTracking('${o.id}', 2)">Mark Dispatched</button>` : ''}
+                            ${o.trackingStep === 2 ? 
+                                `<button class="btn btn-success w-full" onclick="Logic.updateTracking('${o.id}', 3)">Mark Delivered</button>` : ''}
+                            ${o.trackingStep === 3 ? 
+                                `<button class="btn btn-outline w-full" disabled>Order Complete</button>` : ''}
+                        </div>
+
+                        <!-- PAYMENT TRACKING -->
+                        <div style="background:var(--gray-50); padding:1rem; border-radius:8px;">
+                            <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:5px;">
+                                <span>Paid: <strong>${Utils.formatCurrency(o.paidAmount || 0)}</strong></span>
+                                <span style="color:${due > 0 ? 'var(--danger-500)' : 'var(--success-500)'}">Due: ${Utils.formatCurrency(due)}</span>
+                            </div>
+                            <div class="pay-progress"><div class="pay-bar" style="width:${pct}%"></div></div>
+                            
+                            ${due > 0 ? `
+                                <div style="margin-top:10px; display:flex; gap:5px;">
+                                    <input type="number" id="pay-${o.id}" class="form-control" style="padding:5px;" placeholder="Amount">
+                                    <button class="btn btn-primary btn-sm" onclick="Logic.addPayment('${o.id}')">Pay</button>
+                                </div>
+                            ` : '<div style="margin-top:5px; font-size:0.8rem; color:var(--success-500); font-weight:bold;">Fully Paid</div>'}
+                        </div>
+                    </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    },
+
+
+
+
+            
            // CHANGE "newOrder" to "'new-order'" (with quotes)
             'new-order': function() {
                 const customers = appStore.get().customers;
@@ -1275,6 +1392,44 @@
                 ToastManager.show("Customer Added", "success");
                 Router.refresh();
             },
+
+
+            // --- TRACKING & PAYMENT LOGIC ---
+    updateTracking: function(id, step) {
+        const order = appStore.get().orders.find(o => o.id === id);
+        if(order) {
+            order.trackingStep = step;
+            if(step === 2) order.status = 'Dispatched';
+            if(step === 3) order.status = 'Delivered';
+            
+            // Auto-save changes
+            ToastManager.show(`Order status updated to ${order.status}`, "success");
+            Router.refresh();
+        }
+    },
+
+    addPayment: function(id) {
+        const amount = parseFloat(document.getElementById(`pay-${id}`).value);
+        if(!amount || amount <= 0) return ToastManager.show("Invalid Amount", "error");
+
+        const order = appStore.get().orders.find(o => o.id === id);
+        const due = order.total - (order.paidAmount || 0);
+
+        if(amount > due) return ToastManager.show(`Amount exceeds balance of ${due}`, "error");
+
+        // 1. Update Order
+        order.paidAmount = (order.paidAmount || 0) + amount;
+
+        // 2. Update Customer Balance (Reduce debt)
+        const cust = appStore.get().customers.find(c => c.id === order.custId);
+        if(cust) {
+            cust.balance -= amount;
+            if(cust.balance < 0) cust.balance = 0; // Safety catch
+        }
+
+        ToastManager.show(`Payment of ${Utils.formatCurrency(amount)} recorded`, "success");
+        Router.refresh();
+    },
             
             editCustomer: function(id) {
                 const c = appStore.get().customers.find(x => x.id === id);
@@ -1308,55 +1463,58 @@ calcOrderTotal: function() {
         document.getElementById('ord-total-disp').innerText = '₹' + total.toFixed(2);
     },
 
-    submitOrder: function() {
-        const custId = document.getElementById('ord-cust').value;
-        const date = document.getElementById('ord-date').value;
-        const pay = document.getElementById('ord-pay').value;
-        const skus = ['200ml', '500ml', '1L'];
+    // REPLACE THE EXISTING Logic.submitOrder WITH THIS:
+submitOrder: function() {
+    const custId = document.getElementById('ord-cust').value;
+    const date = document.getElementById('ord-date').value;
+    const pay = document.getElementById('ord-pay').value;
+
+    const items = [];
+    let total = 0;
+
+    // Inventory Check Loop
+    for(let sku of SKUS) {
+        const q = parseFloat(document.getElementById(`qty-${sku}`).value) || 0;
+        const r = parseFloat(document.getElementById(`rate-${sku}`).value) || 0;
         
-        let items = [];
-        let total = 0;
-
-        // 1. Gather Items
-        for(let sku of skus) {
-            const q = parseFloat(document.getElementById(`qty-${sku}`).value) || 0;
-            const r = parseFloat(document.getElementById(`rate-${sku}`).value) || 0;
-            if(q > 0) {
-                // Stock Check
-                const stock = appStore.get().inventory[sku];
-                if(stock < q) {
-                    if(!confirm(`Low Stock for ${sku}. Available: ${stock}. Proceed?`)) return;
-                }
-                items.push({ sku, qty: q, rate: r });
-                total += (q * r);
+        if(q > 0) {
+            const currentStock = appStore.get().inventory[sku];
+            if(currentStock < q) {
+                if(!confirm(`Low Inventory for ${sku}. Available: ${currentStock}. Proceed anyway?`)) return;
             }
+            items.push({ sku, qty: q, rate: r });
+            total += (q * r);
         }
+    }
 
-        if(items.length === 0) return alert("Please enter at least one item quantity.");
+    if(items.length === 0) return ToastManager.show("Please add at least one item", "error");
 
-        // 2. Credit Check
-        const cust = appStore.get().customers.find(c => c.id === custId);
-        if(pay === 'Credit' && (cust.balance + total > cust.limit)) {
-            if(!confirm(`Credit Limit Exceeded!\nCurrent: ₹${cust.balance}\nNew Total: ₹${cust.balance + total}\nLimit: ₹${cust.limit}\n\nProceed anyway?`)) return;
-        }
+    // Credit Limit Check
+    const cust = appStore.get().customers.find(c => c.id === custId);
+    if(pay === 'Credit' && (cust.balance + total > cust.limit)) {
+        if(!confirm(`Credit Limit Exceeded! Current Balance: ${cust.balance}, Limit: ${cust.limit}. Add Order anyway?`)) return;
+    }
 
-        // 3. Create Order Object
-        const order = {
-            id: 'ORD-' + Date.now(),
-            date: date,
-            custId: custId,
-            items: items,
-            total: total,
-            paymentMode: pay,
-            status: 'Completed'
-        };
+    // --- NEW LOGIC FOR TRACKING & PAYMENT ---
+    // If Cash/Online, it is fully paid. If Credit, 0 paid.
+    const initialPaid = (pay === 'Credit') ? 0 : total;
 
-        // 4. Save to Store
-        appStore.addOrder(order);
-        alert("Order Saved Successfully!");
-        Router.navigate('orders');
-    },
+    const order = {
+        id: Utils.generateId('ORD'),
+        date, 
+        custId, 
+        items, 
+        total, 
+        paymentMode: pay, 
+        status: 'Ordered',     // Initial Status
+        trackingStep: 1,       // 1: Made, 2: Dispatch, 3: Deliver
+        paidAmount: initialPaid // Track how much is paid
+    };
 
+    appStore.addOrder(order);
+    ToastManager.show("Order Created Successfully", "success");
+    Router.navigate('tracking'); // Redirect to tracking page instead of history
+},
             
             calcOrderTotal: function() {
                 let total = 0;
