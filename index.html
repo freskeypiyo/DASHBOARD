@@ -1031,9 +1031,7 @@
             },
 
             orders: function() {
-        const data = appStore.get();
-        const orders = data.orders.slice().reverse(); // Show newest first
-
+        const orders = appStore.get().orders.slice().reverse();
         return `
             <div class="card">
                 <div class="card-header"><h3 class="card-title">Order History</h3></div>
@@ -1041,26 +1039,23 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Order ID</th>
+                                <th>ID</th>
                                 <th>Date</th>
                                 <th>Customer</th>
-                                <th>Items</th>
                                 <th>Total</th>
-                                <th>Payment</th>
+                                <th>Status</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             ${orders.map(o => {
-                                const c = data.customers.find(cx => cx.id === o.custId);
-                                const itemSummary = o.items.map(i => `${i.qty} x ${i.sku}`).join(', ');
+                                const c = appStore.get().customers.find(cx => cx.id === o.custId);
                                 return `
                                     <tr>
                                         <td style="font-family:monospace;">${o.id.split('-')[1]}</td>
-                                        <td>${Utils.formatDate(o.date)}</td>
-                                        <td>${c ? c.company : 'Unknown Customer'}</td>
-                                        <td style="font-size:0.85rem; color:#666;">${itemSummary}</td>
-                                        <td style="font-weight:700;">${Utils.formatCurrency(o.total)}</td>
+                                        <td>${o.date}</td>
+                                        <td>${c ? c.company : 'Unknown'}</td>
+                                        <td style="font-weight:700;">₹${o.total}</td>
                                         <td><span class="badge ${o.paymentMode==='Credit'?'badge-danger':'badge-success'}">${o.paymentMode}</span></td>
                                         <td>
                                             <button class="btn btn-outline btn-sm" onclick="Logic.editOrder('${o.id}')">Manage</button>
@@ -1068,14 +1063,13 @@
                                     </tr>
                                 `;
                             }).join('')}
-                            ${orders.length === 0 ? '<tr><td colspan="7" style="text-align:center; padding:2rem; color:#999;">No orders found.</td></tr>' : ''}
+                            ${orders.length === 0 ? '<tr><td colspan="6" style="text-align:center; padding:2rem; color:#999;">No orders found.</td></tr>' : ''}
                         </tbody>
                     </table>
                 </div>
             </div>
         `;
     },
-
             customers: function() {
                 const customers = appStore.get().customers;
                 return `
