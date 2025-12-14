@@ -603,6 +603,16 @@
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
                     New Order
                 </div>
+                <!-- PASTE THIS BEFORE THE 'SETTINGS' NAV ITEM -->
+<div class="nav-item" onclick="Router.navigate('invoiceGen')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="12" y1="18" x2="12" y2="12"></line>
+        <line x1="9" y1="15" x2="15" y2="15"></line>
+    </svg>
+    E-Invoice Gen
+</div>
                 <div class="nav-item" onclick="Router.navigate('orders')">
                     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                     Order History
@@ -1408,6 +1418,95 @@
                 `;
             },
 
+            // PASTE THIS INSIDE 'const Views = {' AFTER 'settings: ...'
+    
+    invoiceGen: function() {
+        return `
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Generate E-Invoice / E-Way JSON</h3>
+                </div>
+
+                <!-- A. SUPPLIER DETAILS -->
+                <div style="background:#f1f5f9; padding:10px; border-radius:6px; margin-bottom:15px;">
+                    <h4 style="font-size:0.9rem; margin-bottom:10px; color:var(--primary-700);">🔹 A. Supplier (Freskeypiyo Beverages)</h4>
+                    <div class="grid-3">
+                        <div class="form-group"><label class="form-label">GSTIN</label><input class="form-control" id="inv-fromGstin" value="09ABCDE1234F1Z5" readonly style="background:#e2e8f0;"></div>
+                        <div class="form-group"><label class="form-label">Legal Name</label><input class="form-control" id="inv-fromTrdName" value="FRESKEYPIYO BEVERAGES" readonly style="background:#e2e8f0;"></div>
+                        <div class="form-group"><label class="form-label">State Code</label><input class="form-control" id="inv-fromStateCode" value="9" readonly style="background:#e2e8f0;"></div>
+                        <div class="form-group"><label class="form-label">Address</label><input class="form-control" id="inv-fromAddr1" value="Industrial Area" readonly style="background:#e2e8f0;"></div>
+                        <div class="form-group"><label class="form-label">Place</label><input class="form-control" id="inv-fromPlace" value="Lucknow" readonly style="background:#e2e8f0;"></div>
+                        <div class="form-group"><label class="form-label">PIN Code</label><input class="form-control" id="inv-fromPincode" value="226010" readonly style="background:#e2e8f0;"></div>
+                    </div>
+                </div>
+
+                <!-- B. RECIPIENT DETAILS -->
+                <h4 style="font-size:0.9rem; margin-bottom:10px; color:var(--primary-700);">🔹 B. Recipient Details</h4>
+                <div class="grid-2">
+                    <div class="form-group"><label class="form-label">GSTIN / URP *</label><input class="form-control" id="inv-toGstin" placeholder="e.g. 09PQRSX5678L1Z9"></div>
+                    <div class="form-group"><label class="form-label">Recipient Name *</label><input class="form-control" id="inv-toTrdName" placeholder="e.g. ABC DISTRIBUTOR"></div>
+                </div>
+                <div class="grid-4">
+                    <div class="form-group"><label class="form-label">Address</label><input class="form-control" id="inv-toAddr1" placeholder="Market Road"></div>
+                    <div class="form-group"><label class="form-label">Place</label><input class="form-control" id="inv-toPlace" placeholder="City"></div>
+                    <div class="form-group"><label class="form-label">State Code</label><input type="number" class="form-control" id="inv-toStateCode" placeholder="9"></div>
+                    <div class="form-group"><label class="form-label">PIN Code</label><input type="number" class="form-control" id="inv-toPincode" placeholder="208001"></div>
+                </div>
+
+                <hr style="border:0; border-top:1px solid #e2e8f0; margin:15px 0;">
+
+                <!-- C. INVOICE & D. PRODUCT -->
+                <div class="grid-2">
+                    <div>
+                        <h4 style="font-size:0.9rem; margin-bottom:10px; color:var(--primary-700);">🔹 C. Invoice Details</h4>
+                        <div class="grid-2">
+                            <div class="form-group"><label class="form-label">Invoice No</label><input class="form-control" id="inv-docNo" value="FRK-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-001"></div>
+                            <div class="form-group"><label class="form-label">Date</label><input class="form-control" id="inv-docDate" value="${new Date().toLocaleDateString('en-GB')}"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style="font-size:0.9rem; margin-bottom:10px; color:var(--primary-700);">🔹 E. Transport (Mandatory ⚠️)</h4>
+                        <div class="grid-2">
+                            <div class="form-group"><label class="form-label">Distance (KM) *</label><input type="number" class="form-control" id="inv-distance" style="border-color:red;"></div>
+                            <div class="form-group"><label class="form-label">Vehicle No</label><input class="form-control" id="inv-vehicleNo" placeholder="UP32AB1234"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <h4 style="font-size:0.9rem; margin-bottom:10px; color:var(--primary-700);">🔹 D. Product Details</h4>
+                <div class="grid-4" style="align-items:end;">
+                    <div class="form-group" style="grid-column: span 2;"><label class="form-label">Product Name</label><input class="form-control" id="inv-productName" value="Packaged Drinking Water 500ml"></div>
+                    <div class="form-group"><label class="form-label">HSN Code</label><input class="form-control" id="inv-hsnCode" value="22011010"></div>
+                    <div class="form-group"><label class="form-label">Unit</label>
+                        <select class="form-control" id="inv-qtyUnit"><option value="BOX">BOX</option><option value="NOS">NOS</option></select>
+                    </div>
+                </div>
+
+                <!-- CALCULATION ROW -->
+                <div style="background:#fff7ed; padding:15px; border-radius:8px; border:1px solid #ffedd5; margin-top:10px;">
+                    <div class="grid-4">
+                        <div class="form-group"><label class="form-label">Quantity</label><input type="number" class="form-control" id="inv-quantity" value="200" oninput="Logic.calcJsonTotals()"></div>
+                        <div class="form-group"><label class="form-label">Unit Price</label><input type="number" class="form-control" id="inv-unitPrice" value="240" oninput="Logic.calcJsonTotals()"></div>
+                        <div class="form-group"><label class="form-label">Taxable Val</label><input class="form-control" id="inv-taxableAmount" readonly style="font-weight:bold;"></div>
+                        <div class="form-group"><label class="form-label">Total Value</label><input class="form-control" id="inv-totalValue" readonly style="font-weight:800; color:var(--primary-900);"></div>
+                    </div>
+                    <div class="grid-3" style="font-size:0.8rem; margin-top:5px;">
+                        <div>CGST (3%): <span id="disp-cgst">0</span></div>
+                        <div>SGST (3%): <span id="disp-sgst">0</span></div>
+                        <div>IGST (0%): <span id="disp-igst">0</span></div>
+                    </div>
+                </div>
+
+                <div style="margin-top:20px; text-align:right;">
+                    <button class="btn btn-primary" onclick="Logic.downloadEInvoiceJSON()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        GENERATE & DOWNLOAD JSON
+                    </button>
+                </div>
+            </div>
+        `;
+    },
+
             // Helper Views
             _renderRecentOrdersTable: function(orders) {
                 if(orders.length === 0) return '<p style="padding: 1rem; color: var(--gray-500);">No activity yet.</p>';
@@ -1618,6 +1717,97 @@
             tbody.innerHTML += row;
         });
     },
+
+
+
+
+
+// PASTE THIS INSIDE 'const Logic = {' AT THE BOTTOM
+    
+    calcJsonTotals: function() {
+        const qty = parseFloat(document.getElementById('inv-quantity').value) || 0;
+        const price = parseFloat(document.getElementById('inv-unitPrice').value) || 0;
+        
+        const taxable = qty * price;
+        document.getElementById('inv-taxableAmount').value = taxable.toFixed(2);
+
+        // Hardcoded rates as per your requirement (3% + 3%)
+        const cgstVal = taxable * 0.03;
+        const sgstVal = taxable * 0.03;
+        const igstVal = 0;
+
+        document.getElementById('disp-cgst').innerText = cgstVal.toFixed(2);
+        document.getElementById('disp-sgst').innerText = sgstVal.toFixed(2);
+        
+        const total = taxable + cgstVal + sgstVal + igstVal;
+        document.getElementById('inv-totalValue').value = total.toFixed(2);
+    },
+
+    downloadEInvoiceJSON: function() {
+        // Validation
+        const distance = document.getElementById('inv-distance').value;
+        if(!distance) return ToastManager.show("Distance is Mandatory ⚠️", "error");
+        
+        // Trigger calc once to ensure totals are fresh
+        this.calcJsonTotals();
+
+        const data = {
+            "supplyType": "O",
+            "subSupplyType": "1",
+            "docType": "INV",
+            "docNo": document.getElementById('inv-docNo').value,
+            "docDate": document.getElementById('inv-docDate').value,
+
+            "fromGstin": document.getElementById('inv-fromGstin').value,
+            "fromTrdName": document.getElementById('inv-fromTrdName').value,
+            "fromAddr1": document.getElementById('inv-fromAddr1').value,
+            "fromPlace": document.getElementById('inv-fromPlace').value,
+            "fromPincode": parseInt(document.getElementById('inv-fromPincode').value),
+            "fromStateCode": parseInt(document.getElementById('inv-fromStateCode').value),
+
+            "toGstin": document.getElementById('inv-toGstin').value,
+            "toTrdName": document.getElementById('inv-toTrdName').value,
+            "toAddr1": document.getElementById('inv-toAddr1').value,
+            "toPlace": document.getElementById('inv-toPlace').value,
+            "toPincode": parseInt(document.getElementById('inv-toPincode').value) || 0,
+            "toStateCode": parseInt(document.getElementById('inv-toStateCode').value) || 0,
+
+            "totalValue": parseFloat(document.getElementById('inv-totalValue').value),
+            "cgstValue": parseFloat(document.getElementById('disp-cgst').innerText),
+            "sgstValue": parseFloat(document.getElementById('disp-sgst').innerText),
+            "igstValue": 0,
+
+            "transMode": "1",
+            "distance": parseInt(distance),
+            "vehicleNo": document.getElementById('inv-vehicleNo').value,
+            "vehicleType": "R",
+
+            "itemList": [
+                {
+                    "productName": document.getElementById('inv-productName').value,
+                    "hsnCode": document.getElementById('inv-hsnCode').value,
+                    "quantity": parseFloat(document.getElementById('inv-quantity').value),
+                    "qtyUnit": document.getElementById('inv-qtyUnit').value,
+                    "taxableAmount": parseFloat(document.getElementById('inv-taxableAmount').value),
+                    "cgstRate": 3,
+                    "sgstRate": 3,
+                    "igstRate": 0
+                }
+            ]
+        };
+
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", "Invoice_" + data.docNo + ".json");
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+        
+        ToastManager.show("JSON Downloaded Successfully", "success");
+    },
+
+            
 
     // 3. Toggle Row Visibility
     toggleRow: function(id) {
