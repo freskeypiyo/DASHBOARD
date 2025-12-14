@@ -1491,6 +1491,35 @@
                 Router.refresh();
             },
 
+            // Paste this inside const Logic = { ...
+generateNextOrderId: function(dateString) {
+    // 1. Format Date from YYYY-MM-DD to YYYYMMDD
+    const cleanDate = dateString.replace(/-/g, '');
+    const prefix = `FRK-${cleanDate}-`;
+
+    // 2. Find all existing orders for this specific day
+    // We filter by checking if the ID starts with "FRK-20251214-"
+    const existingOrders = appStore.get().orders.filter(o => o.id.startsWith(prefix));
+
+    if (existingOrders.length === 0) {
+        return prefix + '0001'; // First order of the day
+    }
+
+    // 3. Find the highest sequence number to avoid duplicates
+    let maxSeq = 0;
+    existingOrders.forEach(o => {
+        // ID format: FRK-20251214-0001 -> split gives ["FRK", "20251214", "0001"]
+        const parts = o.id.split('-');
+        if(parts.length === 3) {
+            const seq = parseInt(parts[2]);
+            if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
+        }
+    });
+
+    // 4. Return new ID (Max + 1), padded with zeros
+    return prefix + (maxSeq + 1).toString().padStart(4, '0');
+},
+
 
             // --- FILTER & TABLE LOGIC ---
     
@@ -1547,7 +1576,8 @@
             const itemString = o.items.map(i => `<span class="item-pill">${i.sku}×${i.qty}</span>`).join(' ');
             
             // Display ID (Clean up the internal ID)
-            const displayId = `FRK-${o.date.replace(/-/g,'')}-${o.id.split('-')[1].toUpperCase()}`;
+            // ID is already formatted correctly in the database now
+const displayId = o.id;
             
             // Delivery Date Logic (Inferred from Status)
             let delDate = '-';
@@ -1749,61 +1779,63 @@ calcOrderTotal: function() {
         document.getElementById('ord-total-disp').innerText = '₹' + total.toFixed(2);
     },
 
-   submitOrder: function() {
-                const custId = document.getElementById('ord-cust').value;
-                const date = document.getElementById('ord-date').value;
-                const pay = document.getElementById('ord-pay').value;
+  submitOrder: function() {
+    // 1. Get Form Values
+    const custId = document.getElementById('ord-cust').value;
+    const date = document.getElementById('ord-date').value;
+    const pay = document.getElementById('ord-pay').value;
 
-                const items = [];
-                let total = 0;
+    // 2. Validate Items & Calculate Total
+    const items = [];
+    let total = 0;
 
-                // 1. Inventory Check Loop
-                for(let sku of SKUS) {
-                    const q = parseFloat(document.getElementById(`qty-${sku}`).value) || 0;
-                    const r = parseFloat(document.getElementById(`rate-${sku}`).value) || 0;
-                    
-                    if(q > 0) {
-                        const currentStock = appStore.get().inventory[sku];
-                        if(currentStock < q) {
-                            if(!confirm(`Low Inventory for ${sku}. Available: ${currentStock}. Proceed anyway?`)) return;
-                        }
-                        items.push({ sku, qty: q, rate: r });
-                        total += (q * r);
-                    }
-                }
+    // Loop through defined SKUs (200ml, 500ml, 1L)
+    for(let sku of SKUS) {
+        const q = parseFloat(document.getElementById(`qty-${sku}`).value) || 0;
+        const r = parseFloat(document.getElementById(`rate-${sku}`).value) || 0;
+        
+        if(q > 0) {
+            const currentStock = appStore.get().inventory[sku];
+            // Inventory Warning
+            if(currentStock < q) {
+                if(!confirm(`Low Inventory for ${sku}. Available: ${currentStock}. Proceed anyway?`)) return;
+            }
+            items.push({ sku, qty: q, rate: r });
+            total += (q * r);
+        }
+    }
 
-                if(items.length === 0) return ToastManager.show("Please add at least one item", "error");
+    if(items.length === 0) return ToastManager.show("Please add at least one item", "error");
 
-                // 2. Credit Limit Check
-                const cust = appStore.get().customers.find(c => c.id === custId);
-                if(pay === 'Credit' && (cust.balance + total > cust.limit)) {
-                    if(!confirm(`Credit Limit Exceeded! Current Balance: ${cust.balance}, Limit: ${cust.limit}. Add Order anyway?`)) return;
-                }
+    // 3. Credit Limit Check
+    const cust = appStore.get().customers.find(c => c.id === custId);
+    if(pay === 'Credit' && (cust.balance + total > cust.limit)) {
+        if(!confirm(`Credit Limit Exceeded! Current Balance: ${cust.balance}, Limit: ${cust.limit}. Add Order anyway?`)) return;
+    }
 
-                // 3. Determine Initial Payment
-                // If Credit, Paid = 0. If Cash/Online, Paid = Total.
-                const initialPaid = (pay === 'Credit') ? 0 : total;
+    // 4. Determine Initial Payment (If Credit, paid is 0. Else fully paid.)
+    const initialPaid = (pay === 'Credit') ? 0 : total;
 
-                // 4. Create Order Object
-                const order = {
-                    id: Utils.generateId('ORD'),
-                    date, 
-                    custId, 
-                    items, 
-                    total, 
-                    paymentMode: pay, 
-                    status: 'Ordered',     
-                    trackingStep: 1,        // FORCE STEP 1
-                    paidAmount: initialPaid // Track Payment
-                };
+    // 5. Create Order Object (WITH NEW ID LOGIC)
+    const order = {
+        id: Logic.generateNextOrderId(date), // <--- CHANGED HERE
+        date, 
+        custId, 
+        items, 
+        total, 
+        paymentMode: pay, 
+        status: 'Ordered',     
+        trackingStep: 1,       
+        paidAmount: initialPaid 
+    };
 
-                // 5. Save and Redirect
-                appStore.addOrder(order);
-                ToastManager.show("Order Created Successfully", "success");
-                
-                // IMPORTANT: Redirect to Tracking page to see the new order
-                Router.navigate('tracking');
-            },
+    // 6. Save and Redirect
+    appStore.addOrder(order);
+    ToastManager.show("Order " + order.id + " Created", "success");
+    
+    // Redirect to Tracking page to see the new order
+    Router.navigate('tracking');
+},
             
             calcOrderTotal: function() {
                 let total = 0;
