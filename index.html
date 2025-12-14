@@ -1472,6 +1472,8 @@
                 `);
             },
 
+            
+
             saveNewCustomer: function() {
                 const comp = document.getElementById('new-c-comp').value;
                 if(!comp) return ToastManager.show("Company Name Required", "error");
@@ -1491,34 +1493,32 @@
                 Router.refresh();
             },
 
-            // Paste this inside const Logic = { ...
-generateNextOrderId: function(dateString) {
-    // 1. Format Date from YYYY-MM-DD to YYYYMMDD
-    const cleanDate = dateString.replace(/-/g, '');
-    const prefix = `FRK-${cleanDate}-`;
+            // --- 1. ID GENERATOR (Paste at top of Logic object) ---
+    generateNextOrderId: function(dateString) {
+        // 1. Format Date: YYYY-MM-DD -> YYYYMMDD
+        const cleanDate = dateString.replace(/-/g, '');
+        const prefix = `FRK-${cleanDate}-`;
 
-    // 2. Find all existing orders for this specific day
-    // We filter by checking if the ID starts with "FRK-20251214-"
-    const existingOrders = appStore.get().orders.filter(o => o.id.startsWith(prefix));
+        // 2. Find existing orders for this specific date
+        const existingOrders = appStore.get().orders.filter(o => o.id.startsWith(prefix));
 
-    if (existingOrders.length === 0) {
-        return prefix + '0001'; // First order of the day
-    }
-
-    // 3. Find the highest sequence number to avoid duplicates
-    let maxSeq = 0;
-    existingOrders.forEach(o => {
-        // ID format: FRK-20251214-0001 -> split gives ["FRK", "20251214", "0001"]
-        const parts = o.id.split('-');
-        if(parts.length === 3) {
-            const seq = parseInt(parts[2]);
-            if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
+        if (existingOrders.length === 0) {
+            return prefix + '0001'; // First order of the day
         }
-    });
 
-    // 4. Return new ID (Max + 1), padded with zeros
-    return prefix + (maxSeq + 1).toString().padStart(4, '0');
-},
+        // 3. Find highest sequence number
+        let maxSeq = 0;
+        existingOrders.forEach(o => {
+            const parts = o.id.split('-');
+            if(parts.length === 3) {
+                const seq = parseInt(parts[2]);
+                if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
+            }
+        });
+
+        // 4. Return formatted ID (e.g., FRK-20251214-0002)
+        return prefix + (maxSeq + 1).toString().padStart(4, '0');
+    },
 
 
             // --- FILTER & TABLE LOGIC ---
@@ -1551,12 +1551,12 @@ generateNextOrderId: function(dateString) {
     },
 
     // 2. Render Rows (Generates the HTML)
+    // --- 3. RENDER TABLE ROWS (Replace existing function) ---
     renderOrderRows: function(orders) {
         const tbody = document.getElementById('order-table-body');
         const noRec = document.getElementById('no-records');
         
-        if(!tbody) return; // Guard clause if view changed
-        
+        if(!tbody) return;
         tbody.innerHTML = '';
         
         if(orders.length === 0) {
@@ -1567,37 +1567,30 @@ generateNextOrderId: function(dateString) {
 
         orders.forEach(o => {
             const c = appStore.get().customers.find(cx => cx.id === o.custId);
-            
-            // Calculations
             const paid = o.paidAmount || 0;
             const balance = o.total - paid;
             
-            // Item Combination Logic (e.g., "200ml×10, 500ml×5")
+            // Format Items: 200ml×10, 500ml×5
             const itemString = o.items.map(i => `<span class="item-pill">${i.sku}×${i.qty}</span>`).join(' ');
             
-            // Display ID (Clean up the internal ID)
-            // ID is already formatted correctly in the database now
-const displayId = o.id;
-            
-            // Delivery Date Logic (Inferred from Status)
-            let delDate = '-';
-            if(o.status === 'Delivered') {
-                // If you don't store exact delivery date, we use order date + 1 day or Today as placeholder
-                // For accurate data, add 'deliveryDate' to your saveOrder logic.
-                delDate = Utils.formatDate(o.date); 
-            }
+            // --- KEY CHANGE: Use the ID directly from database ---
+            // If the ID is old (ORD-...), it shows as is. If new (FRK-...), it shows correctly.
+            const displayId = o.id; 
 
-            // Status Badge
+            // Delivery Date
+            let delDate = '-';
+            if(o.status === 'Delivered') delDate = Utils.formatDate(o.date); 
+
+            // Badge Color
             let badgeClass = 'badge-info';
             if(o.status === 'Delivered') badgeClass = 'badge-success';
             if(o.paymentMode === 'Credit' && balance > 0) badgeClass = 'badge-danger';
 
-            // HTML Generation
             const row = `
                 <tr class="tr-clickable" onclick="Logic.toggleRow('${o.id}')">
                     <td style="font-family:monospace; font-weight:700; color:var(--primary-700)">
                         ${displayId}
-                        <div class="hide-mobile" style="font-size:0.7rem; color:#999; margin-top:2px;">Click to expand</div>
+                        <div class="hide-mobile" style="font-size:0.7rem; color:#999;">Click details</div>
                     </td>
                     <td>${Utils.formatDate(o.date)}</td>
                     <td style="font-weight:600;">${c ? c.company : 'Unknown'}</td>
@@ -1614,23 +1607,9 @@ const displayId = o.id;
                     <td colspan="9">
                         <div class="detail-box">
                             <div class="grid-3">
-                                <div>
-                                    <div class="form-label">Items Breakdown</div>
-                                    <ul style="padding-left:1.5rem; margin-top:0.5rem;">
-                                        ${o.items.map(i => `<li>${i.sku} - ${i.qty} units @ ₹${i.rate}</li>`).join('')}
-                                    </ul>
-                                </div>
-                                <div>
-                                    <div class="form-label">Payment Status</div>
-                                    <div>Method: ${o.paymentMode}</div>
-                                    <div>Paid: ${Utils.formatCurrency(paid)}</div>
-                                    <div>Balance: ${Utils.formatCurrency(balance)}</div>
-                                    ${balance > 0 ? `<button class="btn btn-primary btn-sm" style="margin-top:10px;" onclick="Router.navigate('tracking')">Go to Pay</button>` : ''}
-                                </div>
-                                <div>
-                                    <div class="form-label">Actions</div>
-                                    <button class="btn btn-outline btn-sm" onclick="Logic.editOrder('${o.id}')">Manage / Void</button>
-                                </div>
+                                <div><strong>Breakdown:</strong><br>${o.items.map(i => `${i.sku} (${i.qty})`).join(', ')}</div>
+                                <div><strong>Payment:</strong><br>Paid: ${Utils.formatCurrency(paid)}<br>Due: ${Utils.formatCurrency(balance)}</div>
+                                <div><button class="btn btn-outline btn-sm" onclick="Logic.editOrder('${o.id}')">Manage</button></div>
                             </div>
                         </div>
                     </td>
@@ -1779,63 +1758,58 @@ calcOrderTotal: function() {
         document.getElementById('ord-total-disp').innerText = '₹' + total.toFixed(2);
     },
 
-  submitOrder: function() {
-    // 1. Get Form Values
-    const custId = document.getElementById('ord-cust').value;
-    const date = document.getElementById('ord-date').value;
-    const pay = document.getElementById('ord-pay').value;
+  // --- 2. SUBMIT ORDER (Replace existing function) ---
+    submitOrder: function() {
+        const custId = document.getElementById('ord-cust').value;
+        const date = document.getElementById('ord-date').value;
+        const pay = document.getElementById('ord-pay').value;
 
-    // 2. Validate Items & Calculate Total
-    const items = [];
-    let total = 0;
+        // Validation & Calculation
+        const items = [];
+        let total = 0;
 
-    // Loop through defined SKUs (200ml, 500ml, 1L)
-    for(let sku of SKUS) {
-        const q = parseFloat(document.getElementById(`qty-${sku}`).value) || 0;
-        const r = parseFloat(document.getElementById(`rate-${sku}`).value) || 0;
-        
-        if(q > 0) {
-            const currentStock = appStore.get().inventory[sku];
-            // Inventory Warning
-            if(currentStock < q) {
-                if(!confirm(`Low Inventory for ${sku}. Available: ${currentStock}. Proceed anyway?`)) return;
+        // Loop through SKUS to get items
+        for(let sku of SKUS) {
+            const q = parseFloat(document.getElementById(`qty-${sku}`).value) || 0;
+            const r = parseFloat(document.getElementById(`rate-${sku}`).value) || 0;
+            
+            if(q > 0) {
+                const currentStock = appStore.get().inventory[sku];
+                if(currentStock < q) {
+                    if(!confirm(`Low Inventory for ${sku}. Available: ${currentStock}. Proceed?`)) return;
+                }
+                items.push({ sku, qty: q, rate: r });
+                total += (q * r);
             }
-            items.push({ sku, qty: q, rate: r });
-            total += (q * r);
         }
-    }
 
-    if(items.length === 0) return ToastManager.show("Please add at least one item", "error");
+        if(items.length === 0) return ToastManager.show("Please add at least one item", "error");
 
-    // 3. Credit Limit Check
-    const cust = appStore.get().customers.find(c => c.id === custId);
-    if(pay === 'Credit' && (cust.balance + total > cust.limit)) {
-        if(!confirm(`Credit Limit Exceeded! Current Balance: ${cust.balance}, Limit: ${cust.limit}. Add Order anyway?`)) return;
-    }
+        // Credit Check
+        const cust = appStore.get().customers.find(c => c.id === custId);
+        if(pay === 'Credit' && (cust.balance + total > cust.limit)) {
+            if(!confirm(`Credit Limit Exceeded! Bal: ${cust.balance}. Proceed?`)) return;
+        }
 
-    // 4. Determine Initial Payment (If Credit, paid is 0. Else fully paid.)
-    const initialPaid = (pay === 'Credit') ? 0 : total;
+        const initialPaid = (pay === 'Credit') ? 0 : total;
 
-    // 5. Create Order Object (WITH NEW ID LOGIC)
-    const order = {
-        id: Logic.generateNextOrderId(date), // <--- CHANGED HERE
-        date, 
-        custId, 
-        items, 
-        total, 
-        paymentMode: pay, 
-        status: 'Ordered',     
-        trackingStep: 1,       
-        paidAmount: initialPaid 
-    };
+        // --- KEY CHANGE HERE: Generates FRK-YYYYMMDD-XXXX ---
+        const order = {
+            id: Logic.generateNextOrderId(date), 
+            date, 
+            custId, 
+            items, 
+            total, 
+            paymentMode: pay, 
+            status: 'Ordered',     
+            trackingStep: 1,       
+            paidAmount: initialPaid 
+        };
 
-    // 6. Save and Redirect
-    appStore.addOrder(order);
-    ToastManager.show("Order " + order.id + " Created", "success");
-    
-    // Redirect to Tracking page to see the new order
-    Router.navigate('tracking');
-},
+        appStore.addOrder(order);
+        ToastManager.show("Order Created: " + order.id, "success");
+        Router.navigate('tracking');
+    },
             
             calcOrderTotal: function() {
                 let total = 0;
