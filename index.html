@@ -917,15 +917,26 @@
                 
                 const order = this.data.orders[idx];
                 
-                // Rollback Inventory
-                order.items.forEach(item => {
-                    this.adjustInventory(item.sku, item.qty, 'add');
-                });
+                // 1. Rollback Inventory (Add items back to stock)
+                if(order.items && order.items.length > 0) {
+                    order.items.forEach(item => {
+                        this.adjustInventory(item.sku, item.qty, 'add');
+                    });
+                }
 
-                // Rollback Balance
+                // 2. Rollback Balance 
+                // We strictly subtract the Order Total from the Customer Balance
+                // regardless of whether they paid partially or not, because 
+                // any partial payment remains as a "Credit" (advance) on their account.
                 if(order.paymentMode === 'Credit') {
                     const cust = this.data.customers.find(c => c.id === order.custId);
-                    if(cust) cust.balance -= order.total;
+                    if(cust) {
+                        cust.balance -= order.total;
+                        // Fix javascript floating point errors (e.g., 0.0000001)
+                        cust.balance = Math.round(cust.balance * 100) / 100;
+                        // Prevent negative zero
+                        if(Math.abs(cust.balance) < 0.1) cust.balance = 0;
+                    }
                 }
 
                 this.data.orders.splice(idx, 1);
@@ -2087,10 +2098,19 @@ calcOrderTotal: function() {
 
             voidOrder: function(id) {
                 if(confirm("Are you sure? This will return items to stock and adjust customer balance.")) {
+                    // 1. Perform the Logic in Memory
                     appStore.voidOrder(id);
+                    
+                    // 2. FORCE SAVE TO CLOUD IMMEDIATELY
+                    // This fixes the issue where data might revert if you refresh too soon
+                    DriveAdapter.saveDatabase(true);
+
+                    // 3. Update the UI
                     ModalManager.close();
-                    ToastManager.show("Order Voided", "success");
-                    Router.refresh();
+                    ToastManager.show("Order Canceled & Inventory Restored", "success");
+                    
+                    // 4. Refresh the view to show 0 Outstanding
+                    setTimeout(() => Router.refresh(), 100); 
                 }
             },
 
