@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="google-site-verification" content="Nb1niD3Ze90kAE2IZMWifCqivPVVWyO7ufwTUlBMSdU" />
+   <meta name="google-site-verification" content="Nb1niD3Ze90kAE2IZMWifCqivPVVWyO7ufwTUlBMSdU" />
     <title>Freskey Enterprise Admin | Cloud ERP</title>
     
     <!-- ================================================================================== 
@@ -80,85 +81,101 @@
         /* ================================================================================== 
            2. LAYOUT COMPONENTS 
            ================================================================================== */
+/* ================================================================================== 
+   8. DELIVERY CHALLAN PRINT STYLES (A5)
+   ================================================================================== */
+@media print {
+    /* Hide the actual ERP App */
+    #app-root, #modal-layer, #toast-root, #login-view, .mobile-overlay {
+        display: none !important;
+    }
 
-        /* PRINT STYLES (A5 Challan) */
-        @media print {
-            #app-root, #modal-layer, #toast-root, #login-view, .mobile-overlay {
-                display: none !important;
-            }
+    /* Show only the Challan */
+    #print-area {
+        display: block !important;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 148mm; /* A5 Width */
+        height: 209mm; /* A5 Height (Approx) */
+        background: white;
+        padding: 10mm;
+        box-sizing: border-box;
+        font-family: 'Times New Roman', serif; /* Formal Look */
+        color: #000;
+    }
 
-            #print-area {
-                display: block !important;
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 148mm;
-                height: 209mm;
-                background: white;
-                padding: 10mm;
-                box-sizing: border-box;
-                font-family: 'Times New Roman', serif;
-                color: #000;
-            }
+    /* Force A5 Paper Size */
+    @page {
+        size: A5 portrait;
+        margin: 0;
+    }
+}
 
-            @page {
-                size: A5 portrait;
-                margin: 0;
-            }
-        }
+/* Screen Styles for Challan (Hidden by default) */
+#print-area {
+    display: none;
+}
 
-        #print-area { display: none; }
-        .dc-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 10px; }
-        .dc-title { font-size: 16px; font-weight: bold; text-decoration: underline; text-transform: uppercase; }
-        .dc-flex { display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 10px; }
-        .dc-box { width: 48%; border: 1px solid #000; padding: 5px; border-radius: 4px; }
-        .dc-label { font-weight: bold; font-size: 9px; }
-        .dc-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 10px; }
-        .dc-table th { border: 1px solid #000; padding: 4px; background: #eee; text-align: left; }
-        .dc-table td { border: 1px solid #000; padding: 4px; }
-        .dc-purpose { font-size: 10px; border: 1px solid #000; padding: 5px; margin-bottom: 10px; }
-        .dc-footer { display: flex; justify-content: space-between; margin-top: 30px; font-size: 10px; text-align: center; }
-        .dc-sign-box { border-top: 1px solid #000; width: 30%; padding-top: 5px; }
+/* Challan Specific Utility Classes */
+.dc-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 10px; }
+.dc-title { font-size: 16px; font-weight: bold; text-decoration: underline; text-transform: uppercase; }
+.dc-flex { display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 10px; }
+.dc-box { width: 48%; border: 1px solid #000; padding: 5px; border-radius: 4px; }
+.dc-label { font-weight: bold; font-size: 9px; }
+.dc-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 10px; }
+.dc-table th { border: 1px solid #000; padding: 4px; background: #eee; text-align: left; }
+.dc-table td { border: 1px solid #000; padding: 4px; }
+.dc-purpose { font-size: 10px; border: 1px solid #000; padding: 5px; margin-bottom: 10px; }
+.dc-footer { display: flex; justify-content: space-between; margin-top: 30px; font-size: 10px; text-align: center; }
+.dc-sign-box { border-top: 1px solid #000; width: 30%; padding-top: 5px; }
 
-        /* ORDER HISTORY STYLES */
-        .filter-bar {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr auto;
-            gap: 10px;
-            margin-bottom: 1rem;
-            background: var(--gray-50);
-            padding: 1rem;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--gray-200);
-        }
 
-        .table-compact th { padding: 0.75rem 0.5rem; font-size: 0.7rem; }
-        .table-compact td { padding: 0.75rem 0.5rem; font-size: 0.85rem; vertical-align: middle; }
+        /* ================================================================================== 
+   ORDER HISTORY SPECIFIC STYLES 
+   ================================================================================== */
+.filter-bar {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr auto;
+    gap: 10px;
+    margin-bottom: 1rem;
+    background: var(--gray-50);
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--gray-200);
+}
 
-        .item-pill {
-            background: var(--primary-100);
-            color: var(--primary-800);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            display: inline-block;
-            margin-right: 4px;
-        }
+.table-compact th { padding: 0.75rem 0.5rem; font-size: 0.7rem; }
+.table-compact td { padding: 0.75rem 0.5rem; font-size: 0.85rem; vertical-align: middle; }
 
-        .bal-zero { color: var(--success-500); font-weight: 700; }
-        .bal-due { color: var(--danger-500); font-weight: 700; }
-        .tr-clickable { cursor: pointer; transition: background 0.1s; }
-        .tr-clickable:hover { background: var(--gray-50); }
-        .tr-details { display: none; background: #f8fafc; }
-        .tr-details.active { display: table-row; }
-        .detail-box { padding: 1rem; border-left: 3px solid var(--accent-500); margin: 0.5rem; }
+/* Item Pill Style */
+.item-pill {
+    background: var(--primary-100);
+    color: var(--primary-800);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-block;
+    margin-right: 4px;
+}
 
-        @media (max-width: 768px) {
-            .filter-bar { grid-template-columns: 1fr; }
-            .hide-mobile { display: none; }
-        } 
+/* Balance Colors */
+.bal-zero { color: var(--success-500); font-weight: 700; }
+.bal-due { color: var(--danger-500); font-weight: 700; }
 
+/* Expandable Rows */
+.tr-clickable { cursor: pointer; transition: background 0.1s; }
+.tr-clickable:hover { background: var(--gray-50); }
+.tr-details { display: none; background: #f8fafc; }
+.tr-details.active { display: table-row; }
+.detail-box { padding: 1rem; border-left: 3px solid var(--accent-500); margin: 0.5rem; }
+
+/* Mobile Filter Adjustment */
+@media (max-width: 768px) {
+    .filter-bar { grid-template-columns: 1fr; }
+    .hide-mobile { display: none; }
+} 
         #app-root {
             display: flex;
             height: 100vh;
@@ -197,7 +214,11 @@
             gap: 10px;
         }
 
-        .nav-container { flex: 1; padding: 1.5rem 0; overflow-y: auto; }
+        .nav-container {
+            flex: 1;
+            padding: 1.5rem 0;
+            overflow-y: auto;
+        }
 
         .nav-item {
             display: flex;
@@ -209,24 +230,56 @@
             font-weight: 500;
             border-left: 3px solid transparent;
         }
-        .nav-item:hover { background-color: rgba(255,255,255,0.05); color: var(--white); }
+
+        .nav-item:hover {
+            background-color: rgba(255,255,255,0.05);
+            color: var(--white);
+        }
+
         .nav-item.active {
             background-color: rgba(14, 165, 233, 0.1);
             color: var(--accent-500);
             border-left-color: var(--accent-500);
         }
-        .nav-icon { width: 20px; height: 20px; margin-right: 12px; fill: currentColor; }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            fill: currentColor;
+        }
 
         .user-profile {
             padding: 1rem 1.5rem;
             background-color: rgba(0,0,0,0.2);
             border-top: 1px solid rgba(255,255,255,0.1);
         }
-        .user-email { font-weight: 600; font-size: 0.85rem; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .sync-status { font-size: 0.75rem; display: flex; align-items: center; gap: 6px; color: var(--success-500); }
 
-        /* Main Content */
-        .main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        .user-email {
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sync-status {
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--success-500);
+        }
+
+        /* Main Content Styles */
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
 
         .top-header {
             height: var(--header-height);
@@ -239,11 +292,34 @@
             box-shadow: var(--shadow-sm);
             z-index: 40;
         }
-        .header-title { font-size: 1.25rem; font-weight: 700; color: var(--primary-900); display: flex; align-items: center; gap: 10px; }
-        .header-actions { display: flex; gap: 10px; align-items: center; }
-        .content-area { flex: 1; overflow-y: auto; padding: 1rem; scroll-behavior: smooth; }
 
-        /* UI Components */
+        .header-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-900);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            scroll-behavior: smooth;
+        }
+
+        /* ================================================================================== 
+           3. UI COMPONENTS 
+           ================================================================================== */
+        
+        /* Cards */
         .card {
             background: var(--white);
             border-radius: var(--radius-md);
@@ -252,22 +328,49 @@
             padding: 1.5rem;
             margin-bottom: 1.5rem;
         }
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--gray-100); }
-        .card-title { font-size: 1.1rem; font-weight: 700; color: var(--primary-800); }
 
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--gray-100);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--primary-800);
+        }
+
+        /* Grid Systems */
         .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; }
         .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
 
-        .stat-card { display: flex; flex-direction: column; }
+        /* Stats Card */
+        .stat-card {
+            display: flex;
+            flex-direction: column;
+        }
         .stat-label { font-size: 0.85rem; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
         .stat-value { font-size: 2rem; font-weight: 800; color: var(--primary-900); margin: 0.5rem 0; }
         .stat-trend { font-size: 0.8rem; color: var(--success-500); display: flex; align-items: center; gap: 4px; }
         
+        /* Buttons */
         .btn {
-            display: inline-flex; align-items: center; justify-content: center;
-            padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 600; font-size: 0.9rem;
-            cursor: pointer; transition: all 0.2s; border: 1px solid transparent; gap: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            gap: 8px;
         }
         .btn-sm { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
         .btn-primary { background: var(--primary-900); color: var(--white); }
@@ -279,57 +382,192 @@
         .btn-outline { background: transparent; border-color: var(--gray-300); color: var(--gray-800); }
         .btn-outline:hover { background: var(--gray-100); border-color: var(--gray-400); }
 
-        .table-responsive { overflow-x: auto; border-radius: var(--radius-md); border: 1px solid var(--gray-200); }
+        /* Tables */
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--gray-200);
+        }
         table { width: 100%; border-collapse: collapse; background: var(--white); white-space: nowrap; }
-        th { background: var(--gray-50); padding: 1rem; text-align: left; font-size: 0.75rem; text-transform: uppercase; color: var(--gray-500); font-weight: 700; border-bottom: 1px solid var(--gray-200); }
-        td { padding: 1rem; border-bottom: 1px solid var(--gray-200); color: var(--gray-800); }
+        th {
+            background: var(--gray-50);
+            padding: 1rem;
+            text-align: left;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--gray-500);
+            font-weight: 700;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--gray-200);
+            color: var(--gray-800);
+        }
         tr:last-child td { border-bottom: none; }
         tr:hover td { background-color: var(--gray-50); }
 
-        .badge { display: inline-flex; padding: 0.25rem 0.6rem; border-radius: 99px; font-size: 0.75rem; font-weight: 700; line-height: 1; }
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            padding: 0.25rem 0.6rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            line-height: 1;
+        }
         .badge-success { background: var(--success-bg); color: var(--success-text); }
         .badge-warning { background: var(--warning-bg); color: var(--warning-text); }
         .badge-danger { background: var(--danger-bg); color: var(--danger-text); }
         .badge-info { background: #e0f2fe; color: #075985; }
 
-        /* TRACKING */
-        .track-stepper { display: flex; justify-content: space-between; margin: 1.5rem 0; position: relative; }
-        .track-stepper::before { content: ''; position: absolute; top: 15px; left: 0; width: 100%; height: 2px; background: var(--gray-200); z-index: 1; }
-        .step-item { position: relative; z-index: 2; text-align: center; background: var(--white); padding: 0 10px; }
-        .step-circle { width: 32px; height: 32px; border-radius: 50%; background: var(--gray-200); color: var(--gray-500); display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-weight: bold; border: 2px solid var(--white); }
-        .step-item.active .step-circle { color: white; }
-        .step-item.active.s1 .step-circle { background: var(--warning-500); }
-        .step-item.active.s2 .step-circle { background: var(--accent-500); }
-        .step-item.active.s3 .step-circle { background: var(--success-500); }
-        .pay-progress { height: 8px; background: var(--gray-200); border-radius: 4px; overflow: hidden; margin-top: 5px; }
-        .pay-bar { height: 100%; background: var(--success-500); }
 
+        /* TRACKING STYLES */
+.track-stepper {
+    display: flex;
+    justify-content: space-between;
+    margin: 1.5rem 0;
+    position: relative;
+}
+.track-stepper::before {
+    content: ''; position: absolute; top: 15px; left: 0; width: 100%; height: 2px;
+    background: var(--gray-200); z-index: 1;
+}
+.step-item {
+    position: relative; z-index: 2; text-align: center; background: var(--white); padding: 0 10px;
+}
+.step-circle {
+    width: 32px; height: 32px; border-radius: 50%; background: var(--gray-200); color: var(--gray-500);
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-weight: bold;
+    border: 2px solid var(--white);
+}
+.step-item.active .step-circle { color: white; }
+.step-item.active.s1 .step-circle { background: var(--warning-500); } /* Order Made - Orange */
+.step-item.active.s2 .step-circle { background: var(--accent-500); }  /* Dispatch - Blue */
+.step-item.active.s3 .step-circle { background: var(--success-500); } /* Delivered - Green */
+
+.pay-progress { height: 8px; background: var(--gray-200); border-radius: 4px; overflow: hidden; margin-top: 5px; }
+.pay-bar { height: 100%; background: var(--success-500); }
+
+        /* Forms */
         .form-group { margin-bottom: 1.25rem; }
         .form-label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--primary-800); font-size: 0.9rem; }
-        .form-control { width: 100%; padding: 0.75rem; border: 1px solid var(--gray-300); border-radius: 6px; font-size: 0.95rem; transition: border-color 0.2s; background: var(--white); }
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+            background: var(--white);
+        }
         .form-control:focus { outline: none; border-color: var(--accent-500); box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1); }
         .form-control[readonly] { background: var(--gray-100); cursor: not-allowed; }
 
-        /* Modals & Toasts */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+        /* ================================================================================== 
+           4. MODALS & OVERLAYS 
+           ================================================================================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
         .modal-overlay.active { opacity: 1; pointer-events: all; }
-        .modal-container { background: var(--white); width: 90%; max-width: 650px; max-height: 90vh; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); display: flex; flex-direction: column; transform: translateY(20px); transition: transform 0.3s ease; position: relative; }
+
+        .modal-container {
+            background: var(--white);
+            width: 90%;
+            max-width: 650px;
+            max-height: 90vh;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            flex-direction: column;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+
         .modal-overlay.active .modal-container { transform: translateY(0); }
-        .modal-header { padding: 1.5rem; border-bottom: 1px solid var(--gray-200); display: flex; justify-content: space-between; align-items: center; }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
         .modal-title { font-size: 1.25rem; font-weight: 700; color: var(--primary-900); }
-        .btn-close { background: var(--gray-100); border: none; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--gray-500); transition: all 0.2s; }
+        
+        /* CLOSE BUTTON STYLE */
+        .btn-close {
+            background: var(--gray-100);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--gray-500);
+            transition: all 0.2s;
+        }
         .btn-close:hover { background: var(--danger-bg); color: var(--danger-text); }
+
         .modal-body { padding: 1.5rem; overflow-y: auto; }
         .modal-footer { padding: 1.5rem; border-top: 1px solid var(--gray-200); display: flex; justify-content: flex-end; gap: 1rem; }
 
-        .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 2000; display: flex; flex-direction: column; gap: 12px; }
-        .toast { background: var(--white); padding: 1rem 1.5rem; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); border-left: 4px solid var(--accent-500); display: flex; align-items: center; gap: 12px; min-width: 300px; animation: slideInRight 0.3s ease forwards; }
+        /* ================================================================================== 
+           5. NOTIFICATIONS (TOASTS) 
+           ================================================================================== */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toast {
+            background: var(--white);
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            border-left: 4px solid var(--accent-500);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+            animation: slideInRight 0.3s ease forwards;
+        }
+
         .toast.success { border-left-color: var(--success-500); }
         .toast.error { border-left-color: var(--danger-500); }
-        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
 
+        /* ================================================================================== 
+           6. MOBILE RESPONSIVENESS 
+           ================================================================================== */
         .mobile-toggle { display: none; cursor: pointer; }
         .mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 45; }
+
         @media (max-width: 768px) {
             .sidebar { position: fixed; left: -100%; height: 100%; box-shadow: var(--shadow-lg); }
             .sidebar.open { left: 0; }
@@ -340,8 +578,29 @@
             .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
         }
 
-        #login-view { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--primary-900); display: flex; align-items: center; justify-content: center; z-index: 9999; }
-        .login-card { background: var(--white); padding: 3rem; border-radius: var(--radius-lg); text-align: center; width: 90%; max-width: 420px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+        /* ================================================================================== 
+           7. LOGIN SCREEN 
+           ================================================================================== */
+        #login-view {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--primary-900);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .login-card {
+            background: var(--white);
+            padding: 3rem;
+            border-radius: var(--radius-lg);
+            text-align: center;
+            width: 90%;
+            max-width: 420px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
     </style>
 </head>
 <body>
@@ -350,16 +609,28 @@
     <div id="login-view">
         <div class="login-card">
             <h1 style="font-size: 2.5rem; font-weight: 800; color: var(--primary-900); margin-bottom: 0.5rem;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="228" height="90" viewBox="0 0 847 334" style="width: 228px !important; height: 90px !important;">
-                    <g>
-                    <path d="M 88.40 244.90 C86.59,242.89 86.48,240.03 86.00,184.15 C85.72,151.89 85.14,124.94 84.69,124.25 C84.25,123.56 82.83,123.00 81.55,123.00 C80.27,123.00 78.16,122.14 76.86,121.08 C74.59,119.24 74.51,118.69 74.65,106.55 C74.75,98.85 75.25,93.41 75.94,92.57 C76.56,91.82 78.59,90.93 80.44,90.58 C82.29,90.23 84.24,89.40 84.77,88.72 C85.31,88.05 85.97,83.45 86.24,78.50 C87.34,58.59 98.25,40.28 115.00,30.25 C116.93,29.09 122.10,26.89 126.50,25.34 L 134.50 22.53 L 173.29 22.40 C210.23,22.28 212.20,22.37 214.54,24.21 C216.94,26.10 217.00,26.48 217.00,39.92 C217.00,52.64 216.84,53.83 214.90,55.60 C212.93,57.38 210.38,57.53 175.65,58.00 C135.06,58.55 135.50,58.48 128.75,64.80 C125.19,68.14 122.00,76.75 122.00,83.06 C122.00,87.55 122.27,88.15 124.68,89.07 C126.29,89.68 135.65,89.97 148.02,89.79 C164.39,89.56 169.02,89.78 170.34,90.87 C171.73,92.03 172.00,94.34 171.98,105.37 C171.98,112.59 171.63,119.03 171.21,119.69 C169.52,122.34 164.27,123.00 144.63,123.00 C130.23,123.00 124.05,123.35 123.20,124.20 C122.29,125.11 122.00,139.70 122.00,183.75 L 122.00 242.09 L 119.55 244.55 C117.18,246.91 116.58,247.00 103.70,247.00 C91.36,247.00 90.16,246.84 88.40,244.90 ZM 473.32 198.34 C472.66,198.20 472.08,198.12 471.59,197.88 C468.49,196.35 468.56,188.40 468.25,118.09 L 467.91 41.39 L 470.03 38.69 C472.14,36.01 472.19,36.00 485.51,36.00 C495.11,36.00 499.11,36.35 499.69,37.25 C500.14,37.94 500.73,56.69 501.00,78.92 C501.32,104.58 501.87,119.44 502.50,119.62 C503.05,119.77 508.90,112.88 515.50,104.29 C522.10,95.71 528.93,87.07 530.68,85.09 L 533.87 81.50 L 547.18 80.93 C554.51,80.61 561.74,80.77 563.26,81.28 C566.44,82.34 567.77,86.01 566.22,89.42 C565.65,90.66 557.44,101.32 547.96,113.09 C529.63,135.88 528.09,138.17 529.72,140.22 C530.27,140.92 535.60,147.80 541.56,155.50 C547.52,163.20 555.91,173.91 560.20,179.30 C566.51,187.23 568.00,189.76 568.00,192.53 C568.00,197.82 564.74,199.00 550.10,199.00 C543.09,199.00 537.03,198.51 535.54,197.83 C534.13,197.19 526.64,188.87 518.89,179.33 C511.15,169.80 504.42,162.00 503.94,162.00 C501.78,162.00 501.00,166.85 501.00,180.28 C501.00,190.11 501.07,194.62 498.86,196.72 C496.92,198.57 493.21,198.55 486.15,198.66 C480.29,198.74 474.52,198.60 473.32,198.34 ZM 308.00 200.89 C293.78,199.41 282.25,194.09 272.62,184.56 C256.69,168.80 250.68,140.55 258.40,117.67 C265.88,95.50 284.47,80.98 307.50,79.33 C330.56,77.67 350.09,87.37 358.19,104.50 C366.59,122.26 359.22,141.39 340.63,150.09 C333.86,153.25 320.30,156.53 310.00,157.47 C295.42,158.82 293.00,159.18 293.00,160.04 C293.00,160.53 294.38,162.50 296.06,164.42 C300.18,169.11 308.11,172.00 316.88,172.00 C325.33,172.00 331.56,170.17 339.19,165.46 C343.43,162.85 345.79,161.98 347.50,162.41 C348.81,162.74 352.38,165.96 355.44,169.56 C362.79,178.23 362.80,180.16 355.50,186.83 C343.95,197.38 325.83,202.74 308.00,200.89 ZM 602.76 199.44 C592.14,196.87 578.61,188.29 572.47,180.26 C567.80,174.14 562.41,163.00 560.52,155.54 C558.58,147.92 558.58,131.41 560.52,123.19 C565.02,104.07 578.05,89.14 596.50,81.96 C601.61,79.97 604.35,79.62 615.00,79.58 C628.90,79.53 634.34,80.76 643.53,86.02 C651.51,90.58 657.68,97.10 661.26,104.74 C663.94,110.47 664.39,112.57 664.40,119.46 C664.42,125.55 663.91,128.64 662.30,132.18 C659.65,138.01 652.98,145.34 647.27,148.69 C638.51,153.82 619.72,157.99 605.31,158.00 C600.80,158.00 596.86,158.42 596.54,158.94 C595.64,160.40 601.85,166.88 606.41,169.24 C609.34,170.76 612.95,171.48 619.14,171.80 C629.18,172.31 635.39,170.68 643.77,165.35 C646.67,163.51 649.80,162.00 650.73,162.00 C652.69,162.00 662.39,171.91 664.59,176.17 C666.62,180.09 665.01,183.27 658.50,188.23 C647.24,196.81 634.00,201.00 618.50,200.90 C613.00,200.86 605.92,200.21 602.76,199.44 ZM 676.00 254.34 C671.44,252.51 671.00,251.16 671.00,238.88 C671.00,231.85 670.83,228.67 672.32,226.82 C673.72,225.08 676.59,224.51 682.46,223.01 C691.17,220.78 694.67,219.10 699.55,214.82 C703.20,211.62 709.00,201.48 709.00,198.32 C709.00,197.36 705.68,188.69 701.62,179.04 C697.57,169.39 691.22,154.07 687.52,145.00 C683.81,135.93 677.16,119.75 672.73,109.06 C664.75,89.83 663.52,85.08 665.88,82.72 C666.69,81.90 672.00,81.39 681.92,81.18 C696.66,80.86 696.76,80.87 698.69,83.33 C699.75,84.68 704.83,97.83 709.96,112.55 C721.74,146.30 724.53,153.56 725.62,153.25 C726.11,153.11 726.52,152.66 726.54,152.25 C726.59,151.43 728.70,144.66 729.90,141.50 C730.99,138.61 736.00,123.15 742.47,102.70 C745.65,92.65 748.96,84.04 750.05,82.95 C751.79,81.21 753.46,81.00 765.31,81.00 C784.75,81.00 784.87,81.19 777.74,101.50 C771.43,119.48 756.45,161.16 746.83,187.50 C732.07,227.91 725.64,237.35 706.35,246.90 C694.97,252.53 680.41,256.10 676.00,254.34 ZM 396.00 199.57 C387.60,197.81 376.60,193.37 372.91,190.27 C370.90,188.58 370.00,186.90 370.00,184.85 C370.00,180.48 376.30,167.50 379.42,165.46 C381.98,163.78 382.25,163.82 388.78,166.80 C409.92,176.45 429.54,174.27 426.61,162.59 C425.71,158.98 422.44,157.17 411.78,154.38 C385.83,147.58 376.97,141.45 372.45,127.16 C369.97,119.32 370.80,107.14 374.27,100.50 C381.70,86.30 394.73,79.78 415.64,79.80 C431.17,79.83 448.58,85.37 452.66,91.60 C454.25,94.04 454.25,94.49 452.56,99.46 C451.57,102.36 449.47,106.81 447.88,109.36 C445.47,113.23 444.49,114.00 441.95,114.00 C440.27,114.00 437.65,113.35 436.13,112.57 C431.79,110.32 417.26,107.72 411.93,108.23 C403.40,109.05 399.95,113.29 403.06,119.11 C404.36,121.55 406.57,122.44 420.32,126.09 C446.50,133.05 458.00,143.98 458.00,161.93 C458.00,178.28 448.20,191.95 432.09,198.11 C424.93,200.85 405.75,201.62 396.00,199.57 ZM 188.00 198.31 C184.02,196.88 184.00,196.55 184.00,139.43 C184.00,89.32 184.15,84.12 185.65,82.87 C186.79,81.93 191.04,81.39 199.21,81.14 C213.12,80.73 215.00,81.56 215.00,88.15 C215.00,90.27 215.40,92.00 215.89,92.00 C216.38,92.00 218.95,90.21 221.60,88.02 C228.27,82.51 236.24,80.00 247.08,80.00 C261.22,80.00 262.80,82.81 257.03,97.76 C252.43,109.70 251.50,110.60 242.78,111.44 C234.09,112.29 228.63,114.55 224.29,119.13 C218.08,125.68 217.68,128.12 217.06,163.34 L 216.50 195.18 L 214.14 197.09 C212.12,198.73 210.19,198.99 200.64,198.92 C194.51,198.88 188.82,198.60 188.00,198.31 ZM 571.27 321.54 C566.71,319.53 564.01,314.63 564.00,308.38 C564.00,297.85 572.46,286.07 590.45,271.56 C595.15,267.77 595.44,265.18 590.80,268.43 C587.87,270.48 583.53,270.43 579.93,268.30 C577.17,266.67 576.97,266.68 574.78,268.73 C569.98,273.22 563.75,274.16 559.72,271.00 C555.06,267.33 555.19,259.64 560.23,242.50 C563.32,231.97 564.54,230.00 567.96,230.00 C571.69,230.00 572.56,232.53 570.57,237.64 C568.72,242.43 565.00,257.17 565.00,259.73 C565.00,260.77 565.63,262.48 566.40,263.53 C567.63,265.22 568.09,265.29 570.27,264.12 C573.96,262.15 576.47,256.82 579.93,243.65 C581.64,237.13 583.50,230.94 584.05,229.90 C585.31,227.56 590.79,227.29 591.65,229.52 C591.97,230.35 590.88,235.87 589.22,241.77 C584.99,256.87 584.82,257.80 586.01,260.02 C587.57,262.93 589.35,262.46 593.26,258.14 C596.66,254.37 598.11,250.80 602.94,234.26 C604.70,228.23 605.46,226.92 607.52,226.40 C608.88,226.06 610.72,226.06 611.61,226.40 C613.56,227.15 613.39,228.35 609.14,244.24 C604.62,261.12 604.89,262.58 611.40,256.82 C614.51,254.07 615.00,253.03 615.00,249.22 C615.00,237.74 621.18,227.58 630.73,223.36 C636.71,220.71 638.79,220.49 642.40,222.14 C644.71,223.19 648.00,228.34 648.00,230.90 C648.00,232.86 649.91,232.07 653.88,228.49 C657.96,224.80 661.00,224.62 661.00,228.07 C661.00,230.83 655.24,236.88 651.77,237.78 C649.04,238.49 648.58,239.21 647.09,245.16 C645.07,253.17 641.31,259.11 636.04,262.59 C631.30,265.73 626.61,266.03 621.08,263.54 C616.38,261.42 615.64,261.65 607.40,267.88 L 602.50 271.58 L 599.32 283.95 C593.64,306.12 589.40,315.40 583.11,319.52 C578.23,322.71 575.12,323.24 571.27,321.54 ZM 507.06 309.58 C505.24,307.38 506.26,302.74 521.68,243.23 C523.97,234.39 524.67,232.87 526.67,232.37 C529.93,231.55 532.00,232.58 532.00,235.02 C532.00,236.97 532.27,236.91 536.53,233.98 C542.69,229.74 546.49,229.75 550.29,233.99 C553.12,237.17 553.22,237.60 552.80,244.98 C551.76,262.89 539.44,277.00 524.84,277.00 C522.75,277.00 521.91,277.57 521.53,279.25 C518.06,294.72 514.83,307.44 513.98,309.03 C512.75,311.33 508.78,311.64 507.06,309.58 ZM 613.14 130.05 C628.61,128.43 635.00,125.21 635.00,119.06 C635.00,108.94 617.58,104.82 604.04,111.73 C599.64,113.97 597.94,115.58 595.77,119.53 C594.27,122.26 593.04,125.96 593.02,127.75 L 593.00 131.00 L 598.75 130.98 C601.91,130.97 608.39,130.56 613.14,130.05 ZM 315.99 128.88 C323.59,127.68 329.33,124.76 330.93,121.26 C332.27,118.32 330.17,113.96 325.87,110.75 C322.61,108.32 312.18,107.32 306.40,108.89 C298.26,111.09 291.75,117.49 290.41,124.60 C289.25,130.79 289.86,131.15 300.23,130.48 C305.33,130.16 312.42,129.44 315.99,128.88 ZM 744.03 247.78 C740.56,245.94 737.00,240.28 737.01,236.60 C737.02,230.87 741.86,225.61 748.05,224.61 C760.14,222.65 767.74,236.72 759.20,245.26 C755.69,248.77 748.24,250.01 744.03,247.78 ZM 532.14 268.00 C533.90,268.00 539.17,261.59 541.60,256.50 C543.90,251.66 544.75,244.13 543.39,240.58 C541.39,235.35 532.33,243.93 527.99,255.17 C526.35,259.44 525.00,263.83 525.00,264.92 C525.00,267.14 527.80,269.20 529.83,268.47 C530.56,268.21 531.60,268.00 532.14,268.00 ZM 580.84 310.06 C584.69,304.75 592.19,282.86 590.68,281.35 C589.73,280.40 578.10,293.05 574.93,298.50 C571.68,304.08 571.23,308.45 573.56,311.78 C575.79,314.97 577.60,314.54 580.84,310.06 ZM 632.47 254.85 C635.11,252.77 639.00,245.35 639.00,242.39 C639.00,241.60 637.93,240.55 636.63,240.05 C635.33,239.55 633.27,237.89 632.06,236.35 L 629.85 233.54 L 628.03 235.96 C624.08,241.20 622.81,250.85 625.56,254.78 C627.50,257.56 629.00,257.57 632.47,254.85 ZM 754.47 245.45 C758.85,243.37 761.75,238.01 760.46,234.39 C759.46,231.61 756.54,229.12 755.49,230.17 C755.16,230.50 754.84,233.09 754.77,235.92 L 754.66 241.06 L 751.62 240.88 C752.24,240.63 752.61,240.14 752.36,239.50 C752.05,238.68 750.93,238.00 749.89,238.00 C747.99,238.00 747.42,239.09 748.67,240.33 C748.88,240.55 749.13,240.71 749.40,240.83 C747.97,240.87 746.68,241.08 746.20,241.38 C745.32,241.92 745.00,240.52 745.00,236.06 C745.00,233.28 744.70,230.97 744.28,230.24 C745.26,230.04 746.89,230.02 749.51,230.11 C753.09,230.22 756.34,230.00 756.73,229.60 C757.99,228.34 754.62,227.03 750.06,227.02 C745.47,227.00 741.00,229.82 741.00,232.73 C741.00,233.26 741.21,233.59 741.53,233.63 C741.52,233.63 741.51,233.63 741.50,233.64 C737.98,234.99 740.86,242.77 745.89,245.50 C749.27,247.34 750.51,247.33 754.47,245.45 ZM 567.57 222.43 C564.28,219.13 567.09,214.69 572.16,215.18 C574.98,215.45 575.55,215.93 575.82,218.31 C576.00,219.86 575.61,221.77 574.95,222.56 C573.37,224.46 569.54,224.39 567.57,222.43 ZM 641.25 231.52 C640.74,228.88 639.48,228.41 637.05,229.95 C635.86,230.70 636.03,231.21 638.05,232.84 C641.01,235.23 641.89,234.87 641.25,231.52 ZM 748.00 233.50 C748.00,234.33 748.89,235.00 750.00,235.00 C751.11,235.00 752.00,234.33 752.00,233.50 C752.00,232.67 751.11,232.00 750.00,232.00 C748.89,232.00 748.00,232.67 748.00,233.50 ZM 743.07 230.98 C743.02,231.15 743.00,231.34 743.00,231.53 C743.00,231.75 742.95,231.98 742.87,232.20 C742.95,231.94 743.00,231.66 743.00,231.39 C743.00,231.24 743.02,231.10 743.07,230.98 Z" fill="rgba(30,75,56,1)" style="width: 200px !important; height: 200px !important;"></path>
-                    <path d="M 748.67 240.33 C747.42,239.09 747.99,238.00 749.89,238.00 C750.93,238.00 752.05,238.68 752.36,239.50 C752.95,241.03 750.02,241.69 748.67,240.33 ZM 748.00 233.50 C748.00,232.67 748.89,232.00 750.00,232.00 C751.11,232.00 752.00,232.67 752.00,233.50 C752.00,234.33 751.11,235.00 750.00,235.00 C748.89,235.00 748.00,234.33 748.00,233.50 ZM 741.00 232.73 C741.00,229.82 745.47,227.00 750.06,227.02 C754.62,227.03 757.99,228.34 756.73,229.60 C756.34,230.00 753.09,230.22 749.51,230.11 C744.31,229.94 743.00,230.19 743.00,231.39 C743.00,232.21 742.55,233.16 742.00,233.50 C741.45,233.84 741.00,233.49 741.00,232.73 Z" fill="rgba(155,186,171,1)"></path>
-                    </g>
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="847" height="334" viewBox="0 0 847 334" style="
+    width: 228px !important;
+    height: 90px !important;
+">
+<g>
+<path d="M 88.40 244.90 C86.59,242.89 86.48,240.03 86.00,184.15 C85.72,151.89 85.14,124.94 84.69,124.25 C84.25,123.56 82.83,123.00 81.55,123.00 C80.27,123.00 78.16,122.14 76.86,121.08 C74.59,119.24 74.51,118.69 74.65,106.55 C74.75,98.85 75.25,93.41 75.94,92.57 C76.56,91.82 78.59,90.93 80.44,90.58 C82.29,90.23 84.24,89.40 84.77,88.72 C85.31,88.05 85.97,83.45 86.24,78.50 C87.34,58.59 98.25,40.28 115.00,30.25 C116.93,29.09 122.10,26.89 126.50,25.34 L 134.50 22.53 L 173.29 22.40 C210.23,22.28 212.20,22.37 214.54,24.21 C216.94,26.10 217.00,26.48 217.00,39.92 C217.00,52.64 216.84,53.83 214.90,55.60 C212.93,57.38 210.38,57.53 175.65,58.00 C135.06,58.55 135.50,58.48 128.75,64.80 C125.19,68.14 122.00,76.75 122.00,83.06 C122.00,87.55 122.27,88.15 124.68,89.07 C126.29,89.68 135.65,89.97 148.02,89.79 C164.39,89.56 169.02,89.78 170.34,90.87 C171.73,92.03 172.00,94.34 171.98,105.37 C171.98,112.59 171.63,119.03 171.21,119.69 C169.52,122.34 164.27,123.00 144.63,123.00 C130.23,123.00 124.05,123.35 123.20,124.20 C122.29,125.11 122.00,139.70 122.00,183.75 L 122.00 242.09 L 119.55 244.55 C117.18,246.91 116.58,247.00 103.70,247.00 C91.36,247.00 90.16,246.84 88.40,244.90 ZM 473.32 198.34 C472.66,198.20 472.08,198.12 471.59,197.88 C468.49,196.35 468.56,188.40 468.25,118.09 L 467.91 41.39 L 470.03 38.69 C472.14,36.01 472.19,36.00 485.51,36.00 C495.11,36.00 499.11,36.35 499.69,37.25 C500.14,37.94 500.73,56.69 501.00,78.92 C501.32,104.58 501.87,119.44 502.50,119.62 C503.05,119.77 508.90,112.88 515.50,104.29 C522.10,95.71 528.93,87.07 530.68,85.09 L 533.87 81.50 L 547.18 80.93 C554.51,80.61 561.74,80.77 563.26,81.28 C566.44,82.34 567.77,86.01 566.22,89.42 C565.65,90.66 557.44,101.32 547.96,113.09 C529.63,135.88 528.09,138.17 529.72,140.22 C530.27,140.92 535.60,147.80 541.56,155.50 C547.52,163.20 555.91,173.91 560.20,179.30 C566.51,187.23 568.00,189.76 568.00,192.53 C568.00,197.82 564.74,199.00 550.10,199.00 C543.09,199.00 537.03,198.51 535.54,197.83 C534.13,197.19 526.64,188.87 518.89,179.33 C511.15,169.80 504.42,162.00 503.94,162.00 C501.78,162.00 501.00,166.85 501.00,180.28 C501.00,190.11 501.07,194.62 498.86,196.72 C496.92,198.57 493.21,198.55 486.15,198.66 C480.29,198.74 474.52,198.60 473.32,198.34 ZM 308.00 200.89 C293.78,199.41 282.25,194.09 272.62,184.56 C256.69,168.80 250.68,140.55 258.40,117.67 C265.88,95.50 284.47,80.98 307.50,79.33 C330.56,77.67 350.09,87.37 358.19,104.50 C366.59,122.26 359.22,141.39 340.63,150.09 C333.86,153.25 320.30,156.53 310.00,157.47 C295.42,158.82 293.00,159.18 293.00,160.04 C293.00,160.53 294.38,162.50 296.06,164.42 C300.18,169.11 308.11,172.00 316.88,172.00 C325.33,172.00 331.56,170.17 339.19,165.46 C343.43,162.85 345.79,161.98 347.50,162.41 C348.81,162.74 352.38,165.96 355.44,169.56 C362.79,178.23 362.80,180.16 355.50,186.83 C343.95,197.38 325.83,202.74 308.00,200.89 ZM 602.76 199.44 C592.14,196.87 578.61,188.29 572.47,180.26 C567.80,174.14 562.41,163.00 560.52,155.54 C558.58,147.92 558.58,131.41 560.52,123.19 C565.02,104.07 578.05,89.14 596.50,81.96 C601.61,79.97 604.35,79.62 615.00,79.58 C628.90,79.53 634.34,80.76 643.53,86.02 C651.51,90.58 657.68,97.10 661.26,104.74 C663.94,110.47 664.39,112.57 664.40,119.46 C664.42,125.55 663.91,128.64 662.30,132.18 C659.65,138.01 652.98,145.34 647.27,148.69 C638.51,153.82 619.72,157.99 605.31,158.00 C600.80,158.00 596.86,158.42 596.54,158.94 C595.64,160.40 601.85,166.88 606.41,169.24 C609.34,170.76 612.95,171.48 619.14,171.80 C629.18,172.31 635.39,170.68 643.77,165.35 C646.67,163.51 649.80,162.00 650.73,162.00 C652.69,162.00 662.39,171.91 664.59,176.17 C666.62,180.09 665.01,183.27 658.50,188.23 C647.24,196.81 634.00,201.00 618.50,200.90 C613.00,200.86 605.92,200.21 602.76,199.44 ZM 676.00 254.34 C671.44,252.51 671.00,251.16 671.00,238.88 C671.00,231.85 670.83,228.67 672.32,226.82 C673.72,225.08 676.59,224.51 682.46,223.01 C691.17,220.78 694.67,219.10 699.55,214.82 C703.20,211.62 709.00,201.48 709.00,198.32 C709.00,197.36 705.68,188.69 701.62,179.04 C697.57,169.39 691.22,154.07 687.52,145.00 C683.81,135.93 677.16,119.75 672.73,109.06 C664.75,89.83 663.52,85.08 665.88,82.72 C666.69,81.90 672.00,81.39 681.92,81.18 C696.66,80.86 696.76,80.87 698.69,83.33 C699.75,84.68 704.83,97.83 709.96,112.55 C721.74,146.30 724.53,153.56 725.62,153.25 C726.11,153.11 726.52,152.66 726.54,152.25 C726.59,151.43 728.70,144.66 729.90,141.50 C730.99,138.61 736.00,123.15 742.47,102.70 C745.65,92.65 748.96,84.04 750.05,82.95 C751.79,81.21 753.46,81.00 765.31,81.00 C784.75,81.00 784.87,81.19 777.74,101.50 C771.43,119.48 756.45,161.16 746.83,187.50 C732.07,227.91 725.64,237.35 706.35,246.90 C694.97,252.53 680.41,256.10 676.00,254.34 ZM 396.00 199.57 C387.60,197.81 376.60,193.37 372.91,190.27 C370.90,188.58 370.00,186.90 370.00,184.85 C370.00,180.48 376.30,167.50 379.42,165.46 C381.98,163.78 382.25,163.82 388.78,166.80 C409.92,176.45 429.54,174.27 426.61,162.59 C425.71,158.98 422.44,157.17 411.78,154.38 C385.83,147.58 376.97,141.45 372.45,127.16 C369.97,119.32 370.80,107.14 374.27,100.50 C381.70,86.30 394.73,79.78 415.64,79.80 C431.17,79.83 448.58,85.37 452.66,91.60 C454.25,94.04 454.25,94.49 452.56,99.46 C451.57,102.36 449.47,106.81 447.88,109.36 C445.47,113.23 444.49,114.00 441.95,114.00 C440.27,114.00 437.65,113.35 436.13,112.57 C431.79,110.32 417.26,107.72 411.93,108.23 C403.40,109.05 399.95,113.29 403.06,119.11 C404.36,121.55 406.57,122.44 420.32,126.09 C446.50,133.05 458.00,143.98 458.00,161.93 C458.00,178.28 448.20,191.95 432.09,198.11 C424.93,200.85 405.75,201.62 396.00,199.57 ZM 188.00 198.31 C184.02,196.88 184.00,196.55 184.00,139.43 C184.00,89.32 184.15,84.12 185.65,82.87 C186.79,81.93 191.04,81.39 199.21,81.14 C213.12,80.73 215.00,81.56 215.00,88.15 C215.00,90.27 215.40,92.00 215.89,92.00 C216.38,92.00 218.95,90.21 221.60,88.02 C228.27,82.51 236.24,80.00 247.08,80.00 C261.22,80.00 262.80,82.81 257.03,97.76 C252.43,109.70 251.50,110.60 242.78,111.44 C234.09,112.29 228.63,114.55 224.29,119.13 C218.08,125.68 217.68,128.12 217.06,163.34 L 216.50 195.18 L 214.14 197.09 C212.12,198.73 210.19,198.99 200.64,198.92 C194.51,198.88 188.82,198.60 188.00,198.31 ZM 571.27 321.54 C566.71,319.53 564.01,314.63 564.00,308.38 C564.00,297.85 572.46,286.07 590.45,271.56 C595.15,267.77 595.44,265.18 590.80,268.43 C587.87,270.48 583.53,270.43 579.93,268.30 C577.17,266.67 576.97,266.68 574.78,268.73 C569.98,273.22 563.75,274.16 559.72,271.00 C555.06,267.33 555.19,259.64 560.23,242.50 C563.32,231.97 564.54,230.00 567.96,230.00 C571.69,230.00 572.56,232.53 570.57,237.64 C568.72,242.43 565.00,257.17 565.00,259.73 C565.00,260.77 565.63,262.48 566.40,263.53 C567.63,265.22 568.09,265.29 570.27,264.12 C573.96,262.15 576.47,256.82 579.93,243.65 C581.64,237.13 583.50,230.94 584.05,229.90 C585.31,227.56 590.79,227.29 591.65,229.52 C591.97,230.35 590.88,235.87 589.22,241.77 C584.99,256.87 584.82,257.80 586.01,260.02 C587.57,262.93 589.35,262.46 593.26,258.14 C596.66,254.37 598.11,250.80 602.94,234.26 C604.70,228.23 605.46,226.92 607.52,226.40 C608.88,226.06 610.72,226.06 611.61,226.40 C613.56,227.15 613.39,228.35 609.14,244.24 C604.62,261.12 604.89,262.58 611.40,256.82 C614.51,254.07 615.00,253.03 615.00,249.22 C615.00,237.74 621.18,227.58 630.73,223.36 C636.71,220.71 638.79,220.49 642.40,222.14 C644.71,223.19 648.00,228.34 648.00,230.90 C648.00,232.86 649.91,232.07 653.88,228.49 C657.96,224.80 661.00,224.62 661.00,228.07 C661.00,230.83 655.24,236.88 651.77,237.78 C649.04,238.49 648.58,239.21 647.09,245.16 C645.07,253.17 641.31,259.11 636.04,262.59 C631.30,265.73 626.61,266.03 621.08,263.54 C616.38,261.42 615.64,261.65 607.40,267.88 L 602.50 271.58 L 599.32 283.95 C593.64,306.12 589.40,315.40 583.11,319.52 C578.23,322.71 575.12,323.24 571.27,321.54 ZM 507.06 309.58 C505.24,307.38 506.26,302.74 521.68,243.23 C523.97,234.39 524.67,232.87 526.67,232.37 C529.93,231.55 532.00,232.58 532.00,235.02 C532.00,236.97 532.27,236.91 536.53,233.98 C542.69,229.74 546.49,229.75 550.29,233.99 C553.12,237.17 553.22,237.60 552.80,244.98 C551.76,262.89 539.44,277.00 524.84,277.00 C522.75,277.00 521.91,277.57 521.53,279.25 C518.06,294.72 514.83,307.44 513.98,309.03 C512.75,311.33 508.78,311.64 507.06,309.58 ZM 613.14 130.05 C628.61,128.43 635.00,125.21 635.00,119.06 C635.00,108.94 617.58,104.82 604.04,111.73 C599.64,113.97 597.94,115.58 595.77,119.53 C594.27,122.26 593.04,125.96 593.02,127.75 L 593.00 131.00 L 598.75 130.98 C601.91,130.97 608.39,130.56 613.14,130.05 ZM 315.99 128.88 C323.59,127.68 329.33,124.76 330.93,121.26 C332.27,118.32 330.17,113.96 325.87,110.75 C322.61,108.32 312.18,107.32 306.40,108.89 C298.26,111.09 291.75,117.49 290.41,124.60 C289.25,130.79 289.86,131.15 300.23,130.48 C305.33,130.16 312.42,129.44 315.99,128.88 ZM 744.03 247.78 C740.56,245.94 737.00,240.28 737.01,236.60 C737.02,230.87 741.86,225.61 748.05,224.61 C760.14,222.65 767.74,236.72 759.20,245.26 C755.69,248.77 748.24,250.01 744.03,247.78 ZM 532.14 268.00 C533.90,268.00 539.17,261.59 541.60,256.50 C543.90,251.66 544.75,244.13 543.39,240.58 C541.39,235.35 532.33,243.93 527.99,255.17 C526.35,259.44 525.00,263.83 525.00,264.92 C525.00,267.14 527.80,269.20 529.83,268.47 C530.56,268.21 531.60,268.00 532.14,268.00 ZM 580.84 310.06 C584.69,304.75 592.19,282.86 590.68,281.35 C589.73,280.40 578.10,293.05 574.93,298.50 C571.68,304.08 571.23,308.45 573.56,311.78 C575.79,314.97 577.60,314.54 580.84,310.06 ZM 632.47 254.85 C635.11,252.77 639.00,245.35 639.00,242.39 C639.00,241.60 637.93,240.55 636.63,240.05 C635.33,239.55 633.27,237.89 632.06,236.35 L 629.85 233.54 L 628.03 235.96 C624.08,241.20 622.81,250.85 625.56,254.78 C627.50,257.56 629.00,257.57 632.47,254.85 ZM 754.47 245.45 C758.85,243.37 761.75,238.01 760.46,234.39 C759.46,231.61 756.54,229.12 755.49,230.17 C755.16,230.50 754.84,233.09 754.77,235.92 L 754.66 241.06 L 751.62 240.88 C752.24,240.63 752.61,240.14 752.36,239.50 C752.05,238.68 750.93,238.00 749.89,238.00 C747.99,238.00 747.42,239.09 748.67,240.33 C748.88,240.55 749.13,240.71 749.40,240.83 C747.97,240.87 746.68,241.08 746.20,241.38 C745.32,241.92 745.00,240.52 745.00,236.06 C745.00,233.28 744.70,230.97 744.28,230.24 C745.26,230.04 746.89,230.02 749.51,230.11 C753.09,230.22 756.34,230.00 756.73,229.60 C757.99,228.34 754.62,227.03 750.06,227.02 C745.47,227.00 741.00,229.82 741.00,232.73 C741.00,233.26 741.21,233.59 741.53,233.63 C741.52,233.63 741.51,233.63 741.50,233.64 C737.98,234.99 740.86,242.77 745.89,245.50 C749.27,247.34 750.51,247.33 754.47,245.45 ZM 567.57 222.43 C564.28,219.13 567.09,214.69 572.16,215.18 C574.98,215.45 575.55,215.93 575.82,218.31 C576.00,219.86 575.61,221.77 574.95,222.56 C573.37,224.46 569.54,224.39 567.57,222.43 ZM 641.25 231.52 C640.74,228.88 639.48,228.41 637.05,229.95 C635.86,230.70 636.03,231.21 638.05,232.84 C641.01,235.23 641.89,234.87 641.25,231.52 ZM 748.00 233.50 C748.00,234.33 748.89,235.00 750.00,235.00 C751.11,235.00 752.00,234.33 752.00,233.50 C752.00,232.67 751.11,232.00 750.00,232.00 C748.89,232.00 748.00,232.67 748.00,233.50 ZM 743.07 230.98 C743.02,231.15 743.00,231.34 743.00,231.53 C743.00,231.75 742.95,231.98 742.87,232.20 C742.95,231.94 743.00,231.66 743.00,231.39 C743.00,231.24 743.02,231.10 743.07,230.98 Z" fill="rgba(30,75,56,1)" style="
+    width: 200px !important;
+    height: 200px !important;
+"></path>
+<path d="M 748.67 240.33 C747.42,239.09 747.99,238.00 749.89,238.00 C750.93,238.00 752.05,238.68 752.36,239.50 C752.95,241.03 750.02,241.69 748.67,240.33 ZM 748.00 233.50 C748.00,232.67 748.89,232.00 750.00,232.00 C751.11,232.00 752.00,232.67 752.00,233.50 C752.00,234.33 751.11,235.00 750.00,235.00 C748.89,235.00 748.00,234.33 748.00,233.50 ZM 741.00 232.73 C741.00,229.82 745.47,227.00 750.06,227.02 C754.62,227.03 757.99,228.34 756.73,229.60 C756.34,230.00 753.09,230.22 749.51,230.11 C744.31,229.94 743.00,230.19 743.00,231.39 C743.00,232.21 742.55,233.16 742.00,233.50 C741.45,233.84 741.00,233.49 741.00,232.73 Z" fill="rgba(155,186,171,1)"></path>
+</g>
+</svg>
             </h1>
             <p style="color: var(--gray-500); margin-bottom: 2rem;">Enterprise Resource Planning</p>
             
             <button class="btn btn-outline" style="width: 100%; padding: 1rem; justify-content: center;" onclick="AuthManager.signIn()">
+                <svg width="20" height="20" viewBox="0 0 24 24">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
                 Sign In with Google
             </button>
             <p id="login-status" style="margin-top: 1.5rem; font-size: 0.85rem; color: var(--gray-500);">Secure Cloud Access Required</p>
@@ -372,20 +643,69 @@
         <!-- SIDEBAR -->
         <aside class="sidebar" id="sidebar">
             <div class="brand-container">
-                <div class="brand-logo">FRESKEY ERP</div>
+                <div class="brand-logo">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                    </svg>
+                    FRESKEY ERP
+                </div>
             </div>
 
             <nav class="nav-container">
-                <div class="nav-item active" onclick="Router.navigate('dashboard')">Dashboard</div>
-                <div class="nav-item" onclick="Router.navigate('new-order')">New Order</div>
-                <div class="nav-item" onclick="Router.navigate('invoiceGen')">E-Invoice Gen</div>
-                <div class="nav-item" onclick="Router.navigate('orders')">Order History</div>
-                <div class="nav-item" onclick="Router.navigate('customers')">Customers</div>
-                <div class="nav-item" onclick="Router.navigate('tracking')">Tracking & Pay</div>
-                <div class="nav-item" onclick="Router.navigate('inventory')">Inventory</div>
-                <div class="nav-item" onclick="Router.navigate('events')">Events</div>
-                <div class="nav-item" onclick="Router.navigate('reports')">Reports</div>
-                <div class="nav-item" onclick="Router.navigate('settings')">Settings</div>
+                <div class="nav-item active" onclick="Router.navigate('dashboard')">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                    Dashboard
+                </div>
+                <div class="nav-item" onclick="Router.navigate('new-order')">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                    New Order
+                </div>
+                <!-- PASTE THIS BEFORE THE 'SETTINGS' NAV ITEM -->
+<div class="nav-item" onclick="Router.navigate('invoiceGen')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="12" y1="18" x2="12" y2="12"></line>
+        <line x1="9" y1="15" x2="15" y2="15"></line>
+    </svg>
+    E-Invoice Gen
+</div>
+                <div class="nav-item" onclick="Router.navigate('orders')">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    Order History
+                </div>
+                <div class="nav-item" onclick="Router.navigate('customers')">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    Customers
+                </div>
+                <!-- ADD THIS AFTER THE 'NEW ORDER' NAV ITEM -->
+<div class="nav-item" onclick="Router.navigate('tracking')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="1" y="3" width="15" height="13"></rect>
+        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+        <circle cx="5.5" cy="18.5" r="2.5"></circle>
+        <circle cx="18.5" cy="18.5" r="2.5"></circle>
+    </svg>
+    Tracking & Pay
+</div>
+                <div class="nav-item" onclick="Router.navigate('inventory')">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    Inventory
+                </div>
+                <div class="nav-item" onclick="Router.navigate('events')">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    Events
+                </div>
+                <div class="nav-item" onclick="Router.navigate('reports')">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+                    Reports
+                </div>
+                <div class="nav-item" onclick="Router.navigate('settings')">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    Settings
+                </div>
             </nav>
 
             <div class="user-profile">
@@ -408,8 +728,13 @@
                     <span id="page-title">Dashboard</span>
                 </div>
                 <div class="header-actions">
-                    <button class="btn btn-outline btn-sm" onclick="DriveAdapter.forceSync()">Force Save</button>
-                    <button class="btn btn-danger btn-sm" onclick="location.reload()">Reload</button>
+                    <button class="btn btn-outline btn-sm" onclick="DriveAdapter.forceSync()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path><polyline points="17 2 17 8 23 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                        Force Save
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="location.reload()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    </button>
                 </div>
             </header>
 
@@ -420,40 +745,72 @@
     </div>
 
     <!-- MODAL CONTAINER (Popups) -->
-    <div id="modal-layer" class="modal-overlay"></div>
+    <div id="modal-layer" class="modal-overlay">
+        <!-- Content Injected via JS -->
+    </div>
 
     <!-- TOAST CONTAINER -->
     <div id="toast-root" class="toast-container"></div>
+
     
-    <!-- PRINT CONTAINER -->
-    <div id="print-area"></div>
+    <!-- PRINT CONTAINER (Hidden on screen, visible on print) -->
+<div id="print-area">
+    <!-- Content injected via JS -->
+</div>
 
     <!-- ================================================================================== 
          JAVASCRIPT APPLICATION LOGIC
          ================================================================================== -->
     <script>
+        /**
+         * ================================================================================== 
+         * 1. CONFIGURATION & CONSTANTS 
+         * ================================================================================== 
+         */
         const CONFIG = {
             // TODO: REPLACE THIS WITH YOUR ACTUAL GOOGLE CLOUD CLIENT ID
             CLIENT_ID: '950010994560-v7p6cem78h9fsdp102iq4immb36t95ls.apps.googleusercontent.com', 
-            API_KEY: '', 
+            API_KEY: '', // Not strictly needed for Drive File Scope access via GIS
             SCOPES: 'https://www.googleapis.com/auth/drive.file',
-            FILE_NAME: 'freskey_erp_v2.json', // Updated file version
+            FILE_NAME: 'freskey_erp_v1.json',
+            CASE_SIZE: {
+                '200ml': 24,
+                '500ml': 20,
+                '1L': 12
+            }
         };
 
+        const SKUS = ['200ml', '500ml', '1L'];
+
         /**
+         * ================================================================================== 
          * 2. UTILITY CLASSES 
+         * ================================================================================== 
          */
         class Utils {
             static generateId(prefix = 'ID') {
                 return prefix + '-' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
             }
+
             static formatCurrency(amount) {
                 return '₹' + parseFloat(amount || 0).toFixed(2);
             }
+
             static formatDate(dateString) {
                 if(!dateString) return '-';
                 const d = new Date(dateString);
                 return d.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+            }
+
+            static deepClone(obj) {
+                return JSON.parse(JSON.stringify(obj));
+            }
+
+            static getCasesAndBottles(sku, totalBottles) {
+                const caseSize = CONFIG.CASE_SIZE[sku];
+                const cases = Math.floor(totalBottles / caseSize);
+                const loose = totalBottles % caseSize;
+                return { cases, loose, text: `${cases} Cases + ${loose} Btls` };
             }
         }
 
@@ -462,8 +819,15 @@
                 const root = document.getElementById('toast-root');
                 const toast = document.createElement('div');
                 toast.className = `toast ${type}`;
-                toast.innerHTML = `<span>${message}</span>`;
+                
+                let icon = '';
+                if(type === 'success') icon = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                else if(type === 'error') icon = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12" y2="16"></line></svg>';
+                else icon = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="8"></line></svg>';
+
+                toast.innerHTML = `${icon} <span>${message}</span>`;
                 root.appendChild(toast);
+
                 setTimeout(() => {
                     toast.style.opacity = '0';
                     setTimeout(() => toast.remove(), 300);
@@ -478,13 +842,16 @@
                     <div class="modal-container">
                         <div class="modal-header">
                             <h3 class="modal-title">${title}</h3>
-                            <button class="btn-close" onclick="ModalManager.close()">X</button>
+                            <button class="btn-close" onclick="ModalManager.close()">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            </button>
                         </div>
                         <div class="modal-body">${contentHTML}</div>
                     </div>
                 `;
                 layer.classList.add('active');
             }
+
             static close() {
                 const layer = document.getElementById('modal-layer');
                 layer.classList.remove('active');
@@ -493,28 +860,31 @@
         }
 
         /**
+         * ================================================================================== 
          * 3. DATA STORE & STATE MANAGEMENT 
-         * Updated for Dynamic Inventory & Fixed Cancellation
+         * ================================================================================== 
          */
         class Store {
             constructor() {
                 this.data = {
-                    products: [], // { id, name, price, stock, mfgDate, expDate }
-                    customers: [], 
-                    orders: [],    
-                    events: [],    
+                    settings: {
+                        prices: { '200ml': 10, '500ml': 20, '1L': 40 }
+                    },
+                    inventory: { '200ml': 0, '500ml': 0, '1L': 0 },
+                    customers: [], // { id, name, company, phone, address, limit, balance }
+                    orders: [],    // { id, date, custId, items: [{sku, qty, rate}], total, status, paymentMode }
+                    events: [],    // { id, name, date, bottles, status }
                     auditLog: []
                 };
             }
 
             load(jsonData) {
                 this.data = { ...this.data, ...jsonData };
-                // Ensure products array exists
-                if(!this.data.products) this.data.products = [];
             }
 
             get() { return this.data; }
 
+            // Operations
             addCustomer(customer) {
                 this.data.customers.push(customer);
                 this.log('Added Customer: ' + customer.company);
@@ -524,65 +894,59 @@
                 const idx = this.data.customers.findIndex(c => c.id === id);
                 if (idx > -1) {
                     this.data.customers[idx] = { ...this.data.customers[idx], ...updates };
+                    this.log('Updated Customer: ' + this.data.customers[idx].company);
                 }
             }
 
-            // NEW: Product Management
-            saveProduct(product) {
-                const idx = this.data.products.findIndex(p => p.id === product.id);
-                if(idx > -1) {
-                    this.data.products[idx] = { ...this.data.products[idx], ...product };
-                } else {
-                    this.data.products.push(product);
-                }
-                this.log('Saved Product: ' + product.name);
-            }
-
-            adjustInventory(prodId, qty, operation) {
-                const prod = this.data.products.find(p => p.id === prodId);
-                if(!prod) return;
-
-                if (operation === 'add') prod.stock += qty;
-                else prod.stock -= qty;
+            adjustInventory(sku, qty, operation) {
+                if (operation === 'add') this.data.inventory[sku] += qty;
+                else this.data.inventory[sku] -= qty;
                 
-                if(prod.stock < 0) this.log(`Warning: Negative Inventory for ${prod.name}`);
+                // Prevent negative inventory visual glitch (logic allows it but we log warning)
+                if(this.data.inventory[sku] < 0) this.log(`Warning: Negative Inventory for ${sku}`);
             }
 
             addOrder(order) {
                 this.data.orders.push(order);
+                
+                // Deduct Inventory
                 order.items.forEach(item => {
-                    this.adjustInventory(item.prodId, item.qty, 'sub');
+                    this.adjustInventory(item.sku, item.qty, 'sub');
                 });
+
+                // Update Customer Balance if Credit
                 if(order.paymentMode === 'Credit') {
                     const cust = this.data.customers.find(c => c.id === order.custId);
                     if(cust) cust.balance += order.total;
                 }
+
                 this.log(`Created Order ${order.id}`);
             }
 
-            // FIXED VOID LOGIC
             voidOrder(orderId) {
                 const idx = this.data.orders.findIndex(o => o.id === orderId);
                 if(idx === -1) return;
                 
                 const order = this.data.orders[idx];
                 
-                // 1. Rollback Inventory
+                // 1. Rollback Inventory (Add items back to stock)
                 if(order.items && order.items.length > 0) {
                     order.items.forEach(item => {
-                        // Support both old SKU-based items and new ProdID based items
-                        if(item.prodId) {
-                            this.adjustInventory(item.prodId, item.qty, 'add');
-                        } 
+                        this.adjustInventory(item.sku, item.qty, 'add');
                     });
                 }
 
-                // 2. Rollback Balance
+                // 2. Rollback Balance 
+                // We strictly subtract the Order Total from the Customer Balance
+                // regardless of whether they paid partially or not, because 
+                // any partial payment remains as a "Credit" (advance) on their account.
                 if(order.paymentMode === 'Credit') {
                     const cust = this.data.customers.find(c => c.id === order.custId);
                     if(cust) {
                         cust.balance -= order.total;
-                        cust.balance = Math.round(cust.balance * 100) / 100; // Floating point fix
+                        // Fix javascript floating point errors (e.g., 0.0000001)
+                        cust.balance = Math.round(cust.balance * 100) / 100;
+                        // Prevent negative zero
                         if(Math.abs(cust.balance) < 0.1) cust.balance = 0;
                     }
                 }
@@ -600,7 +964,9 @@
         const appStore = new Store();
 
         /**
+         * ================================================================================== 
          * 4. GOOGLE DRIVE ADAPTER 
+         * ================================================================================== 
          */
         class DriveAdapter {
             static fileId = null;
@@ -612,6 +978,7 @@
                     scope: CONFIG.SCOPES,
                     callback: (resp) => this.handleAuthResponse(resp),
                 });
+                
                 gapi.load('client', async () => {
                     await gapi.client.init({
                         discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
@@ -629,14 +996,23 @@
 
             static async onLoginSuccess() {
                 document.getElementById('login-status').innerText = "Loading Database from Cloud...";
+                
+                // Fetch User Info
                 const token = gapi.client.getToken().access_token;
                 fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: `Bearer ${token}` }})
-                .then(r => r.json()).then(u => { document.getElementById('user-display').innerText = u.email; });
+                .then(r => r.json())
+                .then(u => {
+                    document.getElementById('user-display').innerText = u.email;
+                });
 
                 await this.loadDatabase();
+                
+                // UI Transition
                 document.getElementById('login-view').style.display = 'none';
                 document.getElementById('app-root').style.display = 'flex';
                 Router.navigate('dashboard');
+
+                // Start Auto Sync
                 setInterval(() => this.saveDatabase(true), 60000); 
             }
 
@@ -644,6 +1020,7 @@
                 try {
                     const q = `name = '${CONFIG.FILE_NAME}' and trashed = false`;
                     const list = await gapi.client.drive.files.list({ q: q, fields: 'files(id, name)' });
+                    
                     if (list.result.files.length > 0) {
                         this.fileId = list.result.files[0].id;
                         const file = await gapi.client.drive.files.get({ fileId: this.fileId, alt: 'media' });
@@ -651,9 +1028,10 @@
                         ToastManager.show("Database Loaded Successfully", "success");
                     } else {
                         ToastManager.show("Creating New Database...", "info");
-                        await this.saveDatabase(false);
+                        await this.saveDatabase(false); // Create new file
                     }
                 } catch (e) {
+                    console.error(e);
                     ToastManager.show("Error Loading Data", "error");
                 }
             }
@@ -661,23 +1039,30 @@
             static async saveDatabase(silent = false) {
                 const content = JSON.stringify(appStore.get());
                 const metadata = { name: CONFIG.FILE_NAME, mimeType: 'application/json' };
+                
                 const form = new FormData();
                 form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
                 form.append('file', new Blob([content], { type: 'application/json' }));
+
                 const token = gapi.client.getToken().access_token;
                 
                 try {
                     if (!this.fileId) {
+                        // Create
                         const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
                             method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: form
                         });
                         const val = await res.json();
                         this.fileId = val.id;
                     } else {
+                        // Update
                         await fetch(`https://www.googleapis.com/upload/drive/v3/files/${this.fileId}?uploadType=media`, {
-                            method: 'PATCH', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }, body: content
+                            method: 'PATCH',
+                            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                            body: content
                         });
                     }
+                    
                     const time = new Date().toLocaleTimeString();
                     document.getElementById('sync-text').innerText = "Synced: " + time;
                     if(!silent) ToastManager.show("Data Saved to Drive", "success");
@@ -685,6 +1070,7 @@
                     if(!silent) ToastManager.show("Sync Failed", "error");
                 }
             }
+
             static forceSync() { this.saveDatabase(false); }
         }
 
@@ -693,7 +1079,9 @@
         }
 
         /**
+         * ================================================================================== 
          * 5. VIEW CONTROLLERS (PAGES) 
+         * ================================================================================== 
          */
         const Views = {
             dashboard: function() {
@@ -702,8 +1090,7 @@
                 const todayOrders = data.orders.filter(o => o.date === today);
                 
                 const revenue = todayOrders.reduce((sum, o) => sum + o.total, 0);
-                // General bottle count assumption (qty)
-                const itemsSold = todayOrders.reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.qty, 0), 0);
+                const bottles = todayOrders.reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.qty, 0), 0);
                 const customers = data.customers.length;
                 const outstanding = data.customers.reduce((sum, c) => sum + c.balance, 0);
 
@@ -712,12 +1099,15 @@
                         <div class="card stat-card">
                             <span class="stat-label">Today's Revenue</span>
                             <div class="stat-value">${Utils.formatCurrency(revenue)}</div>
-                            <div class="stat-trend">Based on ${todayOrders.length} orders</div>
+                            <div class="stat-trend">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+                                <span>Based on ${todayOrders.length} orders</span>
+                            </div>
                         </div>
                         <div class="card stat-card">
-                            <span class="stat-label">Items Sold</span>
-                            <div class="stat-value">${itemsSold}</div>
-                            <div class="stat-trend">Units Sold Today</div>
+                            <span class="stat-label">Bottles Sold</span>
+                            <div class="stat-value">${bottles}</div>
+                            <div class="stat-trend" style="color:var(--accent-500)">Volume Movement</div>
                         </div>
                         <div class="card stat-card">
                             <span class="stat-label">Total Customers</span>
@@ -727,24 +1117,46 @@
                         <div class="card stat-card">
                             <span class="stat-label">Market Outstanding</span>
                             <div class="stat-value" style="color:var(--danger-500)">${Utils.formatCurrency(outstanding)}</div>
-                            <div class="stat-trend" style="color:var(--danger-500)">Collections Pending</div>
+                            <div class="stat-trend" style="color:var(--danger-500)">Credit Collections Pending</div>
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="card">
+                            <div class="card-header"><h3 class="card-title">Recent Activity</h3></div>
+                            ${this._renderRecentOrdersTable(data.orders.slice().reverse().slice(0, 5))}
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><h3 class="card-title">Inventory Overview</h3></div>
+                            ${this._renderStockPreview(data.inventory)}
                         </div>
                     </div>
                 `;
             },
 
-            tracking: function() {
-                const orders = appStore.get().orders.filter(o => (o.trackingStep || 1) <= 3).reverse();
-                if(orders.length === 0) return '<div class="card text-center" style="padding:3rem;"><h3>No Active Orders</h3></div>';
+            // ADD THIS NEW VIEW
+    tracking: function() {
+                // FILTER FIX: Treat undefined trackingStep as 1 so they show up
+                const orders = appStore.get().orders.filter(o => {
+                    const step = o.trackingStep || 1; 
+                    return step <= 3; // Show everything from Ordered to Delivered
+                }).reverse();
+
+                if(orders.length === 0) return '<div class="card text-center" style="padding:3rem;"><h3>No Active Orders</h3><p style="color:#888;">New orders will appear here.</p></div>';
 
                 return `
                     <div class="grid-2">
                         ${orders.map(o => {
                             const c = appStore.get().customers.find(cx => cx.id === o.custId);
+                            
+                            // Safe Data Handling
                             const currentStep = o.trackingStep || 1; 
                             const paid = o.paidAmount || 0;
                             const due = o.total - paid;
                             const pct = Math.min((paid / o.total) * 100, 100);
+                            
+                            // Step Classes for Colors
+                            // s1 = Ordered (Orange), s2 = Dispatched (Blue), s3 = Delivered (Green)
                             const s1 = currentStep >= 1 ? 'active s1' : '';
                             const s2 = currentStep >= 2 ? 'active s2' : '';
                             const s3 = currentStep >= 3 ? 'active s3' : '';
@@ -761,95 +1173,201 @@
                                         <div style="font-size:0.7rem; color:var(--gray-500); margin-top:4px;">${o.paymentMode}</div>
                                     </div>
                                 </div>
+
+                                <!-- 3-PHASE TRACKING VISUAL -->
                                 <div class="track-stepper">
-                                    <div class="step-item ${s1}"><div class="step-circle">1</div><div>Ordered</div></div>
-                                    <div class="step-item ${s2}"><div class="step-circle">2</div><div>Dispatched</div></div>
-                                    <div class="step-item ${s3}"><div class="step-circle">3</div><div>Delivered</div></div>
+                                    <div class="step-item ${s1}">
+                                        <div class="step-circle">1</div>
+                                        <div style="font-size:0.75rem;">Ordered</div>
+                                    </div>
+                                    <div class="step-item ${s2}">
+                                        <div class="step-circle">2</div>
+                                        <div style="font-size:0.75rem;">Dispatched</div>
+                                    </div>
+                                    <div class="step-item ${s3}">
+                                        <div class="step-circle">3</div>
+                                        <div style="font-size:0.75rem;">Delivered</div>
+                                    </div>
                                 </div>
+
+                                <!-- ACTION BUTTONS -->
                                 <div style="display:flex; gap:10px; margin-bottom: 1.5rem;">
-                                    ${currentStep === 1 ? `<button class="btn btn-accent w-full" onclick="Logic.updateTracking('${o.id}', 2)">Dispatch Order</button>` : ''}
-                                    ${currentStep === 2 ? `<button class="btn btn-success w-full" onclick="Logic.updateTracking('${o.id}', 3)">Mark Delivered</button>` : ''}
+                                    ${currentStep === 1 ? 
+                                        `<button class="btn btn-accent w-full" onclick="Logic.updateTracking('${o.id}', 2)">
+                                            <svg width="16" height="16" style="margin-right:5px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+                                            Dispatch Order
+                                         </button>` : ''}
+                                    ${currentStep === 2 ? 
+                                        `<button class="btn btn-success w-full" onclick="Logic.updateTracking('${o.id}', 3)">
+                                            <svg width="16" height="16" style="margin-right:5px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                                            Mark Delivered
+                                         </button>` : ''}
+                                    ${currentStep === 3 ? 
+                                        `<button class="btn btn-outline w-full" disabled style="opacity:0.6; cursor:not-allowed;">
+                                            Delivered Successfully
+                                         </button>` : ''}
                                 </div>
+
+                                <!-- PAYMENT SECTION -->
                                 <div style="background:var(--gray-50); padding:1rem; border-radius:8px; border:1px solid var(--gray-200);">
                                     <div style="display:flex; justify-content:space-between; font-size:0.85rem; margin-bottom:5px;">
                                         <span>Paid: <strong>${Utils.formatCurrency(paid)}</strong></span>
-                                        <span style="color:${due > 0.5 ? 'var(--danger-500)' : 'var(--success-500)'}; font-weight:700;">${due > 0.5 ? 'Due: ' + Utils.formatCurrency(due) : 'Fully Paid'}</span>
+                                        <span style="color:${due > 0.5 ? 'var(--danger-500)' : 'var(--success-500)'}; font-weight:700;">
+                                            ${due > 0.5 ? 'Due: ' + Utils.formatCurrency(due) : 'Fully Paid'}
+                                        </span>
                                     </div>
+                                    
+                                    <!-- Progress Bar -->
                                     <div class="pay-progress"><div class="pay-bar" style="width:${pct}%"></div></div>
-                                    ${due > 0.5 ? `<div style="margin-top:12px; display:flex; gap:8px;"><input type="number" id="pay-${o.id}" class="form-control" style="padding:6px;" placeholder="Amount"><button class="btn btn-primary btn-sm" onclick="Logic.addPayment('${o.id}')">Add Pay</button></div>` : ''}
+                                    
+                                    <!-- Payment Input (Only if Due > 0) -->
+                                    ${due > 0.5 ? `
+                                        <div style="margin-top:12px; display:flex; gap:8px;">
+                                            <input type="number" id="pay-${o.id}" class="form-control" style="padding:6px;" placeholder="Enter Amount">
+                                            <button class="btn btn-primary btn-sm" onclick="Logic.addPayment('${o.id}')">Add Pay</button>
+                                        </div>
+                                    ` : ''}
                                 </div>
-                            </div>`;
+                            </div>
+                            `;
                         }).join('')}
                     </div>
                 `;
             },
 
-            // DYNAMIC NEW ORDER SCREEN
+
+
+
+            
+           // CHANGE "newOrder" to "'new-order'" (with quotes)
             'new-order': function() {
                 const customers = appStore.get().customers;
-                const products = appStore.get().products || [];
-
-                if(customers.length === 0) return `<div class="card text-center"><h3>No Customers</h3><p>Add customers first.</p><button class="btn btn-primary" onclick="Router.navigate('customers')">Go to Customers</button></div>`;
-                if(products.length === 0) return `<div class="card text-center"><h3>No Products</h3><p>Add inventory first.</p><button class="btn btn-primary" onclick="Router.navigate('inventory')">Go to Inventory</button></div>`;
+                // Check if customers exist
+                if(customers.length === 0) return `<div class="card text-center"><h3>No Customers</h3><p style="margin:1rem 0; color:#666;">You must add customers before creating an order.</p><button class="btn btn-primary" onclick="Router.navigate('customers')">Go to Customers</button></div>`;
 
                 const custOptions = customers.map(c => `<option value="${c.id}">${c.company} (${c.name})</option>`).join('');
+                const skus = ['200ml', '500ml', '1L'];
+                const prices = appStore.get().settings.prices;
+                const inventory = appStore.get().inventory;
 
                 return `
-                    <div class="card" style="max-width: 900px; margin: 0 auto;">
+                    <div class="card" style="max-width: 800px; margin: 0 auto;">
                         <div class="card-header"><h3 class="card-title">Create New Order</h3></div>
+                        
                         <div class="grid-2">
-                            <div class="form-group"><label class="form-label">Select Customer</label><select id="ord-cust" class="form-control">${custOptions}</select></div>
-                            <div class="form-group"><label class="form-label">Date</label><input type="date" id="ord-date" class="form-control" value="${new Date().toISOString().split('T')[0]}"></div>
-                        </div>
-                        <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
-                            <div class="grid-3" style="font-weight:700; color:#64748b; font-size:0.8rem; margin-bottom:0.5rem;">
-                                <div>PRODUCT DETAILS</div>
-                                <div>PRICE & STOCK</div>
-                                <div>ORDER QTY</div>
+                            <div class="form-group">
+                                <label class="form-label">Select Customer</label>
+                                <select id="ord-cust" class="form-control">${custOptions}</select>
                             </div>
-                            ${products.map(p => `
-                                <div class="grid-3" style="align-items: center; margin-bottom: 1rem; border-bottom:1px solid #eee; padding-bottom:10px;">
-                                    <div><strong>${p.name}</strong><div style="font-size: 0.75rem; color: #64748b;">Exp: ${Utils.formatDate(p.expDate)}</div></div>
+                            <div class="form-group">
+                                <label class="form-label">Date</label>
+                                <input type="date" id="ord-date" class="form-control" value="${new Date().toISOString().split('T')[0]}">
+                            </div>
+                        </div>
+
+                        <div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
+                            <h4 class="form-label" style="margin-bottom: 1rem;">Order Items</h4>
+                            <div class="grid-3" style="font-weight:700; color:#64748b; font-size:0.8rem; margin-bottom:0.5rem;">
+                                <div>ITEM & STOCK</div>
+                                <div>RATE (₹)</div>
+                                <div>QUANTITY</div>
+                            </div>
+                            ${skus.map(sku => `
+                                <div class="grid-3" style="align-items: center; margin-bottom: 1rem;">
                                     <div>
-                                        <input type="number" id="rate-${p.id}" class="form-control" value="${p.price}" oninput="Logic.calcOrderTotal()">
-                                        <div style="font-size: 0.75rem; color: ${p.stock < 10 ? 'red' : 'green'}; margin-top:2px;">Stock: ${p.stock}</div>
+                                        <strong>${sku}</strong>
+                                        <div style="font-size: 0.75rem; color: #64748b;">Avail: ${inventory[sku]}</div>
                                     </div>
-                                    <input type="number" id="qty-${p.id}" class="form-control" placeholder="0" oninput="Logic.calcOrderTotal()">
+                                    <input type="number" id="rate-${sku}" class="form-control" value="${prices[sku]}" oninput="Logic.calcOrderTotal()">
+                                    <input type="number" id="qty-${sku}" class="form-control" placeholder="0" oninput="Logic.calcOrderTotal()">
                                 </div>
                             `).join('')}
                         </div>
+
                         <div class="grid-2" style="align-items: center;">
-                            <div class="form-group"><label class="form-label">Payment Mode</label><select id="ord-pay" class="form-control"><option value="Cash">Cash</option><option value="Online">Online / UPI</option><option value="Credit">Credit</option></select></div>
-                            <div style="text-align: right;"><div style="font-size: 0.9rem; color: #64748b;">Grand Total</div><div id="ord-total-disp" style="font-size: 2rem; font-weight: 800; color: #0f172a;">₹0.00</div></div>
+                            <div class="form-group">
+                                <label class="form-label">Payment Mode</label>
+                                <select id="ord-pay" class="form-control">
+                                    <option value="Cash">Cash</option>
+                                    <option value="Online">Online / UPI</option>
+                                    <option value="Credit">Credit (Add to Balance)</option>
+                                </select>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.9rem; color: #64748b;">Grand Total</div>
+                                <div id="ord-total-disp" style="font-size: 2rem; font-weight: 800; color: #0f172a;">₹0.00</div>
+                            </div>
                         </div>
-                        <button class="btn btn-success w-full" style="padding: 1rem;" onclick="Logic.submitOrder()">Confirm & Save Order</button>
+
+                        <hr style="border:0; border-top: 1px solid #e2e8f0; margin: 1.5rem 0;">
+                        <button class="btn btn-success" style="width:100%; padding: 1rem;" onclick="Logic.submitOrder()">Confirm & Save Order</button>
                     </div>
                 `;
             },
+
             
             orders: function() {
-                setTimeout(() => Logic.filterOrders(), 50);
-                const today = new Date().toISOString().split('T')[0];
-                const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
-                return `
-                    <div class="card">
-                        <div class="card-header"><h3 class="card-title">Order History</h3></div>
-                        <div class="filter-bar">
-                            <div><label class="form-label" style="font-size:0.75rem;">Search</label><input type="text" id="filter-search" class="form-control" placeholder="Filter..." onkeyup="Logic.filterOrders()"></div>
-                            <div><label class="form-label" style="font-size:0.75rem;">From</label><input type="date" id="filter-from" class="form-control" value="${firstDay}" onchange="Logic.filterOrders()"></div>
-                            <div><label class="form-label" style="font-size:0.75rem;">To</label><input type="date" id="filter-to" class="form-control" value="${today}" onchange="Logic.filterOrders()"></div>
-                            <div><button class="btn btn-success" onclick="Logic.downloadExcelReport()">Excel</button></div>
-                        </div>
-                        <div class="table-responsive">
-                            <table class="table-compact">
-                                <thead><tr><th>Order ID</th><th>Date</th><th>Customer</th><th>Items</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead>
-                                <tbody id="order-table-body"></tbody>
-                            </table>
-                        </div>
-                        <div id="no-records" style="padding:2rem; text-align:center; color:#999; display:none;">No records.</div>
-                    </div>
-                `;
-            },
+    // Initial Render of the container
+    // We delay the table population slightly to allow the DOM to paint
+    setTimeout(() => Logic.filterOrders(), 50);
+
+    const today = new Date().toISOString().split('T')[0];
+    const firstDay = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+
+    return `
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Order History & Master Record</h3>
+            </div>
+
+            <!-- MASTER FILTER BAR -->
+            <div class="filter-bar">
+                <div>
+                    <label class="form-label" style="font-size:0.75rem; margin-bottom:2px;">Search (ID, Name, Amount)</label>
+                    <input type="text" id="filter-search" class="form-control" placeholder="Type to filter..." onkeyup="Logic.filterOrders()">
+                </div>
+                <div>
+                    <label class="form-label" style="font-size:0.75rem; margin-bottom:2px;">From Date</label>
+                    <input type="date" id="filter-from" class="form-control" value="${firstDay}" onchange="Logic.filterOrders()">
+                </div>
+                <div>
+                    <label class="form-label" style="font-size:0.75rem; margin-bottom:2px;">To Date</label>
+                    <input type="date" id="filter-to" class="form-control" value="${today}" onchange="Logic.filterOrders()">
+                </div>
+                <div style="display:flex; align-items:flex-end;">
+                    <button class="btn btn-success" onclick="Logic.downloadExcelReport()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Excel
+                    </button>
+                </div>
+            </div>
+
+            <!-- COMPACT TABLE -->
+            <div class="table-responsive">
+                <table class="table-compact">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Date</th>
+                            <th>Customer Name</th>
+                            <th>Items (Combined)</th>
+                            <th style="text-align:right">Total</th>
+                            <th style="text-align:right">Paid</th>
+                            <th style="text-align:right">Balance</th>
+                            <th>Status</th>
+                            <th>Delivered</th>
+                        </tr>
+                    </thead>
+                    <tbody id="order-table-body">
+                        <!-- Populated via Javascript -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="no-records" style="padding:2rem; text-align:center; color:#999; display:none;">No matching records found.</div>
+        </div>
+    `;
+},
+
             
             customers: function() {
                 const customers = appStore.get().customers;
@@ -861,11 +1379,15 @@
                         </div>
                         <div class="table-responsive">
                             <table>
-                                <thead><tr><th>Company</th><th>Contact</th><th>Phone</th><th>Area</th><th>Limit</th><th>Balance</th><th>Actions</th></tr></thead>
+                                <thead><tr><th>Company</th><th>Contact Person</th><th>Phone</th><th>Area</th><th>Credit Limit</th><th>Balance</th><th>Actions</th></tr></thead>
                                 <tbody>
                                     ${customers.map(c => `
                                         <tr>
-                                            <td style="font-weight:600;">${c.company}</td><td>${c.name}</td><td>${c.phone}</td><td>${c.address}</td><td>${Utils.formatCurrency(c.limit)}</td>
+                                            <td style="font-weight:600;">${c.company}</td>
+                                            <td>${c.name}</td>
+                                            <td>${c.phone}</td>
+                                            <td>${c.address}</td>
+                                            <td>${Utils.formatCurrency(c.limit)}</td>
                                             <td style="color:${c.balance > 0 ? 'var(--danger-500)' : 'var(--success-500)'}; font-weight:700;">${Utils.formatCurrency(c.balance)}</td>
                                             <td><button class="btn btn-outline btn-sm" onclick="Logic.editCustomer('${c.id}')">Edit</button></td>
                                         </tr>
@@ -877,35 +1399,22 @@
                 `;
             },
 
-            // DYNAMIC INVENTORY VIEW
             inventory: function() {
-                const products = appStore.get().products || [];
-                if(products.length === 0) return `<div class="card text-center" style="padding:3rem;"><h3>No Products</h3><button class="btn btn-primary" onclick="Logic.openAddProductModal()">+ Add First Product</button></div>`;
+                const inv = appStore.get().inventory;
                 return `
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">Inventory Management</h3>
-                            <button class="btn btn-primary btn-sm" onclick="Logic.openAddProductModal()">+ Add Product</button>
-                        </div>
-                        <div class="table-responsive">
-                            <table>
-                                <thead><tr><th>Name</th><th>Price</th><th>Stock</th><th>Mfg Date</th><th>Exp Date</th><th>Actions</th></tr></thead>
-                                <tbody>
-                                    ${products.map(p => {
-                                        const isExpired = p.expDate && new Date(p.expDate) < new Date();
-                                        const dateColor = isExpired ? 'color:var(--danger-500); font-weight:bold;' : '';
-                                        return `<tr>
-                                            <td style="font-weight:600;">${p.name}</td>
-                                            <td>${Utils.formatCurrency(p.price)}</td>
-                                            <td><span class="badge ${p.stock < 10 ? 'badge-danger' : 'badge-info'}">${p.stock} Units</span></td>
-                                            <td>${Utils.formatDate(p.mfgDate)}</td>
-                                            <td style="${dateColor}">${Utils.formatDate(p.expDate)} ${isExpired ? '(Exp)' : ''}</td>
-                                            <td><button class="btn btn-danger btn-sm" onclick="Logic.deleteProduct('${p.id}')">Delete</button></td>
-                                        </tr>`;
-                                    }).join('')}
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="grid-3">
+                        ${SKUS.map(sku => {
+                            const stockInfo = Utils.getCasesAndBottles(sku, inv[sku]);
+                            return `
+                                <div class="card" style="text-align:center;">
+                                    <h3 style="color:var(--gray-500); font-size: 0.9rem; margin-bottom: 0.5rem;">${sku} SKU</h3>
+                                    <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary-900);">${inv[sku]} <span style="font-size: 1rem; color: var(--gray-400);">btls</span></div>
+                                    <div class="badge badge-info" style="margin: 0.5rem 0;">${stockInfo.text}</div>
+                                    <p style="font-size: 0.8rem; color: var(--gray-500); margin-bottom: 1.5rem;">1 Case = ${CONFIG.CASE_SIZE[sku]} Bottles</p>
+                                    <button class="btn btn-primary w-full" onclick="Logic.openAddStockModal('${sku}')">Add Stock</button>
+                                </div>
+                            `;
+                        }).join('')}
                     </div>
                 `;
             },
@@ -914,11 +1423,29 @@
                 const events = appStore.get().events;
                 return `
                     <div class="card">
-                        <div class="card-header"><h3 class="card-title">Event Schedule</h3><button class="btn btn-primary btn-sm" onclick="Logic.openAddEventModal()">+ Schedule Event</button></div>
+                        <div class="card-header">
+                            <h3 class="card-title">Event Schedule</h3>
+                            <button class="btn btn-primary btn-sm" onclick="Logic.openAddEventModal()">+ Schedule Event</button>
+                        </div>
                         <div class="table-responsive">
                             <table>
-                                <thead><tr><th>Event</th><th>Date</th><th>Bottles</th><th>Status</th><th>Actions</th></tr></thead>
-                                <tbody>${events.map(e => `<tr><td>${e.name}</td><td>${Utils.formatDate(e.date)}</td><td>${e.bottles}</td><td><span class="badge badge-info">${e.status}</span></td><td><button class="btn btn-success btn-sm" onclick="Logic.updateEventStatus('${e.id}', 'Done')">Done</button></td></tr>`).join('')}</tbody>
+                                <thead><tr><th>Event Name</th><th>Date</th><th>Est. Bottles</th><th>Status</th><th>Actions</th></tr></thead>
+                                <tbody>
+                                    ${events.map(e => `
+                                        <tr>
+                                            <td><strong>${e.name}</strong></td>
+                                            <td>${Utils.formatDate(e.date)}</td>
+                                            <td>${e.bottles}</td>
+                                            <td><span class="badge ${e.status==='Scheduled'?'badge-warning':e.status==='Done'?'badge-success':'badge-danger'}">${e.status}</span></td>
+                                            <td>
+                                                ${e.status === 'Scheduled' ? `
+                                                    <button class="btn btn-success btn-sm" onclick="Logic.updateEventStatus('${e.id}', 'Done')">Done</button>
+                                                    <button class="btn btn-danger btn-sm" onclick="Logic.updateEventStatus('${e.id}', 'Cancelled')">Cancel</button>
+                                                ` : '-'}
+                                            </td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
                             </table>
                         </div>
                     </div>
@@ -928,321 +1455,939 @@
             reports: function() {
                 return `
                     <div class="grid-2">
-                        <div class="card"><div class="card-header"><h3 class="card-title">Daily Sales PDF</h3></div><button class="btn btn-primary" onclick="Logic.generatePDF()">Download Report</button></div>
-                        <div class="card"><div class="card-header"><h3 class="card-title">Monthly Excel</h3></div><div style="display: flex; gap: 10px;"><input type="month" id="report-month" class="form-control"><button class="btn btn-success" onclick="Logic.generateExcel()">Export</button></div></div>
+                        <div class="card">
+                            <div class="card-header"><h3 class="card-title">Daily Sales PDF</h3></div>
+                            <p style="color: var(--gray-500); margin-bottom: 1rem;">Generate a printable PDF report of today's sales including items sold, revenue, and payment breakdowns.</p>
+                            <button class="btn btn-primary" onclick="Logic.generatePDF()">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                                Download Today's Report
+                            </button>
+                        </div>
+                        <div class="card">
+                            <div class="card-header"><h3 class="card-title">Monthly Excel Export</h3></div>
+                            <p style="color: var(--gray-500); margin-bottom: 1rem;">Export all order data for a specific month to Excel for accounting purposes.</p>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="month" id="report-month" class="form-control">
+                                <button class="btn btn-success" onclick="Logic.generateExcel()">Export XLSX</button>
+                            </div>
+                        </div>
                     </div>
                 `;
             },
             
             settings: function() {
-                return `<div class="card"><div class="card-header"><h3 class="card-title">Settings</h3></div><p>Inventory is now managed dynamically in the Inventory tab.</p></div>`;
-            },
-    
-            invoiceGen: function() {
+                const prices = appStore.get().settings.prices;
                 return `
-                    <div class="card">
-                        <div class="card-header"><h3 class="card-title">Generate E-Invoice</h3></div>
-                        <div class="grid-2"><div class="form-group"><label class="form-label">GSTIN</label><input class="form-control" id="inv-fromGstin" value="09ABCDE1234F1Z5"></div><div class="form-group"><label class="form-label">Legal Name</label><input class="form-control" id="inv-fromTrdName" value="FRESKEYPIYO"></div></div>
-                        <div class="grid-2"><div class="form-group"><label class="form-label">Recipient GSTIN</label><input class="form-control" id="inv-toGstin"></div><div class="form-group"><label class="form-label">Recipient Name</label><input class="form-control" id="inv-toTrdName"></div></div>
-                        <hr style="border:0; border-top:1px solid #e2e8f0; margin:15px 0;">
-                        <div class="grid-4">
-                            <div class="form-group"><label class="form-label">Invoice No</label><input class="form-control" id="inv-docNo" value="FRK-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-001"></div>
-                            <div class="form-group"><label class="form-label">Distance (KM)</label><input type="number" class="form-control" id="inv-distance"></div>
-                            <div class="form-group"><label class="form-label">Qty</label><input type="number" class="form-control" id="inv-quantity" value="100" oninput="Logic.calcJsonTotals()"></div>
-                            <div class="form-group"><label class="form-label">Price</label><input type="number" class="form-control" id="inv-unitPrice" value="10" oninput="Logic.calcJsonTotals()"></div>
+                    <div class="card" style="max-width: 600px;">
+                        <div class="card-header"><h3 class="card-title">System Settings</h3></div>
+                        <h4 class="form-label" style="margin-top: 1rem;">Default Pricing (Per Bottle)</h4>
+                        <div class="grid-3" style="margin-bottom: 1rem;">
+                            ${SKUS.map(sku => `
+                                <div class="form-group">
+                                    <label class="form-label">${sku}</label>
+                                    <input type="number" id="set-price-${sku}" class="form-control" value="${prices[sku]}">
+                                </div>
+                            `).join('')}
                         </div>
-                        <div style="background:#fff7ed; padding:15px; margin-top:10px;">Total Value: <span id="inv-totalValue" style="font-weight:bold">0.00</span></div>
-                        <button class="btn btn-primary" style="margin-top:10px;" onclick="Logic.downloadEInvoiceJSON()">Download JSON</button>
+                        <button class="btn btn-primary" onclick="Logic.saveSettings()">Save Configuration</button>
+                    </div>
+                `;
+            },
+
+            // PASTE THIS INSIDE 'const Views = {' AFTER 'settings: ...'
+    
+    invoiceGen: function() {
+        return `
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Generate E-Invoice / E-Way JSON</h3>
+                </div>
+
+                <!-- A. SUPPLIER DETAILS -->
+                <div style="background:#f1f5f9; padding:10px; border-radius:6px; margin-bottom:15px;">
+                    <h4 style="font-size:0.9rem; margin-bottom:10px; color:var(--primary-700);">🔹 A. Supplier (Freskeypiyo Beverages)</h4>
+                    <div class="grid-3">
+                        <div class="form-group"><label class="form-label">GSTIN</label><input class="form-control" id="inv-fromGstin" value="09ABCDE1234F1Z5" readonly style="background:#e2e8f0;"></div>
+                        <div class="form-group"><label class="form-label">Legal Name</label><input class="form-control" id="inv-fromTrdName" value="FRESKEYPIYO BEVERAGES" readonly style="background:#e2e8f0;"></div>
+                        <div class="form-group"><label class="form-label">State Code</label><input class="form-control" id="inv-fromStateCode" value="9" readonly style="background:#e2e8f0;"></div>
+                        <div class="form-group"><label class="form-label">Address</label><input class="form-control" id="inv-fromAddr1" value="Industrial Area" readonly style="background:#e2e8f0;"></div>
+                        <div class="form-group"><label class="form-label">Place</label><input class="form-control" id="inv-fromPlace" value="Lucknow" readonly style="background:#e2e8f0;"></div>
+                        <div class="form-group"><label class="form-label">PIN Code</label><input class="form-control" id="inv-fromPincode" value="226010" readonly style="background:#e2e8f0;"></div>
+                    </div>
+                </div>
+
+                <!-- B. RECIPIENT DETAILS -->
+                <h4 style="font-size:0.9rem; margin-bottom:10px; color:var(--primary-700);">🔹 B. Recipient Details</h4>
+                <div class="grid-2">
+                    <div class="form-group"><label class="form-label">GSTIN / URP *</label><input class="form-control" id="inv-toGstin" placeholder="e.g. 09PQRSX5678L1Z9"></div>
+                    <div class="form-group"><label class="form-label">Recipient Name *</label><input class="form-control" id="inv-toTrdName" placeholder="e.g. ABC DISTRIBUTOR"></div>
+                </div>
+                <div class="grid-4">
+                    <div class="form-group"><label class="form-label">Address</label><input class="form-control" id="inv-toAddr1" placeholder="Market Road"></div>
+                    <div class="form-group"><label class="form-label">Place</label><input class="form-control" id="inv-toPlace" placeholder="City"></div>
+                    <div class="form-group"><label class="form-label">State Code</label><input type="number" class="form-control" id="inv-toStateCode" placeholder="9"></div>
+                    <div class="form-group"><label class="form-label">PIN Code</label><input type="number" class="form-control" id="inv-toPincode" placeholder="208001"></div>
+                </div>
+
+                <hr style="border:0; border-top:1px solid #e2e8f0; margin:15px 0;">
+
+                <!-- C. INVOICE & D. PRODUCT -->
+                <div class="grid-2">
+                    <div>
+                        <h4 style="font-size:0.9rem; margin-bottom:10px; color:var(--primary-700);">🔹 C. Invoice Details</h4>
+                        <div class="grid-2">
+                            <div class="form-group"><label class="form-label">Invoice No</label><input class="form-control" id="inv-docNo" value="FRK-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-001"></div>
+                            <div class="form-group"><label class="form-label">Date</label><input class="form-control" id="inv-docDate" value="${new Date().toLocaleDateString('en-GB')}"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style="font-size:0.9rem; margin-bottom:10px; color:var(--primary-700);">🔹 E. Transport (Mandatory ⚠️)</h4>
+                        <div class="grid-2">
+                            <div class="form-group"><label class="form-label">Distance (KM) *</label><input type="number" class="form-control" id="inv-distance" style="border-color:red;"></div>
+                            <div class="form-group"><label class="form-label">Vehicle No</label><input class="form-control" id="inv-vehicleNo" placeholder="UP32AB1234"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <h4 style="font-size:0.9rem; margin-bottom:10px; color:var(--primary-700);">🔹 D. Product Details</h4>
+                <div class="grid-4" style="align-items:end;">
+                    <div class="form-group" style="grid-column: span 2;"><label class="form-label">Product Name</label><input class="form-control" id="inv-productName" value="Packaged Drinking Water 500ml"></div>
+                    <div class="form-group"><label class="form-label">HSN Code</label><input class="form-control" id="inv-hsnCode" value="22011010"></div>
+                    <div class="form-group"><label class="form-label">Unit</label>
+                        <select class="form-control" id="inv-qtyUnit"><option value="BOX">BOX</option><option value="NOS">NOS</option></select>
+                    </div>
+                </div>
+
+                <!-- CALCULATION ROW -->
+                <div style="background:#fff7ed; padding:15px; border-radius:8px; border:1px solid #ffedd5; margin-top:10px;">
+                    <div class="grid-4">
+                        <div class="form-group"><label class="form-label">Quantity</label><input type="number" class="form-control" id="inv-quantity" value="200" oninput="Logic.calcJsonTotals()"></div>
+                        <div class="form-group"><label class="form-label">Unit Price</label><input type="number" class="form-control" id="inv-unitPrice" value="240" oninput="Logic.calcJsonTotals()"></div>
+                        <div class="form-group"><label class="form-label">Taxable Val</label><input class="form-control" id="inv-taxableAmount" readonly style="font-weight:bold;"></div>
+                        <div class="form-group"><label class="form-label">Total Value</label><input class="form-control" id="inv-totalValue" readonly style="font-weight:800; color:var(--primary-900);"></div>
+                    </div>
+                    <div class="grid-3" style="font-size:0.8rem; margin-top:5px;">
+                        <div>CGST (3%): <span id="disp-cgst">0</span></div>
+                        <div>SGST (3%): <span id="disp-sgst">0</span></div>
+                        <div>IGST (0%): <span id="disp-igst">0</span></div>
+                    </div>
+                </div>
+
+                <div style="margin-top:20px; text-align:right;">
+                    <button class="btn btn-primary" onclick="Logic.downloadEInvoiceJSON()">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        GENERATE & DOWNLOAD JSON
+                    </button>
+                </div>
+            </div>
+        `;
+    },
+
+            // Helper Views
+            _renderRecentOrdersTable: function(orders) {
+                if(orders.length === 0) return '<p style="padding: 1rem; color: var(--gray-500);">No activity yet.</p>';
+                return `
+                    <div class="table-responsive">
+                    <table>
+                        <thead><tr><th>Customer</th><th>Amount</th><th>Status</th></tr></thead>
+                        <tbody>
+                            ${orders.map(o => {
+                                const c = appStore.get().customers.find(cx => cx.id === o.custId);
+                                return `<tr>
+                                    <td>${c ? c.company : 'N/A'}</td>
+                                    <td style="font-weight:700">${Utils.formatCurrency(o.total)}</td>
+                                    <td><span class="badge ${o.paymentMode==='Credit'?'badge-danger':'badge-success'}">${o.paymentMode}</span></td>
+                                </tr>`;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                    </div>
+                `;
+            },
+
+            _renderStockPreview: function(inv) {
+                return `
+                    <div style="padding: 1rem;">
+                        ${SKUS.map(sku => {
+                             const pct = (inv[sku] / 500) * 100; // Mock max for bar
+                             return `
+                                <div style="margin-bottom: 1rem;">
+                                    <div style="display:flex; justify-content:space-between; font-size: 0.85rem; margin-bottom: 4px;">
+                                        <strong>${sku}</strong>
+                                        <span>${inv[sku]} btls</span>
+                                    </div>
+                                    <div style="height: 8px; background: var(--gray-200); border-radius: 4px; overflow: hidden;">
+                                        <div style="height: 100%; width: ${Math.min(pct, 100)}%; background: var(--accent-500);"></div>
+                                    </div>
+                                </div>
+                             `;
+                        }).join('')}
                     </div>
                 `;
             }
         };
 
         /**
+         * ================================================================================== 
          * 6. CONTROLLER & BUSINESS LOGIC 
+         * ================================================================================== 
          */
         const Logic = {
-            // PRODUCT LOGIC
-            openAddProductModal: function() {
-                ModalManager.show("Add / Edit Product", `
-                    <div class="form-group"><label class="form-label">Product Name</label><input id="prod-name" class="form-control" placeholder="e.g. Mango Juice"></div>
-                    <div class="grid-2">
-                        <div class="form-group"><label class="form-label">Price (₹)</label><input type="number" id="prod-price" class="form-control"></div>
-                        <div class="form-group"><label class="form-label">Current Stock</label><input type="number" id="prod-stock" class="form-control" placeholder="0"></div>
-                    </div>
-                    <div class="grid-2">
-                        <div class="form-group"><label class="form-label">Mfg Date</label><input type="date" id="prod-mfg" class="form-control"></div>
-                        <div class="form-group"><label class="form-label">Expiry Date</label><input type="date" id="prod-exp" class="form-control"></div>
-                    </div>
-                    <button class="btn btn-primary w-full" onclick="Logic.saveNewProduct()">Save Product</button>
-                `);
-            },
-            saveNewProduct: function() {
-                const name = document.getElementById('prod-name').value;
-                const price = parseFloat(document.getElementById('prod-price').value);
-                if(!name || isNaN(price)) return ToastManager.show("Name and Price required", "error");
-
-                const newProd = {
-                    id: Utils.generateId('PROD'),
-                    name: name,
-                    price: price,
-                    stock: parseFloat(document.getElementById('prod-stock').value) || 0,
-                    mfgDate: document.getElementById('prod-mfg').value,
-                    expDate: document.getElementById('prod-exp').value
-                };
-                appStore.saveProduct(newProd);
-                DriveAdapter.saveDatabase(true); 
-                ModalManager.close();
-                ToastManager.show("Product Saved", "success");
-                Router.refresh();
-            },
-            deleteProduct: function(id) {
-                if(confirm("Delete this product?")) {
-                    const list = appStore.get().products;
-                    const idx = list.findIndex(p => p.id === id);
-                    if(idx > -1) {
-                        list.splice(idx, 1);
-                        DriveAdapter.saveDatabase(true);
-                        Router.refresh();
-                    }
-                }
-            },
-
-            // CUSTOMER LOGIC
+            // --- Customer Logic ---
             openAddCustomerModal: function() {
-                ModalManager.show("Add Customer", `
-                    <div class="grid-2"><div class="form-group"><label class="form-label">Company</label><input id="new-c-comp" class="form-control"></div><div class="form-group"><label class="form-label">Person</label><input id="new-c-name" class="form-control"></div></div>
+                ModalManager.show("Add New Customer", `
+                    <div class="grid-2">
+                        <div class="form-group"><label class="form-label">Company Name</label><input id="new-c-comp" class="form-control"></div>
+                        <div class="form-group"><label class="form-label">Contact Person</label><input id="new-c-name" class="form-control"></div>
+                    </div>
                     <div class="form-group"><label class="form-label">Phone</label><input id="new-c-phone" class="form-control"></div>
-                    <div class="form-group"><label class="form-label">Address</label><input id="new-c-addr" class="form-control"></div>
-                    <div class="form-group"><label class="form-label">Limit</label><input type="number" id="new-c-limit" class="form-control" value="5000"></div>
-                    <button class="btn btn-primary w-full" onclick="Logic.saveNewCustomer()">Save</button>
+                    <div class="form-group"><label class="form-label">Area / Address</label><input id="new-c-addr" class="form-control"></div>
+                    <div class="form-group"><label class="form-label">Credit Limit (₹)</label><input type="number" id="new-c-limit" class="form-control" value="5000"></div>
+                    <button class="btn btn-primary w-full" onclick="Logic.saveNewCustomer()">Save Customer</button>
                 `);
             },
+
+            
+
             saveNewCustomer: function() {
                 const comp = document.getElementById('new-c-comp').value;
-                if(!comp) return;
+                if(!comp) return ToastManager.show("Company Name Required", "error");
+
                 appStore.addCustomer({
-                    id: Utils.generateId('CUST'), company: comp, name: document.getElementById('new-c-name').value,
-                    phone: document.getElementById('new-c-phone').value, address: document.getElementById('new-c-addr').value,
-                    limit: parseFloat(document.getElementById('new-c-limit').value) || 0, balance: 0
+                    id: Utils.generateId('CUST'),
+                    company: comp,
+                    name: document.getElementById('new-c-name').value,
+                    phone: document.getElementById('new-c-phone').value,
+                    address: document.getElementById('new-c-addr').value,
+                    limit: parseFloat(document.getElementById('new-c-limit').value) || 0,
+                    balance: 0
                 });
-                ModalManager.close(); ToastManager.show("Added", "success"); Router.refresh();
-            },
-            editCustomer: function(id) {
-                const c = appStore.get().customers.find(x => x.id === id);
-                ModalManager.show("Edit Customer", `<div class="form-group"><label class="form-label">Company</label><input id="edit-c-comp" class="form-control" value="${c.company}"></div><div class="form-group"><label class="form-label">Limit</label><input type="number" id="edit-c-limit" class="form-control" value="${c.limit}"></div><button class="btn btn-primary w-full" onclick="Logic.updateCustomer('${id}')">Update</button>`);
-            },
-            updateCustomer: function(id) {
-                appStore.updateCustomer(id, { company: document.getElementById('edit-c-comp').value, limit: parseFloat(document.getElementById('edit-c-limit').value) });
-                ModalManager.close(); Router.refresh();
+
+                ModalManager.close();
+                ToastManager.show("Customer Added", "success");
+                Router.refresh();
             },
 
-            // ORDER LOGIC
-            generateNextOrderId: function(dateString) {
-                const cleanDate = dateString.replace(/-/g, '');
-                const prefix = `FRK-${cleanDate}-`;
-                const existingOrders = appStore.get().orders.filter(o => o.id.startsWith(prefix));
-                if (existingOrders.length === 0) return prefix + '0001';
-                let maxSeq = 0;
-                existingOrders.forEach(o => {
-                    const parts = o.id.split('-');
-                    if(parts.length === 3) {
-                        const seq = parseInt(parts[2]);
-                        if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
-                    }
-                });
-                return prefix + (maxSeq + 1).toString().padStart(4, '0');
-            },
-            calcOrderTotal: function() {
-                let total = 0;
-                const products = appStore.get().products || [];
-                products.forEach(p => {
-                    const r = parseFloat(document.getElementById(`rate-${p.id}`).value) || 0;
-                    const q = parseFloat(document.getElementById(`qty-${p.id}`).value) || 0;
-                    total += (r * q);
-                });
-                document.getElementById('ord-total-disp').innerText = Utils.formatCurrency(total);
-            },
-            submitOrder: function() {
-                const custId = document.getElementById('ord-cust').value;
-                const date = document.getElementById('ord-date').value;
-                const pay = document.getElementById('ord-pay').value;
-                const products = appStore.get().products || [];
-                const items = [];
-                let total = 0;
+            // --- 1. ID GENERATOR (Paste at top of Logic object) ---
+    generateNextOrderId: function(dateString) {
+        // 1. Format Date: YYYY-MM-DD -> YYYYMMDD
+        const cleanDate = dateString.replace(/-/g, '');
+        const prefix = `FRK-${cleanDate}-`;
 
-                for(let p of products) {
-                    const q = parseFloat(document.getElementById(`qty-${p.id}`).value) || 0;
-                    const r = parseFloat(document.getElementById(`rate-${p.id}`).value) || 0;
-                    if(q > 0) {
-                        if(p.stock < q) { if(!confirm(`Low Inventory for ${p.name}. Proceed?`)) return; }
-                        items.push({ prodId: p.id, sku: p.name, qty: q, rate: r });
-                        total += (q * r);
-                    }
-                }
-                if(items.length === 0) return ToastManager.show("Add item", "error");
+        // 2. Find existing orders for this specific date
+        const existingOrders = appStore.get().orders.filter(o => o.id.startsWith(prefix));
 
-                const cust = appStore.get().customers.find(c => c.id === custId);
-                if(pay === 'Credit' && (cust.balance + total > cust.limit)) { if(!confirm(`Limit Exceeded. Proceed?`)) return; }
+        if (existingOrders.length === 0) {
+            return prefix + '0001'; // First order of the day
+        }
 
-                const order = {
-                    id: Logic.generateNextOrderId(date), date, custId, items, total, 
-                    paymentMode: pay, status: 'Ordered', trackingStep: 1, paidAmount: (pay === 'Credit' ? 0 : total) 
-                };
-                appStore.addOrder(order);
-                DriveAdapter.saveDatabase(true);
-                ToastManager.show("Order Created", "success");
-                Router.navigate('tracking');
-            },
+        // 3. Find highest sequence number
+        let maxSeq = 0;
+        existingOrders.forEach(o => {
+            const parts = o.id.split('-');
+            if(parts.length === 3) {
+                const seq = parseInt(parts[2]);
+                if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
+            }
+        });
 
-            // ORDER HISTORY & VOID
-            filterOrders: function() {
-                const search = document.getElementById('filter-search').value.toLowerCase();
-                const fromDate = document.getElementById('filter-from').value;
-                const toDate = document.getElementById('filter-to').value;
-                const allOrders = appStore.get().orders;
-                const customers = appStore.get().customers;
+        // 4. Return formatted ID (e.g., FRK-20251214-0002)
+        return prefix + (maxSeq + 1).toString().padStart(4, '0');
+    },
 
-                const filtered = allOrders.filter(o => {
-                    const c = customers.find(x => x.id === o.custId);
-                    const cName = c ? (c.company + ' ' + c.name).toLowerCase() : '';
-                    const matchesSearch = o.id.toLowerCase().includes(search) || cName.includes(search) || o.total.toString().includes(search);
-                    const matchesDate = (!fromDate || o.date >= fromDate) && (!toDate || o.date <= toDate);
-                    return matchesSearch && matchesDate;
-                }).sort((a,b) => new Date(b.date) - new Date(a.date));
-                Logic.renderOrderRows(filtered);
-            },
-            renderOrderRows: function(orders) {
-                const tbody = document.getElementById('order-table-body');
-                const noRec = document.getElementById('no-records');
-                if(!tbody) return;
-                tbody.innerHTML = '';
-                if(orders.length === 0) { noRec.style.display = 'block'; return; }
-                noRec.style.display = 'none';
 
-                orders.forEach(o => {
-                    const c = appStore.get().customers.find(cx => cx.id === o.custId);
-                    const paid = o.paidAmount || 0;
-                    const balance = o.total - paid;
-                    const itemString = o.items.map(i => `<span class="item-pill">${i.sku || 'Item'}×${i.qty}</span>`).join(' ');
-                    
-                    const row = `
-                        <tr class="tr-clickable" onclick="Logic.toggleRow('${o.id}')">
-                            <td style="font-family:monospace; font-weight:700;">${o.id}</td>
-                            <td>${Utils.formatDate(o.date)}</td>
-                            <td>${c ? c.company : 'Unknown'}</td>
-                            <td>${itemString}</td>
-                            <td style="text-align:right;">${Utils.formatCurrency(o.total)}</td>
-                            <td style="text-align:right;">${Utils.formatCurrency(paid)}</td>
-                            <td style="text-align:right;" class="${balance > 0.5 ? 'bal-due' : 'bal-zero'}">${Utils.formatCurrency(balance)}</td>
-                            <td><span class="badge badge-info">${o.status}</span></td>
-                        </tr>
-                        <tr id="detail-${o.id}" class="tr-details">
-                            <td colspan="9">
-                                <div class="detail-box">
-                                    <button class="btn btn-danger btn-sm" onclick="Logic.voidOrder('${o.id}')">Void & Refund Stock</button>
-                                    <button class="btn btn-primary btn-sm" onclick="Logic.printChallan('${o.id}')">Print Challan</button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                    tbody.innerHTML += row;
-                });
-            },
-            toggleRow: function(id) { document.getElementById(`detail-${id}`).classList.toggle('active'); },
+            // --- FILTER & TABLE LOGIC ---
+    
+    // 1. Master Filter Function
+    filterOrders: function() {
+        const search = document.getElementById('filter-search').value.toLowerCase();
+        const fromDate = document.getElementById('filter-from').value;
+        const toDate = document.getElementById('filter-to').value;
+        
+        const allOrders = appStore.get().orders;
+        const customers = appStore.get().customers;
+
+        // Filter Logic
+        const filtered = allOrders.filter(o => {
+            const c = customers.find(x => x.id === o.custId);
+            const cName = c ? (c.company + ' ' + c.name).toLowerCase() : '';
+            const oId = o.id.toLowerCase();
             
-            // FIXED VOID FUNCTION
-            voidOrder: function(id) {
-                if(confirm("Are you sure? This will return items to stock and adjust customer balance.")) {
-                    appStore.voidOrder(id);
-                    DriveAdapter.saveDatabase(true); // IMMEDIATE SAVE
-                    ModalManager.close();
-                    ToastManager.show("Order Voided & Inventory Restored", "success");
-                    Router.refresh();
-                }
-            },
+            // Search Match
+            const matchesSearch = oId.includes(search) || cName.includes(search) || o.total.toString().includes(search);
+            
+            // Date Match
+            const matchesDate = (!fromDate || o.date >= fromDate) && (!toDate || o.date <= toDate);
+            
+            return matchesSearch && matchesDate;
+        }).sort((a,b) => new Date(b.date) - new Date(a.date)); // Sort Newest First
 
-            // TRACKING
-            updateTracking: function(id, step) {
+        Logic.renderOrderRows(filtered);
+    },
+
+    // 2. Render Rows (Generates the HTML)
+    // --- 3. RENDER TABLE ROWS (Replace existing function) ---
+    renderOrderRows: function(orders) {
+        const tbody = document.getElementById('order-table-body');
+        const noRec = document.getElementById('no-records');
+        
+        if(!tbody) return;
+        tbody.innerHTML = '';
+        
+        if(orders.length === 0) {
+            noRec.style.display = 'block';
+            return;
+        }
+        noRec.style.display = 'none';
+
+        orders.forEach(o => {
+            const c = appStore.get().customers.find(cx => cx.id === o.custId);
+            const paid = o.paidAmount || 0;
+            const balance = o.total - paid;
+            
+            // Format Items: 200ml×10, 500ml×5
+            const itemString = o.items.map(i => `<span class="item-pill">${i.sku}×${i.qty}</span>`).join(' ');
+            
+            // --- KEY CHANGE: Use the ID directly from database ---
+            // If the ID is old (ORD-...), it shows as is. If new (FRK-...), it shows correctly.
+            const displayId = o.id; 
+
+            // Delivery Date
+            let delDate = '-';
+            if(o.status === 'Delivered') delDate = Utils.formatDate(o.date); 
+
+            // Badge Color
+            let badgeClass = 'badge-info';
+            if(o.status === 'Delivered') badgeClass = 'badge-success';
+            if(o.paymentMode === 'Credit' && balance > 0) badgeClass = 'badge-danger';
+
+            const row = `
+                <tr class="tr-clickable" onclick="Logic.toggleRow('${o.id}')">
+                    <td style="font-family:monospace; font-weight:700; color:var(--primary-700)">
+                        ${displayId}
+                        <div class="hide-mobile" style="font-size:0.7rem; color:#999;">Click details</div>
+                    </td>
+                    <td>${Utils.formatDate(o.date)}</td>
+                    <td style="font-weight:600;">${c ? c.company : 'Unknown'}</td>
+                    <td class="hide-mobile">${itemString}</td>
+                    <td style="text-align:right; font-weight:700;">${Utils.formatCurrency(o.total)}</td>
+                    <td style="text-align:right; color:var(--success-700)">${Utils.formatCurrency(paid)}</td>
+                    <td style="text-align:right;" class="${balance > 0.5 ? 'bal-due' : 'bal-zero'}">
+                        ${Utils.formatCurrency(balance)}
+                    </td>
+                    <td><span class="badge ${badgeClass}">${o.status}</span></td>
+                    <td class="hide-mobile">${delDate}</td>
+                </tr>
+                <tr id="detail-${o.id}" class="tr-details">
+                    <td colspan="9">
+                        <div class="detail-box">
+                            <div class="grid-3">
+    <div><strong>Breakdown:</strong><br>${o.items.map(i => `${i.sku} (${i.qty})`).join(', ')}</div>
+    <div><strong>Payment:</strong><br>Paid: ${Utils.formatCurrency(paid)}<br>Due: ${Utils.formatCurrency(balance)}</div>
+    <div style="display:flex; flex-direction:column; gap:5px;">
+        <button class="btn btn-outline btn-sm" onclick="Logic.editOrder('${o.id}')">Manage Order</button>
+        <!-- NEW BUTTON ADDED HERE -->
+        <button class="btn btn-primary btn-sm" onclick="Logic.printChallan('${o.id}')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            Print Challan (A5)
+        </button>
+    </div>
+</div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            tbody.innerHTML += row;
+        });
+    },
+
+
+
+
+
+// PASTE THIS INSIDE 'const Logic = {' AT THE BOTTOM
+    
+    calcJsonTotals: function() {
+        const qty = parseFloat(document.getElementById('inv-quantity').value) || 0;
+        const price = parseFloat(document.getElementById('inv-unitPrice').value) || 0;
+        
+        const taxable = qty * price;
+        document.getElementById('inv-taxableAmount').value = taxable.toFixed(2);
+
+        // Hardcoded rates as per your requirement (3% + 3%)
+        const cgstVal = taxable * 0.03;
+        const sgstVal = taxable * 0.03;
+        const igstVal = 0;
+
+        document.getElementById('disp-cgst').innerText = cgstVal.toFixed(2);
+        document.getElementById('disp-sgst').innerText = sgstVal.toFixed(2);
+        
+        const total = taxable + cgstVal + sgstVal + igstVal;
+        document.getElementById('inv-totalValue').value = total.toFixed(2);
+    },
+
+    downloadEInvoiceJSON: function() {
+        // Validation
+        const distance = document.getElementById('inv-distance').value;
+        if(!distance) return ToastManager.show("Distance is Mandatory ⚠️", "error");
+        
+        // Trigger calc once to ensure totals are fresh
+        this.calcJsonTotals();
+
+        const data = {
+            "supplyType": "O",
+            "subSupplyType": "1",
+            "docType": "INV",
+            "docNo": document.getElementById('inv-docNo').value,
+            "docDate": document.getElementById('inv-docDate').value,
+
+            "fromGstin": document.getElementById('inv-fromGstin').value,
+            "fromTrdName": document.getElementById('inv-fromTrdName').value,
+            "fromAddr1": document.getElementById('inv-fromAddr1').value,
+            "fromPlace": document.getElementById('inv-fromPlace').value,
+            "fromPincode": parseInt(document.getElementById('inv-fromPincode').value),
+            "fromStateCode": parseInt(document.getElementById('inv-fromStateCode').value),
+
+            "toGstin": document.getElementById('inv-toGstin').value,
+            "toTrdName": document.getElementById('inv-toTrdName').value,
+            "toAddr1": document.getElementById('inv-toAddr1').value,
+            "toPlace": document.getElementById('inv-toPlace').value,
+            "toPincode": parseInt(document.getElementById('inv-toPincode').value) || 0,
+            "toStateCode": parseInt(document.getElementById('inv-toStateCode').value) || 0,
+
+            "totalValue": parseFloat(document.getElementById('inv-totalValue').value),
+            "cgstValue": parseFloat(document.getElementById('disp-cgst').innerText),
+            "sgstValue": parseFloat(document.getElementById('disp-sgst').innerText),
+            "igstValue": 0,
+
+            "transMode": "1",
+            "distance": parseInt(distance),
+            "vehicleNo": document.getElementById('inv-vehicleNo').value,
+            "vehicleType": "R",
+
+            "itemList": [
+                {
+                    "productName": document.getElementById('inv-productName').value,
+                    "hsnCode": document.getElementById('inv-hsnCode').value,
+                    "quantity": parseFloat(document.getElementById('inv-quantity').value),
+                    "qtyUnit": document.getElementById('inv-qtyUnit').value,
+                    "taxableAmount": parseFloat(document.getElementById('inv-taxableAmount').value),
+                    "cgstRate": 3,
+                    "sgstRate": 3,
+                    "igstRate": 0
+                }
+            ]
+        };
+
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        downloadAnchorNode.setAttribute("download", "Invoice_" + data.docNo + ".json");
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+        
+        ToastManager.show("JSON Downloaded Successfully", "success");
+    },
+
+            
+
+    // 3. Toggle Row Visibility
+    toggleRow: function(id) {
+        const row = document.getElementById(`detail-${id}`);
+        if(row) row.classList.toggle('active');
+    },
+
+    // 4. Excel Download Logic
+    downloadExcelReport: function() {
+        const fromDate = document.getElementById('filter-from').value;
+        const toDate = document.getElementById('filter-to').value;
+        
+        // Use the same filtering logic to get data
+        const allOrders = appStore.get().orders;
+        const customers = appStore.get().customers;
+        
+        const dataToExport = allOrders.filter(o => 
+            o.date >= fromDate && o.date <= toDate
+        ).map(o => {
+             const c = customers.find(x => x.id === o.custId);
+             const paid = o.paidAmount || 0;
+             const balance = o.total - paid;
+             
+             return {
+                 "Order ID": `FRK-${o.date.replace(/-/g,'')}-${o.id.split('-')[1]}`,
+                 "Date": o.date,
+                 "Customer": c ? c.company : 'Unknown',
+                 "Items": o.items.map(i => `${i.sku}x${i.qty}`).join(', '),
+                 "Total Amount": o.total,
+                 "Paid Amount": paid,
+                 "Balance": balance,
+                 "Status": o.status,
+                 "Payment Mode": o.paymentMode
+             };
+        });
+
+        if(dataToExport.length === 0) return ToastManager.show("No data in selected range", "error");
+
+        const ws = XLSX.utils.json_to_sheet(dataToExport);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Order History");
+        XLSX.writeFile(wb, `Freskey_Orders_${fromDate}_to_${toDate}.xlsx`);
+    },
+
+
+            // --- TRACKING & PAYMENT LOGIC ---
+    updateTracking: function(id, step) {
                 const order = appStore.get().orders.find(o => o.id === id);
                 if(order) {
                     order.trackingStep = step;
                     if(step === 2) order.status = 'Dispatched';
                     if(step === 3) order.status = 'Delivered';
-                    DriveAdapter.saveDatabase(true); Router.refresh();
+                    
+                    // Force Save to Drive
+                    DriveAdapter.saveDatabase(true); 
+                    Router.refresh();
                 }
             },
+
             addPayment: function(id) {
                 const amount = parseFloat(document.getElementById(`pay-${id}`).value);
+                if(!amount || amount <= 0) return ToastManager.show("Invalid Amount", "error");
+
                 const order = appStore.get().orders.find(o => o.id === id);
+                const due = order.total - (order.paidAmount || 0);
+
+                // Allow small floating point differences
+                if(amount > due + 1) return ToastManager.show(`Amount exceeds balance of ${Utils.formatCurrency(due)}`, "error");
+
+                // 1. Update Order
                 order.paidAmount = (order.paidAmount || 0) + amount;
+
+                // 2. Update Customer Balance (If they were in debt, paying reduces debt)
                 const cust = appStore.get().customers.find(c => c.id === order.custId);
-                if(cust) { cust.balance -= amount; if(cust.balance < 0) cust.balance = 0; }
-                DriveAdapter.saveDatabase(true); Router.refresh();
+                if(cust) {
+                    cust.balance -= amount;
+                    // Prevent negative balance glitches
+                    if(Math.abs(cust.balance) < 1) cust.balance = 0; 
+                }
+
+                ToastManager.show(`Payment of ${Utils.formatCurrency(amount)} recorded`, "success");
+                DriveAdapter.saveDatabase(true);
+                Router.refresh();
             },
 
-            // EVENTS & PRINTING
+    addPayment: function(id) {
+        const amount = parseFloat(document.getElementById(`pay-${id}`).value);
+        if(!amount || amount <= 0) return ToastManager.show("Invalid Amount", "error");
+
+        const order = appStore.get().orders.find(o => o.id === id);
+        const due = order.total - (order.paidAmount || 0);
+
+        if(amount > due) return ToastManager.show(`Amount exceeds balance of ${due}`, "error");
+
+        // 1. Update Order
+        order.paidAmount = (order.paidAmount || 0) + amount;
+
+        // 2. Update Customer Balance (Reduce debt)
+        const cust = appStore.get().customers.find(c => c.id === order.custId);
+        if(cust) {
+            cust.balance -= amount;
+            if(cust.balance < 0) cust.balance = 0; // Safety catch
+        }
+
+        ToastManager.show(`Payment of ${Utils.formatCurrency(amount)} recorded`, "success");
+        Router.refresh();
+    },
+            
+            editCustomer: function(id) {
+                const c = appStore.get().customers.find(x => x.id === id);
+                if(!c) return;
+                ModalManager.show("Edit Customer", `
+                    <div class="form-group"><label class="form-label">Company</label><input id="edit-c-comp" class="form-control" value="${c.company}"></div>
+                    <div class="form-group"><label class="form-label">Limit</label><input type="number" id="edit-c-limit" class="form-control" value="${c.limit}"></div>
+                    <button class="btn btn-primary w-full" onclick="Logic.updateCustomer('${id}')">Update</button>
+                `);
+            },
+
+            updateCustomer: function(id) {
+                appStore.updateCustomer(id, {
+                    company: document.getElementById('edit-c-comp').value,
+                    limit: parseFloat(document.getElementById('edit-c-limit').value)
+                });
+                ModalManager.close();
+                Router.refresh();
+            },
+
+            // --- Order Logic ---
+
+
+calcOrderTotal: function() {
+        let total = 0;
+        ['200ml', '500ml', '1L'].forEach(sku => {
+            const r = parseFloat(document.getElementById(`rate-${sku}`).value) || 0;
+            const q = parseFloat(document.getElementById(`qty-${sku}`).value) || 0;
+            total += (r * q);
+        });
+        document.getElementById('ord-total-disp').innerText = '₹' + total.toFixed(2);
+    },
+
+  // --- 2. SUBMIT ORDER (Replace existing function) ---
+    submitOrder: function() {
+        const custId = document.getElementById('ord-cust').value;
+        const date = document.getElementById('ord-date').value;
+        const pay = document.getElementById('ord-pay').value;
+
+        // Validation & Calculation
+        const items = [];
+        let total = 0;
+
+        // Loop through SKUS to get items
+        for(let sku of SKUS) {
+            const q = parseFloat(document.getElementById(`qty-${sku}`).value) || 0;
+            const r = parseFloat(document.getElementById(`rate-${sku}`).value) || 0;
+            
+            if(q > 0) {
+                const currentStock = appStore.get().inventory[sku];
+                if(currentStock < q) {
+                    if(!confirm(`Low Inventory for ${sku}. Available: ${currentStock}. Proceed?`)) return;
+                }
+                items.push({ sku, qty: q, rate: r });
+                total += (q * r);
+            }
+        }
+
+        if(items.length === 0) return ToastManager.show("Please add at least one item", "error");
+
+        // Credit Check
+        const cust = appStore.get().customers.find(c => c.id === custId);
+        if(pay === 'Credit' && (cust.balance + total > cust.limit)) {
+            if(!confirm(`Credit Limit Exceeded! Bal: ${cust.balance}. Proceed?`)) return;
+        }
+
+        const initialPaid = (pay === 'Credit') ? 0 : total;
+
+        // --- KEY CHANGE HERE: Generates FRK-YYYYMMDD-XXXX ---
+        const order = {
+            id: Logic.generateNextOrderId(date), 
+            date, 
+            custId, 
+            items, 
+            total, 
+            paymentMode: pay, 
+            status: 'Ordered',     
+            trackingStep: 1,       
+            paidAmount: initialPaid 
+        };
+
+        appStore.addOrder(order);
+        ToastManager.show("Order Created: " + order.id, "success");
+        Router.navigate('tracking');
+    },
+            
+            calcOrderTotal: function() {
+                let total = 0;
+                SKUS.forEach(sku => {
+                    const r = parseFloat(document.getElementById(`rate-${sku}`).value) || 0;
+                    const q = parseFloat(document.getElementById(`qty-${sku}`).value) || 0;
+                    total += (r * q);
+                });
+                document.getElementById('ord-total-disp').innerText = Utils.formatCurrency(total);
+            },
+
+            
+            editOrder: function(id) {
+                // To allow robust inventory rollback, "Editing" in this strict version works by Voiding the old one 
+                // and allowing the user to create a new one, or simply changing payment mode.
+                const order = appStore.get().orders.find(o => o.id === id);
+                ModalManager.show(`Manage Order ${id.split('-')[1]}`, `
+                    <p style="margin-bottom:1rem;">To modify items, please void this order and create a new one to ensure inventory accuracy.</p>
+                    <div class="grid-2">
+                        <button class="btn btn-danger w-full" onclick="Logic.voidOrder('${id}')">Void & Refund Inventory</button>
+                        <button class="btn btn-outline w-full" onclick="ModalManager.close()">Cancel</button>
+                    </div>
+                `);
+            },
+
+            voidOrder: function(id) {
+                if(confirm("Are you sure? This will return items to stock and adjust customer balance.")) {
+                    // 1. Perform the Logic in Memory
+                    appStore.voidOrder(id);
+                    
+                    // 2. FORCE SAVE TO CLOUD IMMEDIATELY
+                    // This fixes the issue where data might revert if you refresh too soon
+                    DriveAdapter.saveDatabase(true);
+
+                    // 3. Update the UI
+                    ModalManager.close();
+                    ToastManager.show("Order Canceled & Inventory Restored", "success");
+                    
+                    // 4. Refresh the view to show 0 Outstanding
+                    setTimeout(() => Router.refresh(), 100); 
+                }
+            },
+
+            // --- PRINT CHALLAN LOGIC ---
+    printChallan: function(orderId) {
+        const order = appStore.get().orders.find(o => o.id === orderId);
+        if(!order) return ToastManager.show("Order not found", "error");
+
+        const cust = appStore.get().customers.find(c => c.id === order.custId) || {};
+        
+        // 1. Company Details (Configure these statically or load from settings)
+        const COMPANY = {
+            name: "Freskey Piyo Beverages",
+            address: "Plot 12, Ind. Area, Lucknow, UP",
+            gst: "09ABCDE1234F1Z5",
+            fssai: "12345678901234",
+            contact: "+91 98765 43210"
+        };
+
+        // 2. Generate Item Rows
+        const itemsHtml = order.items.map((item, index) => `
+            <tr>
+                <td style="text-align:center">${index + 1}</td>
+                <td>Packaged Drinking Water<br><small>Size: ${item.sku}</small></td>
+                <td>2201</td>
+                <td style="text-align:center">${item.qty}</td>
+                <td>Cases/Btls</td>
+                <td>${Utils.formatCurrency(item.rate)}</td> <!-- Rate Optional -->
+            </tr>
+        `).join('');
+
+        // 3. Construct HTML Structure
+        const html = `
+            <div class="dc-header">
+                <div style="font-size: 18px; font-weight: bold;">${COMPANY.name}</div>
+                <div style="font-size: 10px;">${COMPANY.address}</div>
+                <div style="font-size: 10px;">GSTIN: ${COMPANY.gst} | FSSAI: ${COMPANY.fssai}</div>
+                <div style="font-size: 10px;">Contact: ${COMPANY.contact}</div>
+                <div class="dc-title" style="margin-top:5px;">DELIVERY CHALLAN</div>
+            </div>
+
+            <div class="dc-flex">
+                <div class="dc-box">
+                    <div class="dc-label">Details of Consignee (To):</div>
+                    <div><strong>${cust.company || 'Cash Customer'}</strong></div>
+                    <div>${cust.address || ''}</div>
+                    <div>Ph: ${cust.phone || '-'}</div>
+                </div>
+                <div class="dc-box">
+                    <div class="dc-label">Challan Details:</div>
+                    <div style="display:flex; justify-content:space-between;"><span>Challan No:</span> <strong>${order.id}</strong></div>
+                    <div style="display:flex; justify-content:space-between;"><span>Date:</span> <span>${Utils.formatDate(order.date)}</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span>Transport:</span> <span>Own / Road</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span>Place:</span> <span>Lucknow</span></div>
+                </div>
+            </div>
+
+            <table class="dc-table">
+                <thead>
+                    <tr>
+                        <th style="width:5%">Sr</th>
+                        <th style="width:45%">Description of Goods</th>
+                        <th style="width:15%">HSN</th>
+                        <th style="width:10%">Qty</th>
+                        <th style="width:10%">Unit</th>
+                        <th style="width:15%">Rate (Opt)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${itemsHtml}
+                    <!-- Fill empty rows to make table look full -->
+                    <tr style="height: 20px;"><td colspan="6"></td></tr>
+                    <tr style="height: 20px;"><td colspan="6"></td></tr>
+                </tbody>
+            </table>
+
+            <div class="dc-purpose">
+                <div class="dc-label">Purpose of Delivery:</div>
+                <div style="display:flex; gap: 10px; margin-top:2px;">
+                    <span>&#9745; Supply</span>
+                    <span>&#9744; Job Work</span>
+                    <span>&#9744; Stock Transfer</span>
+                    <span>&#9744; Exhibition</span>
+                </div>
+            </div>
+
+            <div style="font-size: 9px; margin-bottom: 20px;">
+                <strong>Declaration:</strong> We hereby declare that the above goods are sent for the purpose mentioned above and the value stated is for reference/tax purposes only.
+            </div>
+
+            <div class="dc-footer">
+                <div class="dc-sign-box">
+                    Prepared By
+                </div>
+                <div class="dc-sign-box">
+                    Received By<br>(Sign & Seal)
+                </div>
+                <div class="dc-sign-box">
+                    <strong>For ${COMPANY.name}</strong><br><br>
+                    Auth. Signatory
+                </div>
+            </div>
+            <div style="text-align:center; font-size:8px; margin-top:10px;">Subject to Lucknow Jurisdiction. Computer Generated Document.</div>
+        `;
+
+        // 4. Inject and Print
+        document.getElementById('print-area').innerHTML = html;
+        window.print();
+    },
+
+            // --- Inventory Logic ---
+            openAddStockModal: function(sku) {
+                ModalManager.show(`Add Stock: ${sku}`, `
+                    <p style="margin-bottom:1rem; color:var(--gray-500);">1 Case = ${CONFIG.CASE_SIZE[sku]} Bottles</p>
+                    <div class="form-group">
+                        <label class="form-label">Add Quantity (CASES)</label>
+                        <input type="number" id="add-stock-cases" class="form-control" placeholder="0">
+                    </div>
+                    <button class="btn btn-success w-full" onclick="Logic.saveStock('${sku}')">Update Stock</button>
+                `);
+            },
+
+            saveStock: function(sku) {
+                const cases = parseInt(document.getElementById('add-stock-cases').value) || 0;
+                const bottles = cases * CONFIG.CASE_SIZE[sku];
+                if(bottles > 0) {
+                    appStore.adjustInventory(sku, bottles, 'add');
+                    ToastManager.show(`Added ${bottles} bottles`, "success");
+                    ModalManager.close();
+                    Router.refresh();
+                }
+            },
+
+            // --- Event Logic ---
             openAddEventModal: function() {
-                ModalManager.show("Schedule", `<div class="form-group"><label>Name</label><input id="evt-name" class="form-control"></div><div class="form-group"><label>Date</label><input type="date" id="evt-date" class="form-control"></div><div class="form-group"><label>Bottles</label><input type="number" id="evt-btl" class="form-control"></div><button class="btn btn-primary w-full" onclick="Logic.saveEvent()">Save</button>`);
+                ModalManager.show("Schedule Event", `
+                    <div class="form-group"><label class="form-label">Event Name</label><input id="evt-name" class="form-control"></div>
+                    <div class="form-group"><label class="form-label">Date</label><input type="date" id="evt-date" class="form-control"></div>
+                    <div class="form-group"><label class="form-label">Est. Bottles</label><input type="number" id="evt-btl" class="form-control"></div>
+                    <button class="btn btn-primary w-full" onclick="Logic.saveEvent()">Schedule</button>
+                `);
             },
+
             saveEvent: function() {
-                appStore.get().events.push({ id: Utils.generateId('EVT'), name: document.getElementById('evt-name').value, date: document.getElementById('evt-date').value, bottles: document.getElementById('evt-btl').value, status: 'Scheduled' });
-                ModalManager.close(); Router.refresh();
+                appStore.get().events.push({
+                    id: Utils.generateId('EVT'),
+                    name: document.getElementById('evt-name').value,
+                    date: document.getElementById('evt-date').value,
+                    bottles: document.getElementById('evt-btl').value,
+                    status: 'Scheduled'
+                });
+                ModalManager.close();
+                Router.refresh();
             },
+
             updateEventStatus: function(id, status) {
-                const e = appStore.get().events.find(x => x.id === id); if(e) e.status = status; Router.refresh();
+                const e = appStore.get().events.find(x => x.id === id);
+                if(e) e.status = status;
+                Router.refresh();
+            },
+
+            // --- Reports ---
+            generatePDF: function() {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                doc.setFontSize(18);
+                doc.text("Freskey Daily Sales Report", 14, 20);
+                doc.setFontSize(10);
+                doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 28);
+
+                const today = new Date().toISOString().split('T')[0];
+                const orders = appStore.get().orders.filter(o => o.date === today);
+
+                const tableData = orders.map(o => {
+                    const c = appStore.get().customers.find(cx => cx.id === o.custId);
+                    return [o.id.split('-')[1], c?.company, Utils.formatCurrency(o.total), o.paymentMode];
+                });
+
+                doc.autoTable({
+                    head: [['ID', 'Customer', 'Amount', 'Payment']],
+                    body: tableData,
+                    startY: 35
+                });
+
+                const total = orders.reduce((sum, o) => sum + o.total, 0);
+                doc.text(`Total Revenue Today: ${Utils.formatCurrency(total)}`, 14, doc.lastAutoTable.finalY + 10);
+
+                doc.save(`daily_report_${today}.pdf`);
+            },
+
+            generateExcel: function() {
+                const month = document.getElementById('report-month').value;
+                if(!month) return ToastManager.show("Please select a month", "error");
+
+                const orders = appStore.get().orders.filter(o => o.date.startsWith(month));
+                const data = orders.map(o => {
+                    const c = appStore.get().customers.find(cx => cx.id === o.custId);
+                    return {
+                        Date: o.date,
+                        OrderID: o.id,
+                        Customer: c ? c.company : 'Unknown',
+                        Total: o.total,
+                        Payment: o.paymentMode,
+                        Items: o.items.map(i => `${i.qty} ${i.sku}`).join('; ')
+                    };
+                });
+
+                const ws = XLSX.utils.json_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Sales");
+                XLSX.writeFile(wb, `Sales_${month}.xlsx`);
             },
             
-            printChallan: function(orderId) {
-                const order = appStore.get().orders.find(o => o.id === orderId);
-                const cust = appStore.get().customers.find(c => c.id === order.custId) || {};
-                const itemsHtml = order.items.map((item, index) => `<tr><td style="text-align:center">${index+1}</td><td>${item.sku}</td><td>2201</td><td style="text-align:center">${item.qty}</td><td>Units</td><td>-</td></tr>`).join('');
-                document.getElementById('print-area').innerHTML = `
-                    <div class="dc-header"><div class="dc-title">DELIVERY CHALLAN</div><div>Order: ${orderId}</div></div>
-                    <div class="dc-flex"><div class="dc-box"><strong>To:</strong> ${cust.company}</div><div class="dc-box"><strong>Date:</strong> ${Utils.formatDate(order.date)}</div></div>
-                    <table class="dc-table"><thead><tr><th>Sr</th><th>Item</th><th>HSN</th><th>Qty</th><th>Unit</th><th>Rate</th></tr></thead><tbody>${itemsHtml}</tbody></table>
-                `;
-                window.print();
-            },
-
-            // INVOICE GEN
-            calcJsonTotals: function() {
-                const qty = parseFloat(document.getElementById('inv-quantity').value) || 0;
-                const price = parseFloat(document.getElementById('inv-unitPrice').value) || 0;
-                document.getElementById('inv-totalValue').innerText = (qty * price).toFixed(2);
-            },
-            downloadEInvoiceJSON: function() {
-                // Simplified JSON generation logic
-                const data = { docNo: document.getElementById('inv-docNo').value, total: document.getElementById('inv-totalValue').innerText };
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
-                const a = document.createElement('a'); a.setAttribute("href", dataStr); a.setAttribute("download", "invoice.json"); document.body.appendChild(a); a.click(); a.remove();
-            },
-            downloadExcelReport: function() {
-                const orders = appStore.get().orders;
-                const ws = XLSX.utils.json_to_sheet(orders);
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "Orders");
-                XLSX.writeFile(wb, "report.xlsx");
+            saveSettings: function() {
+                 SKUS.forEach(sku => {
+                     appStore.get().settings.prices[sku] = parseFloat(document.getElementById(`set-price-${sku}`).value) || 0;
+                 });
+                 ToastManager.show("Settings Saved", "success");
             }
         };
 
+        /**
+         * ================================================================================== 
+         * 7. ROUTING & NAVIGATION 
+         * ================================================================================== 
+         */
         const Router = {
             currentPage: 'dashboard',
+            
             navigate: function(pageId) {
                 this.currentPage = pageId;
+                
+                // Update Nav UI
                 document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
                 const activeNav = document.querySelector(`.nav-item[onclick="Router.navigate('${pageId}')"]`);
                 if(activeNav) activeNav.classList.add('active');
-                document.getElementById('page-title').innerText = pageId.toUpperCase();
-                document.getElementById('main-content').innerHTML = Views[pageId] ? Views[pageId]() : '<h1>404</h1>';
+
+                // Render Content
+                document.getElementById('page-title').innerText = pageId.charAt(0).toUpperCase() + pageId.slice(1).replace('-', ' ');
+                document.getElementById('main-content').innerHTML = Views[pageId] ? Views[pageId]() : '<h1>404 Page Not Found</h1>';
+
+                // Close Mobile Sidebar
                 document.getElementById('sidebar').classList.remove('open');
                 document.getElementById('mobile-overlay').classList.remove('active');
             },
-            refresh: function() { this.navigate(this.currentPage); }
+
+            refresh: function() {
+                this.navigate(this.currentPage);
+            }
         };
 
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('mobile-overlay').classList.toggle('active'); }
-        window.onload = function() { DriveAdapter.init(); };
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('mobile-overlay').classList.toggle('active');
+        }
+
+        /**
+         * ================================================================================== 
+         * 8. INITIALIZATION 
+         * ================================================================================== 
+         */
+        window.onload = function() {
+            DriveAdapter.init(); // Init Google Auth scripts
+        };
 
     </script>
 </body>
