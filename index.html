@@ -80,7 +80,54 @@
         /* ================================================================================== 
            2. LAYOUT COMPONENTS 
            ================================================================================== */
+/* ================================================================================== 
+   8. DELIVERY CHALLAN PRINT STYLES (A5)
+   ================================================================================== */
+@media print {
+    /* Hide the actual ERP App */
+    #app-root, #modal-layer, #toast-root, #login-view, .mobile-overlay {
+        display: none !important;
+    }
 
+    /* Show only the Challan */
+    #print-area {
+        display: block !important;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 148mm; /* A5 Width */
+        height: 209mm; /* A5 Height (Approx) */
+        background: white;
+        padding: 10mm;
+        box-sizing: border-box;
+        font-family: 'Times New Roman', serif; /* Formal Look */
+        color: #000;
+    }
+
+    /* Force A5 Paper Size */
+    @page {
+        size: A5 portrait;
+        margin: 0;
+    }
+}
+
+/* Screen Styles for Challan (Hidden by default) */
+#print-area {
+    display: none;
+}
+
+/* Challan Specific Utility Classes */
+.dc-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 10px; }
+.dc-title { font-size: 16px; font-weight: bold; text-decoration: underline; text-transform: uppercase; }
+.dc-flex { display: flex; justify-content: space-between; font-size: 10px; margin-bottom: 10px; }
+.dc-box { width: 48%; border: 1px solid #000; padding: 5px; border-radius: 4px; }
+.dc-label { font-weight: bold; font-size: 9px; }
+.dc-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 10px; }
+.dc-table th { border: 1px solid #000; padding: 4px; background: #eee; text-align: left; }
+.dc-table td { border: 1px solid #000; padding: 4px; }
+.dc-purpose { font-size: 10px; border: 1px solid #000; padding: 5px; margin-bottom: 10px; }
+.dc-footer { display: flex; justify-content: space-between; margin-top: 30px; font-size: 10px; text-align: center; }
+.dc-sign-box { border-top: 1px solid #000; width: 30%; padding-top: 5px; }
 
 
         /* ================================================================================== 
@@ -692,6 +739,12 @@
 
     <!-- TOAST CONTAINER -->
     <div id="toast-root" class="toast-container"></div>
+
+    
+    <!-- PRINT CONTAINER (Hidden on screen, visible on print) -->
+<div id="print-area">
+    <!-- Content injected via JS -->
+</div>
 
     <!-- ================================================================================== 
          JAVASCRIPT APPLICATION LOGIC
@@ -1706,10 +1759,17 @@
                     <td colspan="9">
                         <div class="detail-box">
                             <div class="grid-3">
-                                <div><strong>Breakdown:</strong><br>${o.items.map(i => `${i.sku} (${i.qty})`).join(', ')}</div>
-                                <div><strong>Payment:</strong><br>Paid: ${Utils.formatCurrency(paid)}<br>Due: ${Utils.formatCurrency(balance)}</div>
-                                <div><button class="btn btn-outline btn-sm" onclick="Logic.editOrder('${o.id}')">Manage</button></div>
-                            </div>
+    <div><strong>Breakdown:</strong><br>${o.items.map(i => `${i.sku} (${i.qty})`).join(', ')}</div>
+    <div><strong>Payment:</strong><br>Paid: ${Utils.formatCurrency(paid)}<br>Due: ${Utils.formatCurrency(balance)}</div>
+    <div style="display:flex; flex-direction:column; gap:5px;">
+        <button class="btn btn-outline btn-sm" onclick="Logic.editOrder('${o.id}')">Manage Order</button>
+        <!-- NEW BUTTON ADDED HERE -->
+        <button class="btn btn-primary btn-sm" onclick="Logic.printChallan('${o.id}')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+            Print Challan (A5)
+        </button>
+    </div>
+</div>
                         </div>
                     </td>
                 </tr>
@@ -2033,6 +2093,113 @@ calcOrderTotal: function() {
                     Router.refresh();
                 }
             },
+
+            // --- PRINT CHALLAN LOGIC ---
+    printChallan: function(orderId) {
+        const order = appStore.get().orders.find(o => o.id === orderId);
+        if(!order) return ToastManager.show("Order not found", "error");
+
+        const cust = appStore.get().customers.find(c => c.id === order.custId) || {};
+        
+        // 1. Company Details (Configure these statically or load from settings)
+        const COMPANY = {
+            name: "Freskey Piyo Beverages",
+            address: "Plot 12, Ind. Area, Lucknow, UP",
+            gst: "09ABCDE1234F1Z5",
+            fssai: "12345678901234",
+            contact: "+91 98765 43210"
+        };
+
+        // 2. Generate Item Rows
+        const itemsHtml = order.items.map((item, index) => `
+            <tr>
+                <td style="text-align:center">${index + 1}</td>
+                <td>Packaged Drinking Water<br><small>Size: ${item.sku}</small></td>
+                <td>2201</td>
+                <td style="text-align:center">${item.qty}</td>
+                <td>Cases/Btls</td>
+                <td>${Utils.formatCurrency(item.rate)}</td> <!-- Rate Optional -->
+            </tr>
+        `).join('');
+
+        // 3. Construct HTML Structure
+        const html = `
+            <div class="dc-header">
+                <div style="font-size: 18px; font-weight: bold;">${COMPANY.name}</div>
+                <div style="font-size: 10px;">${COMPANY.address}</div>
+                <div style="font-size: 10px;">GSTIN: ${COMPANY.gst} | FSSAI: ${COMPANY.fssai}</div>
+                <div style="font-size: 10px;">Contact: ${COMPANY.contact}</div>
+                <div class="dc-title" style="margin-top:5px;">DELIVERY CHALLAN</div>
+            </div>
+
+            <div class="dc-flex">
+                <div class="dc-box">
+                    <div class="dc-label">Details of Consignee (To):</div>
+                    <div><strong>${cust.company || 'Cash Customer'}</strong></div>
+                    <div>${cust.address || ''}</div>
+                    <div>Ph: ${cust.phone || '-'}</div>
+                </div>
+                <div class="dc-box">
+                    <div class="dc-label">Challan Details:</div>
+                    <div style="display:flex; justify-content:space-between;"><span>Challan No:</span> <strong>${order.id}</strong></div>
+                    <div style="display:flex; justify-content:space-between;"><span>Date:</span> <span>${Utils.formatDate(order.date)}</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span>Transport:</span> <span>Own / Road</span></div>
+                    <div style="display:flex; justify-content:space-between;"><span>Place:</span> <span>Lucknow</span></div>
+                </div>
+            </div>
+
+            <table class="dc-table">
+                <thead>
+                    <tr>
+                        <th style="width:5%">Sr</th>
+                        <th style="width:45%">Description of Goods</th>
+                        <th style="width:15%">HSN</th>
+                        <th style="width:10%">Qty</th>
+                        <th style="width:10%">Unit</th>
+                        <th style="width:15%">Rate (Opt)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${itemsHtml}
+                    <!-- Fill empty rows to make table look full -->
+                    <tr style="height: 20px;"><td colspan="6"></td></tr>
+                    <tr style="height: 20px;"><td colspan="6"></td></tr>
+                </tbody>
+            </table>
+
+            <div class="dc-purpose">
+                <div class="dc-label">Purpose of Delivery:</div>
+                <div style="display:flex; gap: 10px; margin-top:2px;">
+                    <span>&#9745; Supply</span>
+                    <span>&#9744; Job Work</span>
+                    <span>&#9744; Stock Transfer</span>
+                    <span>&#9744; Exhibition</span>
+                </div>
+            </div>
+
+            <div style="font-size: 9px; margin-bottom: 20px;">
+                <strong>Declaration:</strong> We hereby declare that the above goods are sent for the purpose mentioned above and the value stated is for reference/tax purposes only.
+            </div>
+
+            <div class="dc-footer">
+                <div class="dc-sign-box">
+                    Prepared By
+                </div>
+                <div class="dc-sign-box">
+                    Received By<br>(Sign & Seal)
+                </div>
+                <div class="dc-sign-box">
+                    <strong>For ${COMPANY.name}</strong><br><br>
+                    Auth. Signatory
+                </div>
+            </div>
+            <div style="text-align:center; font-size:8px; margin-top:10px;">Subject to Lucknow Jurisdiction. Computer Generated Document.</div>
+        `;
+
+        // 4. Inject and Print
+        document.getElementById('print-area').innerHTML = html;
+        window.print();
+    },
 
             // --- Inventory Logic ---
             openAddStockModal: function(sku) {
