@@ -1559,7 +1559,9 @@
          * ================================================================================== 
          */
         const Logic = {
-            // --- Customer Logic ---
+            // ============================================================
+            // 1. CUSTOMER LOGIC
+            // ============================================================
             openAddCustomerModal: function() {
                 ModalManager.show("Add New Customer", `
                     <div class="grid-2">
@@ -1572,8 +1574,6 @@
                     <button class="btn btn-primary w-full" onclick="Logic.saveNewCustomer()">Save Customer</button>
                 `);
             },
-
-            
 
             saveNewCustomer: function() {
                 const comp = document.getElementById('new-c-comp').value;
@@ -1594,253 +1594,6 @@
                 Router.refresh();
             },
 
-            // --- 1. ID GENERATOR (Paste at top of Logic object) ---
-    generateNextOrderId: function(dateString) {
-        // 1. Format Date: YYYY-MM-DD -> YYYYMMDD
-        const cleanDate = dateString.replace(/-/g, '');
-        const prefix = `FRK-${cleanDate}-`;
-
-        // 2. Find existing orders for this specific date
-        const existingOrders = appStore.get().orders.filter(o => o.id.startsWith(prefix));
-
-        if (existingOrders.length === 0) {
-            return prefix + '0001'; // First order of the day
-        }
-
-        // 3. Find highest sequence number
-        let maxSeq = 0;
-        existingOrders.forEach(o => {
-            const parts = o.id.split('-');
-            if(parts.length === 3) {
-                const seq = parseInt(parts[2]);
-                if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
-            }
-        });
-
-        // 4. Return formatted ID (e.g., FRK-20251214-0002)
-        return prefix + (maxSeq + 1).toString().padStart(4, '0');
-    },
-
-
-            // --- FILTER & TABLE LOGIC ---
-    
-    // 1. Master Filter Function
-    filterOrders: function() {
-        const search = document.getElementById('filter-search').value.toLowerCase();
-        const fromDate = document.getElementById('filter-from').value;
-        const toDate = document.getElementById('filter-to').value;
-        
-        const allOrders = appStore.get().orders;
-        const customers = appStore.get().customers;
-
-        // Filter Logic
-        const filtered = allOrders.filter(o => {
-            const c = customers.find(x => x.id === o.custId);
-            const cName = c ? (c.company + ' ' + c.name).toLowerCase() : '';
-            const oId = o.id.toLowerCase();
-            
-            // Search Match
-            const matchesSearch = oId.includes(search) || cName.includes(search) || o.total.toString().includes(search);
-            
-            // Date Match
-            const matchesDate = (!fromDate || o.date >= fromDate) && (!toDate || o.date <= toDate);
-            
-            return matchesSearch && matchesDate;
-        }).sort((a,b) => new Date(b.date) - new Date(a.date)); // Sort Newest First
-
-        Logic.renderOrderRows(filtered);
-    },
-
-    // 2. Render Rows (Generates the HTML)
-    // --- 3. RENDER TABLE ROWS (Replace existing function) ---
-    renderOrderRows: function(orders) {
-        const tbody = document.getElementById('order-table-body');
-        const noRec = document.getElementById('no-records');
-        
-        if(!tbody) return;
-        tbody.innerHTML = '';
-        
-        if(orders.length === 0) {
-            noRec.style.display = 'block';
-            return;
-        }
-        noRec.style.display = 'none';
-
-        orders.forEach(o => {
-            const c = appStore.get().customers.find(cx => cx.id === o.custId);
-            const paid = o.paidAmount || 0;
-            const balance = o.total - paid;
-            
-            // Format Items: 200ml×10, 500ml×5
-            const itemString = o.items.map(i => `<span class="item-pill">${i.sku}×${i.qty}</span>`).join(' ');
-            
-            // --- KEY CHANGE: Use the ID directly from database ---
-            // If the ID is old (ORD-...), it shows as is. If new (FRK-...), it shows correctly.
-            const displayId = o.id; 
-
-            // Delivery Date
-            let delDate = '-';
-            if(o.status === 'Delivered') delDate = Utils.formatDate(o.date); 
-
-            // Badge Color
-            let badgeClass = 'badge-info';
-            if(o.status === 'Delivered') badgeClass = 'badge-success';
-            if(o.paymentMode === 'Credit' && balance > 0) badgeClass = 'badge-danger';
-
-            const row = `
-                <tr class="tr-clickable" onclick="Logic.toggleRow('${o.id}')">
-                    <td style="font-family:monospace; font-weight:700; color:var(--primary-700)">
-                        ${displayId}
-                        <div class="hide-mobile" style="font-size:0.7rem; color:#999;">Click details</div>
-                    </td>
-                    <td>${Utils.formatDate(o.date)}</td>
-                    <td style="font-weight:600;">${c ? c.company : 'Unknown'}</td>
-                    <td class="hide-mobile">${itemString}</td>
-                    <td style="text-align:right; font-weight:700;">${Utils.formatCurrency(o.total)}</td>
-                    <td style="text-align:right; color:var(--success-700)">${Utils.formatCurrency(paid)}</td>
-                    <td style="text-align:right;" class="${balance > 0.5 ? 'bal-due' : 'bal-zero'}">
-                        ${Utils.formatCurrency(balance)}
-                    </td>
-                    <td><span class="badge ${badgeClass}">${o.status}</span></td>
-                    <td class="hide-mobile">${delDate}</td>
-                </tr>
-                <tr id="detail-${o.id}" class="tr-details">
-                    <td colspan="9">
-                        <div class="detail-box">
-                            <div class="grid-3">
-    <div><strong>Breakdown:</strong><br>${o.items.map(i => `${i.sku} (${i.qty})`).join(', ')}</div>
-    <div><strong>Payment:</strong><br>Paid: ${Utils.formatCurrency(paid)}<br>Due: ${Utils.formatCurrency(balance)}</div>
-    <div style="display:flex; flex-direction:column; gap:5px;">
-        <button class="btn btn-outline btn-sm" onclick="Logic.editOrder('${o.id}')">Manage Order</button>
-        <!-- NEW BUTTON ADDED HERE -->
-        <button class="btn btn-primary btn-sm" onclick="Logic.printChallan('${o.id}')">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-            Print Challan (A5)
-        </button>
-    </div>
-</div>
-                        </div>
-                    </td>
-                </tr>
-            `;
-            tbody.innerHTML += row;
-        });
-    },
-
-
-
-
-
-
-            
-
-    // 3. Toggle Row Visibility
-    toggleRow: function(id) {
-        const row = document.getElementById(`detail-${id}`);
-        if(row) row.classList.toggle('active');
-    },
-
-    // 4. Excel Download Logic
-    downloadExcelReport: function() {
-        const fromDate = document.getElementById('filter-from').value;
-        const toDate = document.getElementById('filter-to').value;
-        
-        // Use the same filtering logic to get data
-        const allOrders = appStore.get().orders;
-        const customers = appStore.get().customers;
-        
-        const dataToExport = allOrders.filter(o => 
-            o.date >= fromDate && o.date <= toDate
-        ).map(o => {
-             const c = customers.find(x => x.id === o.custId);
-             const paid = o.paidAmount || 0;
-             const balance = o.total - paid;
-             
-             return {
-                 "Order ID": `FRK-${o.date.replace(/-/g,'')}-${o.id.split('-')[1]}`,
-                 "Date": o.date,
-                 "Customer": c ? c.company : 'Unknown',
-                 "Items": o.items.map(i => `${i.sku}x${i.qty}`).join(', '),
-                 "Total Amount": o.total,
-                 "Paid Amount": paid,
-                 "Balance": balance,
-                 "Status": o.status,
-                 "Payment Mode": o.paymentMode
-             };
-        });
-
-        if(dataToExport.length === 0) return ToastManager.show("No data in selected range", "error");
-
-        const ws = XLSX.utils.json_to_sheet(dataToExport);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Order History");
-        XLSX.writeFile(wb, `Freskey_Orders_${fromDate}_to_${toDate}.xlsx`);
-    },
-
-
-            // --- TRACKING & PAYMENT LOGIC ---
-    updateTracking: function(id, step) {
-                const order = appStore.get().orders.find(o => o.id === id);
-                if(order) {
-                    order.trackingStep = step;
-                    if(step === 2) order.status = 'Dispatched';
-                    if(step === 3) order.status = 'Delivered';
-                    
-                    // Force Save to Drive
-                    DriveAdapter.saveDatabase(true); 
-                    Router.refresh();
-                }
-            },
-
-            addPayment: function(id) {
-                const amount = parseFloat(document.getElementById(`pay-${id}`).value);
-                if(!amount || amount <= 0) return ToastManager.show("Invalid Amount", "error");
-
-                const order = appStore.get().orders.find(o => o.id === id);
-                const due = order.total - (order.paidAmount || 0);
-
-                // Allow small floating point differences
-                if(amount > due + 1) return ToastManager.show(`Amount exceeds balance of ${Utils.formatCurrency(due)}`, "error");
-
-                // 1. Update Order
-                order.paidAmount = (order.paidAmount || 0) + amount;
-
-                // 2. Update Customer Balance (If they were in debt, paying reduces debt)
-                const cust = appStore.get().customers.find(c => c.id === order.custId);
-                if(cust) {
-                    cust.balance -= amount;
-                    // Prevent negative balance glitches
-                    if(Math.abs(cust.balance) < 1) cust.balance = 0; 
-                }
-
-                ToastManager.show(`Payment of ${Utils.formatCurrency(amount)} recorded`, "success");
-                DriveAdapter.saveDatabase(true);
-                Router.refresh();
-            },
-
-    addPayment: function(id) {
-        const amount = parseFloat(document.getElementById(`pay-${id}`).value);
-        if(!amount || amount <= 0) return ToastManager.show("Invalid Amount", "error");
-
-        const order = appStore.get().orders.find(o => o.id === id);
-        const due = order.total - (order.paidAmount || 0);
-
-        if(amount > due) return ToastManager.show(`Amount exceeds balance of ${due}`, "error");
-
-        // 1. Update Order
-        order.paidAmount = (order.paidAmount || 0) + amount;
-
-        // 2. Update Customer Balance (Reduce debt)
-        const cust = appStore.get().customers.find(c => c.id === order.custId);
-        if(cust) {
-            cust.balance -= amount;
-            if(cust.balance < 0) cust.balance = 0; // Safety catch
-        }
-
-        ToastManager.show(`Payment of ${Utils.formatCurrency(amount)} recorded`, "success");
-        Router.refresh();
-    },
-            
             editCustomer: function(id) {
                 const c = appStore.get().customers.find(x => x.id === id);
                 if(!c) return;
@@ -1860,125 +1613,295 @@
                 Router.refresh();
             },
 
-            // --- Order Logic ---
+            // ============================================================
+            // 2. ORDER UTILITIES (ID Gen, Filtering)
+            // ============================================================
+            generateNextOrderId: function(dateString) {
+                const cleanDate = dateString.replace(/-/g, '');
+                const prefix = `FRK-${cleanDate}-`;
+                const existingOrders = appStore.get().orders.filter(o => o.id.startsWith(prefix));
 
+                if (existingOrders.length === 0) {
+                    return prefix + '0001';
+                }
 
-calcOrderTotal: function() {
-    let totalAmount = 0;
-    let totalBoxes = 0;
-    let totalBottles = 0;
-
-    // Loop through each SKU (200ml, 500ml, 1L)
-    SKUS.forEach(sku => {
-        // 1. Find the elements in the HTML
-        const rateEl = document.getElementById(`rate-${sku}`);
-        const boxEl = document.getElementById(`qty-box-${sku}`); // Looking for BOX ID now
-        const rowDispEl = document.getElementById(`row-tot-${sku}`);
-
-        // Safety check: if elements aren't found, skip to avoid crashing
-        if (!rateEl || !boxEl) return;
-
-        // 2. Get the numbers (Default to 0 if empty)
-        const rate = parseFloat(rateEl.value) || 0;
-        const boxes = parseFloat(boxEl.value) || 0;
-
-        // 3. Do the math: Boxes * Case Size * Rate
-        const caseSize = CONFIG.CASE_SIZE[sku];
-        const bottles = boxes * caseSize;
-        const rowTotal = bottles * rate;
-
-        // 4. Update the small total next to the input
-        if (rowDispEl) rowDispEl.innerText = Utils.formatCurrency(rowTotal);
-
-        // 5. Add to the main totals
-        totalAmount += rowTotal;
-        totalBoxes += boxes;
-        totalBottles += bottles;
-    });
-
-    // 6. Update the Grand Total display at the bottom
-    const totalDisp = document.getElementById('ord-total-disp');
-    const qtyDisp = document.getElementById('ord-total-qty-disp');
-    
-    if (totalDisp) totalDisp.innerText = Utils.formatCurrency(totalAmount);
-    if (qtyDisp) qtyDisp.innerText = `${totalBoxes} Boxes | ${totalBottles} Total Bottles`;
-},
-
-  // --- 2. SUBMIT ORDER (Replace existing function) ---
-    submitOrder: function() {
-    const custId = document.getElementById('ord-cust').value;
-    const date = document.getElementById('ord-date').value;
-    const pay = document.getElementById('ord-pay').value;
-
-    const items = [];
-    let total = 0;
-
-    for(let sku of SKUS) {
-        // GET BOX INPUT
-        const boxEl = document.getElementById(`qty-box-${sku}`);
-        const rateEl = document.getElementById(`rate-${sku}`);
-
-        if(!boxEl || !rateEl) continue; // Skip if fields missing
-
-        const boxes = parseFloat(boxEl.value) || 0;
-        const rate = parseFloat(rateEl.value) || 0;
-        
-        if(boxes > 0) {
-            const caseSize = CONFIG.CASE_SIZE[sku];
-            const totalBottles = boxes * caseSize; 
-            
-            // Check Inventory
-            const currentStock = appStore.get().inventory[sku];
-            if(currentStock < totalBottles) {
-                if(!confirm(`Low Stock for ${sku}!\nRequested: ${boxes} Boxes (${totalBottles} btls)\nAvailable: ${Math.floor(currentStock/caseSize)} Boxes\n\nProceed anyway?`)) return;
-            }
-
-            items.push({ sku, qty: totalBottles, rate: rate });
-            total += (totalBottles * rate);
-        }
-    }
-
-    if(items.length === 0) return ToastManager.show("Please enter at least 1 box", "error");
-
-    // Credit Check
-    const cust = appStore.get().customers.find(c => c.id === custId);
-    if(pay === 'Credit' && (cust.balance + total > cust.limit)) {
-        if(!confirm(`Credit Limit Exceeded! Bal: ${cust.balance}. Proceed?`)) return;
-    }
-
-    const order = {
-        id: Logic.generateNextOrderId(date), 
-        date, custId, items, total, 
-        paymentMode: pay, status: 'Ordered', trackingStep: 1, 
-        paidAmount: (pay === 'Credit') ? 0 : total 
-    };
-
-    appStore.addOrder(order);
-    ToastManager.show("Order Created", "success");
-    Router.navigate('tracking');
-},
-
-            
-            
-            calcOrderTotal: function() {
-                let total = 0;
-                SKUS.forEach(sku => {
-                    const r = parseFloat(document.getElementById(`rate-${sku}`).value) || 0;
-                    const q = parseFloat(document.getElementById(`qty-${sku}`).value) || 0;
-                    total += (r * q);
+                let maxSeq = 0;
+                existingOrders.forEach(o => {
+                    const parts = o.id.split('-');
+                    if(parts.length === 3) {
+                        const seq = parseInt(parts[2]);
+                        if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
+                    }
                 });
-                document.getElementById('ord-total-disp').innerText = Utils.formatCurrency(total);
+                return prefix + (maxSeq + 1).toString().padStart(4, '0');
             },
 
-            
-            editOrder: function(id) {
-                // To allow robust inventory rollback, "Editing" in this strict version works by Voiding the old one 
-                // and allowing the user to create a new one, or simply changing payment mode.
+            filterOrders: function() {
+                const searchEl = document.getElementById('filter-search');
+                const fromEl = document.getElementById('filter-from');
+                const toEl = document.getElementById('filter-to');
+                
+                // If elements don't exist yet (page load), skip
+                if(!searchEl) { Logic.renderOrderRows(appStore.get().orders); return; }
+
+                const search = searchEl.value.toLowerCase();
+                const fromDate = fromEl.value;
+                const toDate = toEl.value;
+                
+                const allOrders = appStore.get().orders;
+                const customers = appStore.get().customers;
+
+                const filtered = allOrders.filter(o => {
+                    const c = customers.find(x => x.id === o.custId);
+                    const cName = c ? (c.company + ' ' + c.name).toLowerCase() : '';
+                    const oId = o.id.toLowerCase();
+                    
+                    const matchesSearch = oId.includes(search) || cName.includes(search) || o.total.toString().includes(search);
+                    const matchesDate = (!fromDate || o.date >= fromDate) && (!toDate || o.date <= toDate);
+                    
+                    return matchesSearch && matchesDate;
+                }).sort((a,b) => new Date(b.date) - new Date(a.date));
+
+                Logic.renderOrderRows(filtered);
+            },
+
+            renderOrderRows: function(orders) {
+                const tbody = document.getElementById('order-table-body');
+                const noRec = document.getElementById('no-records');
+                
+                if(!tbody) return;
+                tbody.innerHTML = '';
+                
+                if(orders.length === 0) {
+                    if(noRec) noRec.style.display = 'block';
+                    return;
+                }
+                if(noRec) noRec.style.display = 'none';
+
+                orders.forEach(o => {
+                    const c = appStore.get().customers.find(cx => cx.id === o.custId);
+                    const paid = o.paidAmount || 0;
+                    const balance = o.total - paid;
+                    
+                    // Display items summary
+                    const itemString = o.items.map(i => {
+                        // Display Box count if available, else calc
+                        const caseSize = CONFIG.CASE_SIZE[i.sku];
+                        const displayQty = i.boxes ? `${i.boxes} Box` : `${i.qty} btls`;
+                        return `<span class="item-pill">${i.sku}: ${displayQty}</span>`;
+                    }).join(' ');
+                    
+                    let delDate = '-';
+                    if(o.status === 'Delivered') delDate = Utils.formatDate(o.date); 
+
+                    let badgeClass = 'badge-info';
+                    if(o.status === 'Delivered') badgeClass = 'badge-success';
+                    if(o.paymentMode === 'Credit' && balance > 0.5) badgeClass = 'badge-danger';
+
+                    const row = `
+                        <tr class="tr-clickable" onclick="Logic.toggleRow('${o.id}')">
+                            <td style="font-family:monospace; font-weight:700; color:var(--primary-700)">
+                                ${o.id}
+                            </td>
+                            <td>${Utils.formatDate(o.date)}</td>
+                            <td style="font-weight:600;">${c ? c.company : 'Unknown'}</td>
+                            <td class="hide-mobile">${itemString}</td>
+                            <td style="text-align:right; font-weight:700;">${Utils.formatCurrency(o.total)}</td>
+                            <td style="text-align:right; color:var(--success-700)">${Utils.formatCurrency(paid)}</td>
+                            <td style="text-align:right;" class="${balance > 0.5 ? 'bal-due' : 'bal-zero'}">
+                                ${Utils.formatCurrency(balance)}
+                            </td>
+                            <td><span class="badge ${badgeClass}">${o.status}</span></td>
+                            <td class="hide-mobile">${delDate}</td>
+                        </tr>
+                        <tr id="detail-${o.id}" class="tr-details">
+                            <td colspan="9">
+                                <div class="detail-box">
+                                    <div class="grid-3">
+                                        <div>
+                                            <strong>Item Breakdown:</strong><br>
+                                            ${o.items.map(i => {
+                                                const b = i.boxes ? `(${i.boxes} Boxes)` : '';
+                                                return `${i.sku} x ${i.qty} Btls ${b}`;
+                                            }).join('<br>')}
+                                        </div>
+                                        <div>
+                                            <strong>Payment Status:</strong><br>
+                                            Total: ${Utils.formatCurrency(o.total)}<br>
+                                            Paid: ${Utils.formatCurrency(paid)}<br>
+                                            Balance: ${Utils.formatCurrency(balance)}
+                                        </div>
+                                        <div style="display:flex; flex-direction:column; gap:5px;">
+                                            <button class="btn btn-outline btn-sm" onclick="Logic.editOrder('${o.id}')">Manage / Void</button>
+                                            <button class="btn btn-primary btn-sm" onclick="Logic.printChallan('${o.id}')">
+                                                Print Challan (A5)
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            },
+
+            toggleRow: function(id) {
+                const row = document.getElementById(`detail-${id}`);
+                if(row) row.classList.toggle('active');
+            },
+
+            // ============================================================
+            // 3. TRACKING & PAYMENTS
+            // ============================================================
+            updateTracking: function(id, step) {
                 const order = appStore.get().orders.find(o => o.id === id);
-                ModalManager.show(`Manage Order ${id.split('-')[1]}`, `
+                if(order) {
+                    order.trackingStep = step;
+                    if(step === 2) order.status = 'Dispatched';
+                    if(step === 3) order.status = 'Delivered';
+                    DriveAdapter.saveDatabase(true); 
+                    Router.refresh();
+                }
+            },
+
+            addPayment: function(id) {
+                const amount = parseFloat(document.getElementById(`pay-${id}`).value);
+                if(!amount || amount <= 0) return ToastManager.show("Invalid Amount", "error");
+
+                const order = appStore.get().orders.find(o => o.id === id);
+                const due = order.total - (order.paidAmount || 0);
+
+                if(amount > due + 1) return ToastManager.show(`Amount exceeds balance`, "error");
+
+                order.paidAmount = (order.paidAmount || 0) + amount;
+
+                const cust = appStore.get().customers.find(c => c.id === order.custId);
+                if(cust) {
+                    cust.balance -= amount;
+                    if(Math.abs(cust.balance) < 1) cust.balance = 0; 
+                }
+
+                DriveAdapter.saveDatabase(true);
+                ToastManager.show(`Payment Recorded`, "success");
+                Router.refresh();
+            },
+
+            // ============================================================
+            // 4. ORDER CREATION (BOX LOGIC)
+            // ============================================================
+            
+            // This function calculates totals instantly when user types
+            calcOrderTotal: function() {
+                let totalAmount = 0;
+                let totalBoxes = 0;
+                let totalBottles = 0;
+
+                SKUS.forEach(sku => {
+                    // CRITICAL: Look for 'qty-box-' IDs
+                    const rateEl = document.getElementById(`rate-${sku}`);
+                    const boxEl = document.getElementById(`qty-box-${sku}`);
+                    const rowDispEl = document.getElementById(`row-tot-${sku}`);
+
+                    // Skip if elements not found (e.g. on different page)
+                    if (!rateEl || !boxEl) return;
+
+                    const rate = parseFloat(rateEl.value) || 0;
+                    const boxes = parseFloat(boxEl.value) || 0;
+
+                    // Calculation
+                    const caseSize = CONFIG.CASE_SIZE[sku];
+                    const bottles = boxes * caseSize;
+                    const rowTotal = bottles * rate; // Rate is per bottle
+
+                    // Update Row Total Display
+                    if (rowDispEl) rowDispEl.innerText = Utils.formatCurrency(rowTotal);
+
+                    // Add to Grand Totals
+                    totalAmount += rowTotal;
+                    totalBoxes += boxes;
+                    totalBottles += bottles;
+                });
+
+                // Update Grand Total Display
+                const tDisp = document.getElementById('ord-total-disp');
+                const qDisp = document.getElementById('ord-total-qty-disp');
+                
+                if (tDisp) tDisp.innerText = Utils.formatCurrency(totalAmount);
+                if (qDisp) qDisp.innerText = `${totalBoxes} Boxes | ${totalBottles} Total Bottles`;
+            },
+
+            submitOrder: function() {
+                const custId = document.getElementById('ord-cust').value;
+                const date = document.getElementById('ord-date').value;
+                const pay = document.getElementById('ord-pay').value;
+
+                const items = [];
+                let total = 0;
+
+                for(let sku of SKUS) {
+                    const boxEl = document.getElementById(`qty-box-${sku}`);
+                    const rateEl = document.getElementById(`rate-${sku}`);
+                    
+                    if(!boxEl || !rateEl) continue;
+
+                    const boxes = parseFloat(boxEl.value) || 0;
+                    const rate = parseFloat(rateEl.value) || 0;
+                    
+                    if(boxes > 0) {
+                        const caseSize = CONFIG.CASE_SIZE[sku];
+                        const totalBottles = boxes * caseSize; 
+                        
+                        // Inventory Check
+                        const currentStock = appStore.get().inventory[sku];
+                        if(currentStock < totalBottles) {
+                            const availBox = Math.floor(currentStock/caseSize);
+                            if(!confirm(`Low Stock for ${sku}!\nRequested: ${boxes} Boxes\nAvailable: ${availBox} Boxes\n\nProceed anyway?`)) return;
+                        }
+
+                        items.push({ 
+                            sku, 
+                            qty: totalBottles, // Save bottles for inventory math
+                            rate: rate,
+                            boxes: boxes       // Save boxes for display
+                        });
+                        
+                        total += (totalBottles * rate);
+                    }
+                }
+
+                if(items.length === 0) return ToastManager.show("Please enter at least 1 box", "error");
+
+                // Credit Limit Check
+                const cust = appStore.get().customers.find(c => c.id === custId);
+                if(pay === 'Credit' && (cust.balance + total > cust.limit)) {
+                    if(!confirm(`Credit Limit Exceeded! Bal: ${cust.balance}. Proceed?`)) return;
+                }
+
+                const initialPaid = (pay === 'Credit') ? 0 : total;
+
+                const order = {
+                    id: Logic.generateNextOrderId(date), 
+                    date, 
+                    custId, 
+                    items, 
+                    total, 
+                    paymentMode: pay, 
+                    status: 'Ordered',     
+                    trackingStep: 1,       
+                    paidAmount: initialPaid 
+                };
+
+                appStore.addOrder(order);
+                ToastManager.show("Order Created Successfully", "success");
+                Router.navigate('tracking');
+            },
+
+            editOrder: function(id) {
+                ModalManager.show(`Manage Order`, `
                     <p style="margin-bottom:1rem;">To modify items, please void this order and create a new one to ensure inventory accuracy.</p>
                     <div class="grid-2">
-                        <button class="btn btn-danger w-full" onclick="Logic.voidOrder('${id}')">Void & Refund Inventory</button>
+                        <button class="btn btn-danger w-full" onclick="Logic.voidOrder('${id}')">Void & Refund Stock</button>
                         <button class="btn btn-outline w-full" onclick="ModalManager.close()">Cancel</button>
                     </div>
                 `);
@@ -1986,135 +1909,110 @@ calcOrderTotal: function() {
 
             voidOrder: function(id) {
                 if(confirm("Are you sure? This will return items to stock and adjust customer balance.")) {
-                    // 1. Perform the Logic in Memory
                     appStore.voidOrder(id);
-                    
-                    // 2. FORCE SAVE TO CLOUD IMMEDIATELY
-                    // This fixes the issue where data might revert if you refresh too soon
                     DriveAdapter.saveDatabase(true);
-
-                    // 3. Update the UI
                     ModalManager.close();
-                    ToastManager.show("Order Canceled & Inventory Restored", "success");
-                    
-                    // 4. Refresh the view to show 0 Outstanding
-                    setTimeout(() => Router.refresh(), 100); 
+                    ToastManager.show("Order Canceled & Stock Restored", "success");
+                    Router.refresh(); 
                 }
             },
 
-            // --- PRINT CHALLAN LOGIC ---
-    printChallan: function(orderId) {
-        const order = appStore.get().orders.find(o => o.id === orderId);
-        if(!order) return ToastManager.show("Order not found", "error");
+            // ============================================================
+            // 5. PRINT CHALLAN
+            // ============================================================
+            printChallan: function(orderId) {
+                const order = appStore.get().orders.find(o => o.id === orderId);
+                if(!order) return ToastManager.show("Order not found", "error");
 
-        const cust = appStore.get().customers.find(c => c.id === order.custId) || {};
-        
-        // 1. Company Details (Configure these statically or load from settings)
-        const COMPANY = {
-            name: "Freskey Piyo Beverages",
-            address: "Plot 12, Ind. Area, Lucknow, UP",
-            gst: "09ABCDE1234F1Z5",
-            fssai: "12345678901234",
-            contact: "+91 98765 43210"
-        };
+                const cust = appStore.get().customers.find(c => c.id === order.custId) || {};
+                
+                const COMPANY = {
+                    name: "Freskey Piyo Beverages",
+                    address: "Plot 12, Ind. Area, Lucknow, UP",
+                    gst: "09ABCDE1234F1Z5",
+                    fssai: "12345678901234",
+                    contact: "+91 98765 43210"
+                };
 
-        // 2. Generate Item Rows
-        const itemsHtml = order.items.map((item, index) => `
-            <tr>
-                <td style="text-align:center">${index + 1}</td>
-                <td>Packaged Drinking Water<br><small>Size: ${item.sku}</small></td>
-                <td>2201</td>
-                <td style="text-align:center">${item.qty}</td>
-                <td>Cases/Btls</td>
-                <td>${Utils.formatCurrency(item.rate)}</td> <!-- Rate Optional -->
-            </tr>
-        `).join('');
+                const itemsHtml = order.items.map((item, index) => {
+                    const caseSize = CONFIG.CASE_SIZE[item.sku];
+                    // If old data doesn't have 'boxes', calculate it
+                    const boxCount = item.boxes || (item.qty / caseSize).toFixed(1);
 
-        // 3. Construct HTML Structure
-        const html = `
-            <div class="dc-header">
-                <div style="font-size: 18px; font-weight: bold;">${COMPANY.name}</div>
-                <div style="font-size: 10px;">${COMPANY.address}</div>
-                <div style="font-size: 10px;">GSTIN: ${COMPANY.gst} | FSSAI: ${COMPANY.fssai}</div>
-                <div style="font-size: 10px;">Contact: ${COMPANY.contact}</div>
-                <div class="dc-title" style="margin-top:5px;">DELIVERY CHALLAN</div>
-            </div>
-
-            <div class="dc-flex">
-                <div class="dc-box">
-                    <div class="dc-label">Details of Consignee (To):</div>
-                    <div><strong>${cust.company || 'Cash Customer'}</strong></div>
-                    <div>${cust.address || ''}</div>
-                    <div>Ph: ${cust.phone || '-'}</div>
-                </div>
-                <div class="dc-box">
-                    <div class="dc-label">Challan Details:</div>
-                    <div style="display:flex; justify-content:space-between;"><span>Challan No:</span> <strong>${order.id}</strong></div>
-                    <div style="display:flex; justify-content:space-between;"><span>Date:</span> <span>${Utils.formatDate(order.date)}</span></div>
-                    <div style="display:flex; justify-content:space-between;"><span>Transport:</span> <span>Own / Road</span></div>
-                    <div style="display:flex; justify-content:space-between;"><span>Place:</span> <span>Lucknow</span></div>
-                </div>
-            </div>
-
-            <table class="dc-table">
-                <thead>
+                    return `
                     <tr>
-                        <th style="width:5%">Sr</th>
-                        <th style="width:45%">Description of Goods</th>
-                        <th style="width:15%">HSN</th>
-                        <th style="width:10%">Qty</th>
-                        <th style="width:10%">Unit</th>
-                        <th style="width:15%">Rate (Opt)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${itemsHtml}
-                    <!-- Fill empty rows to make table look full -->
-                    <tr style="height: 20px;"><td colspan="6"></td></tr>
-                    <tr style="height: 20px;"><td colspan="6"></td></tr>
-                </tbody>
-            </table>
+                        <td style="text-align:center">${index + 1}</td>
+                        <td>Packaged Drinking Water<br><small>Size: ${item.sku}</small></td>
+                        <td>2201</td>
+                        <td style="text-align:center"><strong>${boxCount}</strong></td>
+                        <td>Boxes</td>
+                        <td>${Utils.formatCurrency(item.rate)}</td>
+                    </tr>`;
+                }).join('');
 
-            <div class="dc-purpose">
-                <div class="dc-label">Purpose of Delivery:</div>
-                <div style="display:flex; gap: 10px; margin-top:2px;">
-                    <span>&#9745; Supply</span>
-                    <span>&#9744; Job Work</span>
-                    <span>&#9744; Stock Transfer</span>
-                    <span>&#9744; Exhibition</span>
-                </div>
-            </div>
+                const html = `
+                    <div class="dc-header">
+                        <div style="font-size: 18px; font-weight: bold;">${COMPANY.name}</div>
+                        <div style="font-size: 10px;">${COMPANY.address}</div>
+                        <div style="font-size: 10px;">GSTIN: ${COMPANY.gst} | FSSAI: ${COMPANY.fssai}</div>
+                        <div class="dc-title" style="margin-top:5px;">DELIVERY CHALLAN</div>
+                    </div>
 
-            <div style="font-size: 9px; margin-bottom: 20px;">
-                <strong>Declaration:</strong> We hereby declare that the above goods are sent for the purpose mentioned above and the value stated is for reference/tax purposes only.
-            </div>
+                    <div class="dc-flex">
+                        <div class="dc-box">
+                            <div class="dc-label">Details of Consignee (To):</div>
+                            <div><strong>${cust.company || 'Cash Customer'}</strong></div>
+                            <div>${cust.address || ''}</div>
+                            <div>Ph: ${cust.phone || '-'}</div>
+                        </div>
+                        <div class="dc-box">
+                            <div class="dc-label">Challan Details:</div>
+                            <div style="display:flex; justify-content:space-between;"><span>No:</span> <strong>${order.id}</strong></div>
+                            <div style="display:flex; justify-content:space-between;"><span>Date:</span> <span>${Utils.formatDate(order.date)}</span></div>
+                        </div>
+                    </div>
 
-            <div class="dc-footer">
-                <div class="dc-sign-box">
-                    Prepared By
-                </div>
-                <div class="dc-sign-box">
-                    Received By<br>(Sign & Seal)
-                </div>
-                <div class="dc-sign-box">
-                    <strong>For ${COMPANY.name}</strong><br><br>
-                    Auth. Signatory
-                </div>
-            </div>
-            <div style="text-align:center; font-size:8px; margin-top:10px;">Subject to Lucknow Jurisdiction. Computer Generated Document.</div>
-        `;
+                    <table class="dc-table">
+                        <thead>
+                            <tr>
+                                <th style="width:5%">Sr</th>
+                                <th style="width:45%">Description</th>
+                                <th style="width:15%">HSN</th>
+                                <th style="width:10%">Qty</th>
+                                <th style="width:10%">Unit</th>
+                                <th style="width:15%">Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemsHtml}
+                            <tr style="height: 20px;"><td colspan="6"></td></tr>
+                        </tbody>
+                    </table>
 
-        // 4. Inject and Print
-        document.getElementById('print-area').innerHTML = html;
-        window.print();
-    },
+                    <div class="dc-purpose">
+                        <div class="dc-label">Purpose of Delivery:</div>
+                        <span>&#9745; Supply</span>
+                    </div>
 
-            // --- Inventory Logic ---
+                    <div class="dc-footer">
+                        <div class="dc-sign-box">Prepared By</div>
+                        <div class="dc-sign-box">Received By</div>
+                        <div class="dc-sign-box"><strong>For ${COMPANY.name}</strong><br><br>Auth. Signatory</div>
+                    </div>
+                `;
+
+                document.getElementById('print-area').innerHTML = html;
+                window.print();
+            },
+
+            // ============================================================
+            // 6. INVENTORY
+            // ============================================================
             openAddStockModal: function(sku) {
                 ModalManager.show(`Add Stock: ${sku}`, `
-                    <p style="margin-bottom:1rem; color:var(--gray-500);">1 Case = ${CONFIG.CASE_SIZE[sku]} Bottles</p>
+                    <p style="margin-bottom:1rem; color:var(--gray-500);">1 Box = ${CONFIG.CASE_SIZE[sku]} Bottles</p>
                     <div class="form-group">
-                        <label class="form-label">Add Quantity (CASES)</label>
+                        <label class="form-label">Add Quantity (BOXES)</label>
                         <input type="number" id="add-stock-cases" class="form-control" placeholder="0">
                     </div>
                     <button class="btn btn-success w-full" onclick="Logic.saveStock('${sku}')">Update Stock</button>
@@ -2126,13 +2024,15 @@ calcOrderTotal: function() {
                 const bottles = cases * CONFIG.CASE_SIZE[sku];
                 if(bottles > 0) {
                     appStore.adjustInventory(sku, bottles, 'add');
-                    ToastManager.show(`Added ${bottles} bottles`, "success");
+                    ToastManager.show(`Added ${cases} Boxes (${bottles} btls)`, "success");
                     ModalManager.close();
                     Router.refresh();
                 }
             },
 
-            // --- Event Logic ---
+            // ============================================================
+            // 7. EVENTS
+            // ============================================================
             openAddEventModal: function() {
                 ModalManager.show("Schedule Event", `
                     <div class="form-group"><label class="form-label">Event Name</label><input id="evt-name" class="form-control"></div>
@@ -2160,7 +2060,9 @@ calcOrderTotal: function() {
                 Router.refresh();
             },
 
-            // --- Reports ---
+            // ============================================================
+            // 8. REPORTS (PDF & EXCEL)
+            // ============================================================
             generatePDF: function() {
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
@@ -2175,7 +2077,7 @@ calcOrderTotal: function() {
 
                 const tableData = orders.map(o => {
                     const c = appStore.get().customers.find(cx => cx.id === o.custId);
-                    return [o.id.split('-')[1], c?.company, Utils.formatCurrency(o.total), o.paymentMode];
+                    return [o.id, c?.company, Utils.formatCurrency(o.total), o.paymentMode];
                 });
 
                 doc.autoTable({
@@ -2190,11 +2092,27 @@ calcOrderTotal: function() {
                 doc.save(`daily_report_${today}.pdf`);
             },
 
-            generateExcel: function() {
-                const month = document.getElementById('report-month').value;
-                if(!month) return ToastManager.show("Please select a month", "error");
+            downloadExcelReport: function() {
+                // This is the button inside the Order History page
+                Logic.filterOrders(); // Ensure filters applied
+                Logic.generateExcel(true); // Reuse generateExcel logic
+            },
 
-                const orders = appStore.get().orders.filter(o => o.date.startsWith(month));
+            generateExcel: function(useFilter = false) {
+                let orders;
+                
+                if(useFilter) {
+                    const fromDate = document.getElementById('filter-from').value;
+                    const toDate = document.getElementById('filter-to').value;
+                    orders = appStore.get().orders.filter(o => o.date >= fromDate && o.date <= toDate);
+                } else {
+                    const month = document.getElementById('report-month').value;
+                    if(!month) return ToastManager.show("Select a month", "error");
+                    orders = appStore.get().orders.filter(o => o.date.startsWith(month));
+                }
+
+                if(orders.length === 0) return ToastManager.show("No records to export", "error");
+
                 const data = orders.map(o => {
                     const c = appStore.get().customers.find(cx => cx.id === o.custId);
                     return {
@@ -2202,15 +2120,21 @@ calcOrderTotal: function() {
                         OrderID: o.id,
                         Customer: c ? c.company : 'Unknown',
                         Total: o.total,
+                        Paid: o.paidAmount || 0,
+                        Balance: o.total - (o.paidAmount || 0),
                         Payment: o.paymentMode,
-                        Items: o.items.map(i => `${i.qty} ${i.sku}`).join('; ')
+                        Status: o.status,
+                        Items: o.items.map(i => {
+                            const b = i.boxes ? `(${i.boxes} Box)` : '';
+                            return `${i.qty} ${i.sku} ${b}`;
+                        }).join('; ')
                     };
                 });
 
                 const ws = XLSX.utils.json_to_sheet(data);
                 const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "Sales");
-                XLSX.writeFile(wb, `Sales_${month}.xlsx`);
+                XLSX.utils.book_append_sheet(wb, ws, "Sales Data");
+                XLSX.writeFile(wb, `Freskey_Sales_Export.xlsx`);
             },
             
             saveSettings: function() {
@@ -2220,7 +2144,7 @@ calcOrderTotal: function() {
                  ToastManager.show("Settings Saved", "success");
             }
         };
-
+        
         /**
          * ================================================================================== 
          * 7. ROUTING & NAVIGATION 
