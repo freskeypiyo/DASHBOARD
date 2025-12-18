@@ -909,110 +909,141 @@
          * ================================================================================== 
          */
         class DriveAdapter {
-            static fileId = null;
-            static tokenClient = null;
+    static fileId = null;
+    static tokenClient = null;
+    // TODO: Paste your API Key here. It starts with "AIza..."
+    static API_KEY = ''; 
 
-            static init() {
-                this.tokenClient = google.accounts.oauth2.initTokenClient({
-                    client_id: CONFIG.CLIENT_ID,
-                    scope: CONFIG.SCOPES,
-                    callback: (resp) => this.handleAuthResponse(resp),
+    static init() {
+        // 1. Initialize the Login Client (GIS)
+        this.tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: 950010994560-v7p6cem78h9fsdp102iq4immb36t95ls.apps.googleusercontent.com,
+            scope: CONFIG.SCOPES,
+            callback: (resp) => this.handleAuthResponse(resp),
+        });
+
+        // 2. Initialize the Drive API Client (GAPI)
+        gapi.load('client', async () => {
+            try {
+                await gapi.client.init({
+                    apiKey: this.API_KEY, // strictly recommended for stability
+                    discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
                 });
-                
-                gapi.load('client', async () => {
-                    await gapi.client.init({
-                        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
-                    });
-                });
+                console.log("GAPI Initialized");
+            } catch (err) {
+                console.error("GAPI Init Error:", err);
+                ToastManager.show("Google API Failed to Load", "error");
             }
+        });
+    }
 
-            static handleAuthResponse(resp) {
-                if (resp.error) {
-                    document.getElementById('login-status').innerText = "Access Denied: " + resp.error;
-                    return;
-                }
-                this.onLoginSuccess();
-            }
-
-            static async onLoginSuccess() {
-                document.getElementById('login-status').innerText = "Loading Database from Cloud...";
-                
-                // Fetch User Info
-                const token = gapi.client.getToken().access_token;
-                fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: `Bearer ${token}` }})
-                .then(r => r.json())
-                .then(u => {
-                    document.getElementById('user-display').innerText = u.email;
-                });
-
-                await this.loadDatabase();
-                
-                // UI Transition
-                document.getElementById('login-view').style.display = 'none';
-                document.getElementById('app-root').style.display = 'flex';
-                Router.navigate('dashboard');
-
-                // Start Auto Sync
-                setInterval(() => this.saveDatabase(true), 60000); 
-            }
-
-            static async loadDatabase() {
-                try {
-                    const q = `name = '${CONFIG.FILE_NAME}' and trashed = false`;
-                    const list = await gapi.client.drive.files.list({ q: q, fields: 'files(id, name)' });
-                    
-                    if (list.result.files.length > 0) {
-                        this.fileId = list.result.files[0].id;
-                        const file = await gapi.client.drive.files.get({ fileId: this.fileId, alt: 'media' });
-                        appStore.load(file.result);
-                        ToastManager.show("Database Loaded Successfully", "success");
-                    } else {
-                        ToastManager.show("Creating New Database...", "info");
-                        await this.saveDatabase(false); // Create new file
-                    }
-                } catch (e) {
-                    console.error(e);
-                    ToastManager.show("Error Loading Data", "error");
-                }
-            }
-
-            static async saveDatabase(silent = false) {
-                const content = JSON.stringify(appStore.get());
-                const metadata = { name: CONFIG.FILE_NAME, mimeType: 'application/json' };
-                
-                const form = new FormData();
-                form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-                form.append('file', new Blob([content], { type: 'application/json' }));
-
-                const token = gapi.client.getToken().access_token;
-                
-                try {
-                    if (!this.fileId) {
-                        // Create
-                        const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-                            method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: form
-                        });
-                        const val = await res.json();
-                        this.fileId = val.id;
-                    } else {
-                        // Update
-                        await fetch(`https://www.googleapis.com/upload/drive/v3/files/${this.fileId}?uploadType=media`, {
-                            method: 'PATCH',
-                            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                            body: content
-                        });
-                    }
-                    
-                    const time = new Date().toLocaleTimeString();
-                    document.getElementById('sync-text').innerText = "Synced: " + time;
-                    if(!silent) ToastManager.show("Data Saved to Drive", "success");
-                } catch(e) {
-                    if(!silent) ToastManager.show("Sync Failed", "error");
-                }
-            }
-
-            static forceSync() { this.saveDatabase(false); }
+    // --- THIS IS THE FIXED FUNCTION ---
+    static handleAuthResponse(resp) {
+        if (resp.error) {
+            console.error("Auth Error:", resp);
+            document.getElementById('login-status').innerText = "Error: " + resp.error;
+            return;
         }
+
+        // CRITICAL FIX: Hand the token to gapi so it can make API calls
+        if (resp.access_token) {
+            gapi.client.setToken(resp);
+            this.onLoginSuccess();
+        }
+    }
+
+    static async onLoginSuccess() {
+        document.getElementById('login-status').innerText = "Loading Database...";
+        
+        try {
+            // Fetch User Info to confirm token works
+            const token = gapi.client.getToken().access_token;
+            const userReq = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { 
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const user = await userReq.json();
+            document.getElementById('user-display').innerText = user.email || "Authenticated User";
+
+            // Load Data
+            await this.loadDatabase();
+            
+            // Switch Screens
+            document.getElementById('login-view').style.display = 'none';
+            document.getElementById('app-root').style.display = 'flex';
+            Router.navigate('dashboard');
+
+            // Auto-Sync
+            setInterval(() => this.saveDatabase(true), 60000); 
+        } catch (error) {
+            console.error("Login Success Logic Failed:", error);
+            ToastManager.show("Login succeeded but data failed to load.", "error");
+        }
+    }
+
+    static async loadDatabase() {
+        try {
+            const q = `name = '${CONFIG.FILE_NAME}' and trashed = false`;
+            const list = await gapi.client.drive.files.list({ q: q, fields: 'files(id, name)' });
+            
+            if (list.result.files.length > 0) {
+                this.fileId = list.result.files[0].id;
+                const file = await gapi.client.drive.files.get({ fileId: this.fileId, alt: 'media' });
+                appStore.load(file.result);
+                ToastManager.show("Database Loaded Successfully", "success");
+            } else {
+                ToastManager.show("Creating New Database...", "info");
+                await this.saveDatabase(false);
+            }
+        } catch (e) {
+            console.error(e);
+            // Don't block app if file doesn't exist yet
+            if(e.status === 404) {
+                 ToastManager.show("New Database Created", "info");
+                 await this.saveDatabase(false);
+            } else {
+                ToastManager.show("Error Loading Data: " + e.message, "error");
+            }
+        }
+    }
+
+    static async saveDatabase(silent = false) {
+        if (!gapi.client.getToken()) return; // Don't save if not logged in
+
+        const content = JSON.stringify(appStore.get());
+        const metadata = { name: CONFIG.FILE_NAME, mimeType: 'application/json' };
+        
+        const form = new FormData();
+        form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+        form.append('file', new Blob([content], { type: 'application/json' }));
+
+        const token = gapi.client.getToken().access_token;
+        
+        try {
+            if (!this.fileId) {
+                const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                    method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: form
+                });
+                const val = await res.json();
+                this.fileId = val.id;
+            } else {
+                await fetch(`https://www.googleapis.com/upload/drive/v3/files/${this.fileId}?uploadType=media`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: content
+                });
+            }
+            
+            const time = new Date().toLocaleTimeString();
+            document.getElementById('sync-text').innerText = "Synced: " + time;
+            if(!silent) ToastManager.show("Data Saved to Drive", "success");
+        } catch(e) {
+            console.error("Sync Error:", e);
+            if(!silent) ToastManager.show("Sync Failed", "error");
+        }
+    }
+
+    static forceSync() { this.saveDatabase(false); }
+}
 
         class AuthManager {
             static signIn() { DriveAdapter.tokenClient.requestAccessToken({prompt: 'consent'}); }
