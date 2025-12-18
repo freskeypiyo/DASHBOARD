@@ -1641,7 +1641,6 @@
                 const fromEl = document.getElementById('filter-from');
                 const toEl = document.getElementById('filter-to');
                 
-                // If elements don't exist yet (page load), skip
                 if(!searchEl) { Logic.renderOrderRows(appStore.get().orders); return; }
 
                 const search = searchEl.value.toLowerCase();
@@ -1683,9 +1682,7 @@
                     const paid = o.paidAmount || 0;
                     const balance = o.total - paid;
                     
-                    // Display items summary
                     const itemString = o.items.map(i => {
-                        // Display Box count if available, else calc
                         const caseSize = CONFIG.CASE_SIZE[i.sku];
                         const displayQty = i.boxes ? `${i.boxes} Box` : `${i.qty} btls`;
                         return `<span class="item-pill">${i.sku}: ${displayQty}</span>`;
@@ -1790,40 +1787,32 @@
             // ============================================================
             // 4. ORDER CREATION (BOX LOGIC)
             // ============================================================
-            
-            // This function calculates totals instantly when user types
             calcOrderTotal: function() {
                 let totalAmount = 0;
                 let totalBoxes = 0;
                 let totalBottles = 0;
 
                 SKUS.forEach(sku => {
-                    // CRITICAL: Look for 'qty-box-' IDs
                     const rateEl = document.getElementById(`rate-${sku}`);
                     const boxEl = document.getElementById(`qty-box-${sku}`);
                     const rowDispEl = document.getElementById(`row-tot-${sku}`);
 
-                    // Skip if elements not found (e.g. on different page)
                     if (!rateEl || !boxEl) return;
 
                     const rate = parseFloat(rateEl.value) || 0;
                     const boxes = parseFloat(boxEl.value) || 0;
 
-                    // Calculation
                     const caseSize = CONFIG.CASE_SIZE[sku];
                     const bottles = boxes * caseSize;
-                    const rowTotal = bottles * rate; // Rate is per bottle
+                    const rowTotal = bottles * rate; 
 
-                    // Update Row Total Display
                     if (rowDispEl) rowDispEl.innerText = Utils.formatCurrency(rowTotal);
 
-                    // Add to Grand Totals
                     totalAmount += rowTotal;
                     totalBoxes += boxes;
                     totalBottles += bottles;
                 });
 
-                // Update Grand Total Display
                 const tDisp = document.getElementById('ord-total-disp');
                 const qDisp = document.getElementById('ord-total-qty-disp');
                 
@@ -1852,7 +1841,6 @@
                         const caseSize = CONFIG.CASE_SIZE[sku];
                         const totalBottles = boxes * caseSize; 
                         
-                        // Inventory Check
                         const currentStock = appStore.get().inventory[sku];
                         if(currentStock < totalBottles) {
                             const availBox = Math.floor(currentStock/caseSize);
@@ -1861,9 +1849,9 @@
 
                         items.push({ 
                             sku, 
-                            qty: totalBottles, // Save bottles for inventory math
+                            qty: totalBottles, 
                             rate: rate,
-                            boxes: boxes       // Save boxes for display
+                            boxes: boxes
                         });
                         
                         total += (totalBottles * rate);
@@ -1872,7 +1860,6 @@
 
                 if(items.length === 0) return ToastManager.show("Please enter at least 1 box", "error");
 
-                // Credit Limit Check
                 const cust = appStore.get().customers.find(c => c.id === custId);
                 if(pay === 'Credit' && (cust.balance + total > cust.limit)) {
                     if(!confirm(`Credit Limit Exceeded! Bal: ${cust.balance}. Proceed?`)) return;
@@ -1918,7 +1905,7 @@
             },
 
             // ============================================================
-            // 5. PRINT CHALLAN
+            // 5. PRINT CHALLAN (UPDATED: Box Wise Rate)
             // ============================================================
             printChallan: function(orderId) {
                 const order = appStore.get().orders.find(o => o.id === orderId);
@@ -1936,8 +1923,12 @@
 
                 const itemsHtml = order.items.map((item, index) => {
                     const caseSize = CONFIG.CASE_SIZE[item.sku];
-                    // If old data doesn't have 'boxes', calculate it
+                    
+                    // Quantity in Boxes
                     const boxCount = item.boxes || (item.qty / caseSize).toFixed(1);
+
+                    // Rate Per Box Calculation (BottleRate * CaseSize)
+                    const boxRate = item.rate * caseSize;
 
                     return `
                     <tr>
@@ -1946,7 +1937,7 @@
                         <td>2201</td>
                         <td style="text-align:center"><strong>${boxCount}</strong></td>
                         <td>Boxes</td>
-                        <td>${Utils.formatCurrency(item.rate)}</td>
+                        <td>${Utils.formatCurrency(boxRate)}</td>
                     </tr>`;
                 }).join('');
 
@@ -1980,7 +1971,7 @@
                                 <th style="width:15%">HSN</th>
                                 <th style="width:10%">Qty</th>
                                 <th style="width:10%">Unit</th>
-                                <th style="width:15%">Rate</th>
+                                <th style="width:15%">Rate (Per Box)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -2061,7 +2052,7 @@
             },
 
             // ============================================================
-            // 8. REPORTS (PDF & EXCEL)
+            // 8. REPORTS
             // ============================================================
             generatePDF: function() {
                 const { jsPDF } = window.jspdf;
@@ -2093,9 +2084,8 @@
             },
 
             downloadExcelReport: function() {
-                // This is the button inside the Order History page
-                Logic.filterOrders(); // Ensure filters applied
-                Logic.generateExcel(true); // Reuse generateExcel logic
+                Logic.filterOrders(); 
+                Logic.generateExcel(true);
             },
 
             generateExcel: function(useFilter = false) {
