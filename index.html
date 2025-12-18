@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -756,31 +755,35 @@
          * ================================================================================== 
          */
         class Utils {
-            static generateId(prefix = 'ID') {
-                return prefix + '-' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
-            }
+    static generateId(prefix = 'ID') {
+        return prefix + '-' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+    }
 
-            static formatCurrency(amount) {
-                return '₹' + parseFloat(amount || 0).toFixed(2);
-            }
+    static formatCurrency(amount) {
+        return '₹' + parseFloat(amount || 0).toFixed(2);
+    }
 
-            static formatDate(dateString) {
-                if(!dateString) return '-';
-                const d = new Date(dateString);
-                return d.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
-            }
+    static formatDate(dateString) {
+        if(!dateString) return '-';
+        const d = new Date(dateString);
+        return d.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
 
-            static deepClone(obj) {
-                return JSON.parse(JSON.stringify(obj));
-            }
+    static deepClone(obj) {
+        return JSON.parse(JSON.stringify(obj));
+    }
 
-            static getCasesAndBottles(sku, totalBottles) {
-                const caseSize = CONFIG.CASE_SIZE[sku];
-                const cases = Math.floor(totalBottles / caseSize);
-                const loose = totalBottles % caseSize;
-                return { cases, loose, text: `${cases} Cases + ${loose} Btls` };
-            }
-        }
+    // UPDATED FUNCTION: Uses App Settings for calculation
+    static getCasesAndBottles(sku, totalBottles) {
+        // Get dynamic case size from store, default to 12 if missing
+        const settings = appStore.get().settings.caseSizes || {};
+        const caseSize = settings[sku] || 12; 
+        
+        const cases = Math.floor(totalBottles / caseSize);
+        const loose = totalBottles % caseSize;
+        return { cases, loose, text: `${cases} Boxes + ${loose} Btls`, size: caseSize };
+    }
+}
 
         class ToastManager {
             static show(message, type = 'info') {
@@ -833,103 +836,72 @@
          * ================================================================================== 
          */
         class Store {
-            constructor() {
-                this.data = {
-                    settings: {
-                        prices: { '200ml': 10, '500ml': 20, '1L': 40 }
-                    },
-                    inventory: { '200ml': 0, '500ml': 0, '1L': 0 },
-                    customers: [], // { id, name, company, phone, address, limit, balance }
-                    orders: [],    // { id, date, custId, items: [{sku, qty, rate}], total, status, paymentMode }
-                    events: [],    // { id, name, date, bottles, status }
-                    auditLog: []
-                };
-            }
-
-            load(jsonData) {
-                this.data = { ...this.data, ...jsonData };
-            }
-
-            get() { return this.data; }
-
-            // Operations
-            addCustomer(customer) {
-                this.data.customers.push(customer);
-                this.log('Added Customer: ' + customer.company);
-            }
-
-            updateCustomer(id, updates) {
-                const idx = this.data.customers.findIndex(c => c.id === id);
-                if (idx > -1) {
-                    this.data.customers[idx] = { ...this.data.customers[idx], ...updates };
-                    this.log('Updated Customer: ' + this.data.customers[idx].company);
-                }
-            }
-
-            adjustInventory(sku, qty, operation) {
-                if (operation === 'add') this.data.inventory[sku] += qty;
-                else this.data.inventory[sku] -= qty;
-                
-                // Prevent negative inventory visual glitch (logic allows it but we log warning)
-                if(this.data.inventory[sku] < 0) this.log(`Warning: Negative Inventory for ${sku}`);
-            }
-
-            addOrder(order) {
-                this.data.orders.push(order);
-                
-                // Deduct Inventory
-                order.items.forEach(item => {
-                    this.adjustInventory(item.sku, item.qty, 'sub');
-                });
-
-                // Update Customer Balance if Credit
-                if(order.paymentMode === 'Credit') {
-                    const cust = this.data.customers.find(c => c.id === order.custId);
-                    if(cust) cust.balance += order.total;
-                }
-
-                this.log(`Created Order ${order.id}`);
-            }
-
-            voidOrder(orderId) {
-                const idx = this.data.orders.findIndex(o => o.id === orderId);
-                if(idx === -1) return;
-                
-                const order = this.data.orders[idx];
-                
-                // 1. Rollback Inventory (Add items back to stock)
-                if(order.items && order.items.length > 0) {
-                    order.items.forEach(item => {
-                        this.adjustInventory(item.sku, item.qty, 'add');
-                    });
-                }
-
-                // 2. Rollback Balance 
-                // We strictly subtract the Order Total from the Customer Balance
-                // regardless of whether they paid partially or not, because 
-                // any partial payment remains as a "Credit" (advance) on their account.
-                if(order.paymentMode === 'Credit') {
-                    const cust = this.data.customers.find(c => c.id === order.custId);
-                    if(cust) {
-                        cust.balance -= order.total;
-                        // Fix javascript floating point errors (e.g., 0.0000001)
-                        cust.balance = Math.round(cust.balance * 100) / 100;
-                        // Prevent negative zero
-                        if(Math.abs(cust.balance) < 0.1) cust.balance = 0;
-                    }
-                }
-
-                this.data.orders.splice(idx, 1);
-                this.log(`Voided Order ${orderId}`);
-            }
-
-            log(action) {
-                this.data.auditLog.unshift({ time: new Date().toISOString(), action });
-                if(this.data.auditLog.length > 50) this.data.auditLog.pop();
+    constructor() {
+        this.data = {
+            settings: {
+                prices: { '200ml': 10, '500ml': 20, '1L': 40 },
+                // NEW: Default Case Sizes (Bottles per Box)
+                caseSizes: { '200ml': 24, '500ml': 20, '1L': 12 } 
+            },
+            inventory: { '200ml': 0, '500ml': 0, '1L': 0 },
+            customers: [], 
+            orders: [],    
+            events: [],    
+            auditLog: []
+        };
+    }
+    // ... keep the rest of the Store class methods (load, get, addCustomer, etc.) as they were ...
+    load(jsonData) {
+        // Merge allows new settings (like caseSizes) to exist even if loading old data
+        this.data = { ...this.data, ...jsonData };
+        
+        // Safety check: ensure caseSizes exists if loading an old DB file
+        if(!this.data.settings.caseSizes) {
+            this.data.settings.caseSizes = { '200ml': 24, '500ml': 20, '1L': 12 };
+        }
+    }
+    // ... rest of class ...
+    get() { return this.data; }
+    addCustomer(customer) { this.data.customers.push(customer); }
+    updateCustomer(id, updates) {
+        const idx = this.data.customers.findIndex(c => c.id === id);
+        if (idx > -1) this.data.customers[idx] = { ...this.data.customers[idx], ...updates };
+    }
+    adjustInventory(sku, qty, operation) {
+        if (operation === 'add') this.data.inventory[sku] += qty;
+        else this.data.inventory[sku] -= qty;
+        if(this.data.inventory[sku] < 0) this.log(`Warning: Negative Inventory for ${sku}`);
+    }
+    addOrder(order) {
+        this.data.orders.push(order);
+        order.items.forEach(item => { this.adjustInventory(item.sku, item.qty, 'sub'); });
+        if(order.paymentMode === 'Credit') {
+            const cust = this.data.customers.find(c => c.id === order.custId);
+            if(cust) cust.balance += order.total;
+        }
+    }
+    voidOrder(orderId) {
+        const idx = this.data.orders.findIndex(o => o.id === orderId);
+        if(idx === -1) return;
+        const order = this.data.orders[idx];
+        if(order.items && order.items.length > 0) {
+            order.items.forEach(item => { this.adjustInventory(item.sku, item.qty, 'add'); });
+        }
+        if(order.paymentMode === 'Credit') {
+            const cust = this.data.customers.find(c => c.id === order.custId);
+            if(cust) {
+                cust.balance -= order.total;
+                cust.balance = Math.round(cust.balance * 100) / 100;
+                if(Math.abs(cust.balance) < 0.1) cust.balance = 0;
             }
         }
-
-        const appStore = new Store();
+        this.data.orders.splice(idx, 1);
+    }
+    log(action) {
+        this.data.auditLog.unshift({ time: new Date().toISOString(), action });
+        if(this.data.auditLog.length > 50) this.data.auditLog.pop();
+    }
+}
 
         /**
          * ================================================================================== 
@@ -1367,25 +1339,37 @@
                 `;
             },
 
-            inventory: function() {
-                const inv = appStore.get().inventory;
+           inventory: function() {
+    const inv = appStore.get().inventory;
+    return `
+        <div class="grid-3">
+            ${SKUS.map(sku => {
+                const stockInfo = Utils.getCasesAndBottles(sku, inv[sku]);
                 return `
-                    <div class="grid-3">
-                        ${SKUS.map(sku => {
-                            const stockInfo = Utils.getCasesAndBottles(sku, inv[sku]);
-                            return `
-                                <div class="card" style="text-align:center;">
-                                    <h3 style="color:var(--gray-500); font-size: 0.9rem; margin-bottom: 0.5rem;">${sku} SKU</h3>
-                                    <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary-900);">${inv[sku]} <span style="font-size: 1rem; color: var(--gray-400);">btls</span></div>
-                                    <div class="badge badge-info" style="margin: 0.5rem 0;">${stockInfo.text}</div>
-                                    <p style="font-size: 0.8rem; color: var(--gray-500); margin-bottom: 1.5rem;">1 Case = ${CONFIG.CASE_SIZE[sku]} Bottles</p>
-                                    <button class="btn btn-primary w-full" onclick="Logic.openAddStockModal('${sku}')">Add Stock</button>
-                                </div>
-                            `;
-                        }).join('')}
+                    <div class="card" style="text-align:center;">
+                        <h3 style="color:var(--gray-500); font-size: 0.9rem; margin-bottom: 0.5rem;">${sku} SKU</h3>
+                        
+                        <div style="font-size: 2.5rem; font-weight: 800; color: var(--primary-900);">
+                            ${stockInfo.cases} <span style="font-size: 1rem; color: var(--gray-400);">Boxes</span>
+                        </div>
+                        <div style="font-size: 1rem; color: var(--accent-600); margin-bottom: 10px;">
+                            + ${stockInfo.loose} Loose Bottles
+                        </div>
+
+                        <div class="badge badge-info" style="margin-bottom: 1.5rem;">
+                            Total: ${inv[sku]} Bottles
+                        </div>
+                        
+                        <p style="font-size: 0.8rem; color: var(--gray-500); margin-bottom: 0.5rem;">
+                            Config: 1 Box = ${stockInfo.size} Bottles
+                        </p>
+                        <button class="btn btn-primary w-full" onclick="Logic.openAddStockModal('${sku}')">Add Stock (Boxes)</button>
                     </div>
                 `;
-            },
+            }).join('')}
+        </div>
+    `;
+},
 
             events: function() {
                 const events = appStore.get().events;
@@ -1444,23 +1428,43 @@
             },
             
             settings: function() {
-                const prices = appStore.get().settings.prices;
-                return `
-                    <div class="card" style="max-width: 600px;">
-                        <div class="card-header"><h3 class="card-title">System Settings</h3></div>
-                        <h4 class="form-label" style="margin-top: 1rem;">Default Pricing (Per Bottle)</h4>
-                        <div class="grid-3" style="margin-bottom: 1rem;">
-                            ${SKUS.map(sku => `
-                                <div class="form-group">
-                                    <label class="form-label">${sku}</label>
-                                    <input type="number" id="set-price-${sku}" class="form-control" value="${prices[sku]}">
-                                </div>
-                            `).join('')}
+    const prices = appStore.get().settings.prices;
+    const caseSizes = appStore.get().settings.caseSizes;
+    
+    return `
+        <div class="card" style="max-width: 800px;">
+            <div class="card-header"><h3 class="card-title">System Settings & Configuration</h3></div>
+            
+            <div class="grid-2">
+                <!-- PRICING COLUMN -->
+                <div>
+                    <h4 class="form-label" style="margin-top: 1rem; color:var(--accent-600);">Selling Price (Per Bottle)</h4>
+                    ${SKUS.map(sku => `
+                        <div class="form-group">
+                            <label class="form-label">${sku} Price (₹)</label>
+                            <input type="number" id="set-price-${sku}" class="form-control" value="${prices[sku]}">
                         </div>
-                        <button class="btn btn-primary" onclick="Logic.saveSettings()">Save Configuration</button>
-                    </div>
-                `;
-            },
+                    `).join('')}
+                </div>
+
+                <!-- BOX CONFIG COLUMN -->
+                <div>
+                    <h4 class="form-label" style="margin-top: 1rem; color:var(--accent-600);">Box Configuration (Bottles per Box)</h4>
+                    ${SKUS.map(sku => `
+                        <div class="form-group">
+                            <label class="form-label">${sku} Box Size</label>
+                            <input type="number" id="set-case-${sku}" class="form-control" value="${caseSizes[sku]}">
+                            <small style="color:var(--gray-500)">How many bottles in 1 box?</small>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+
+            <hr style="border:0; border-top:1px solid var(--gray-200); margin:1.5rem 0;">
+            <button class="btn btn-primary" onclick="Logic.saveSettings()">Save All Configuration</button>
+        </div>
+    `;
+},
 
             // PASTE THIS INSIDE 'const Views = {' AFTER 'settings: ...'
     
@@ -2033,26 +2037,37 @@ calcOrderTotal: function() {
 
             // --- Inventory Logic ---
             openAddStockModal: function(sku) {
-                ModalManager.show(`Add Stock: ${sku}`, `
-                    <p style="margin-bottom:1rem; color:var(--gray-500);">1 Case = ${CONFIG.CASE_SIZE[sku]} Bottles</p>
-                    <div class="form-group">
-                        <label class="form-label">Add Quantity (CASES)</label>
-                        <input type="number" id="add-stock-cases" class="form-control" placeholder="0">
-                    </div>
-                    <button class="btn btn-success w-full" onclick="Logic.saveStock('${sku}')">Update Stock</button>
-                `);
-            },
-
-            saveStock: function(sku) {
-                const cases = parseInt(document.getElementById('add-stock-cases').value) || 0;
-                const bottles = cases * CONFIG.CASE_SIZE[sku];
-                if(bottles > 0) {
-                    appStore.adjustInventory(sku, bottles, 'add');
-                    ToastManager.show(`Added ${bottles} bottles`, "success");
-                    ModalManager.close();
-                    Router.refresh();
-                }
-            },
+    // Get the current configured size
+    const currentSize = appStore.get().settings.caseSizes[sku];
+    
+    ModalManager.show(`Add Stock: ${sku}`, `
+        <div style="background:var(--primary-100); padding:10px; border-radius:6px; margin-bottom:15px; text-align:center;">
+            <strong>1 Box = ${currentSize} Bottles</strong><br>
+            <small>Change this in Settings if incorrect</small>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Add Quantity (BOXES)</label>
+            <input type="number" id="add-stock-cases" class="form-control" placeholder="Enter number of boxes">
+        </div>
+        <button class="btn btn-success w-full" onclick="Logic.saveStock('${sku}')">Update Stock</button>
+    `);
+},
+           saveStock: function(sku) {
+    const boxes = parseInt(document.getElementById('add-stock-cases').value) || 0;
+    
+    // CALCULATE BASED ON SETTINGS
+    const bottlesPerBox = appStore.get().settings.caseSizes[sku];
+    const totalBottles = boxes * bottlesPerBox;
+    
+    if(totalBottles > 0) {
+        appStore.adjustInventory(sku, totalBottles, 'add');
+        ToastManager.show(`Added ${boxes} Boxes (${totalBottles} bottles)`, "success");
+        ModalManager.close();
+        Router.refresh();
+    } else {
+        ToastManager.show("Please enter a valid quantity", "error");
+    }
+},
 
             // --- Event Logic ---
             openAddEventModal: function() {
@@ -2136,12 +2151,19 @@ calcOrderTotal: function() {
             },
             
             saveSettings: function() {
-                 SKUS.forEach(sku => {
-                     appStore.get().settings.prices[sku] = parseFloat(document.getElementById(`set-price-${sku}`).value) || 0;
-                 });
-                 ToastManager.show("Settings Saved", "success");
-            }
-        };
+     SKUS.forEach(sku => {
+         // Save Prices
+         appStore.get().settings.prices[sku] = parseFloat(document.getElementById(`set-price-${sku}`).value) || 0;
+         
+         // Save Case Sizes
+         appStore.get().settings.caseSizes[sku] = parseInt(document.getElementById(`set-case-${sku}`).value) || 12;
+     });
+     
+     // Save to cloud
+     DriveAdapter.saveDatabase(true);
+     ToastManager.show("Settings & Box Config Saved", "success");
+     Router.refresh();
+},
 
         /**
          * ================================================================================== 
