@@ -1868,29 +1868,40 @@ calcOrderTotal: function() {
     let totalBoxes = 0;
     let totalBottles = 0;
 
+    // Loop through each SKU (200ml, 500ml, 1L)
     SKUS.forEach(sku => {
-        const ratePerBottle = parseFloat(document.getElementById(`rate-${sku}`).value) || 0;
-        
-        // GET INPUT FROM BOX FIELD
-        const boxesInput = parseFloat(document.getElementById(`qty-box-${sku}`).value) || 0;
-        
-        // CALCULATION: Boxes * Case Size * Rate
+        // 1. Find the elements in the HTML
+        const rateEl = document.getElementById(`rate-${sku}`);
+        const boxEl = document.getElementById(`qty-box-${sku}`); // Looking for BOX ID now
+        const rowDispEl = document.getElementById(`row-tot-${sku}`);
+
+        // Safety check: if elements aren't found, skip to avoid crashing
+        if (!rateEl || !boxEl) return;
+
+        // 2. Get the numbers (Default to 0 if empty)
+        const rate = parseFloat(rateEl.value) || 0;
+        const boxes = parseFloat(boxEl.value) || 0;
+
+        // 3. Do the math: Boxes * Case Size * Rate
         const caseSize = CONFIG.CASE_SIZE[sku];
-        const bottlesInRow = boxesInput * caseSize;
-        const rowTotal = bottlesInRow * ratePerBottle;
+        const bottles = boxes * caseSize;
+        const rowTotal = bottles * rate;
 
-        // Update Row Display
-        document.getElementById(`row-tot-${sku}`).innerText = Utils.formatCurrency(rowTotal);
+        // 4. Update the small total next to the input
+        if (rowDispEl) rowDispEl.innerText = Utils.formatCurrency(rowTotal);
 
-        // Add to Grand Totals
+        // 5. Add to the main totals
         totalAmount += rowTotal;
-        totalBoxes += boxesInput;
-        totalBottles += bottlesInRow;
+        totalBoxes += boxes;
+        totalBottles += bottles;
     });
 
-    // Update Grand Total Display
-    document.getElementById('ord-total-disp').innerText = Utils.formatCurrency(totalAmount);
-    document.getElementById('ord-total-qty-disp').innerText = `${totalBoxes} Boxes | ${totalBottles} Total Bottles`;
+    // 6. Update the Grand Total display at the bottom
+    const totalDisp = document.getElementById('ord-total-disp');
+    const qtyDisp = document.getElementById('ord-total-qty-disp');
+    
+    if (totalDisp) totalDisp.innerText = Utils.formatCurrency(totalAmount);
+    if (qtyDisp) qtyDisp.innerText = `${totalBoxes} Boxes | ${totalBottles} Total Bottles`;
 },
 
   // --- 2. SUBMIT ORDER (Replace existing function) ---
@@ -1902,32 +1913,27 @@ calcOrderTotal: function() {
     const items = [];
     let total = 0;
 
-    // Loop through SKUS
     for(let sku of SKUS) {
-        // GET BOXES INPUT
-        const boxes = parseFloat(document.getElementById(`qty-box-${sku}`).value) || 0;
-        const rate = parseFloat(document.getElementById(`rate-${sku}`).value) || 0;
+        // GET BOX INPUT
+        const boxEl = document.getElementById(`qty-box-${sku}`);
+        const rateEl = document.getElementById(`rate-${sku}`);
+
+        if(!boxEl || !rateEl) continue; // Skip if fields missing
+
+        const boxes = parseFloat(boxEl.value) || 0;
+        const rate = parseFloat(rateEl.value) || 0;
         
         if(boxes > 0) {
             const caseSize = CONFIG.CASE_SIZE[sku];
-            const totalBottles = boxes * caseSize; // Convert Boxes to Bottles for Inventory
+            const totalBottles = boxes * caseSize; 
             
-            // Check Inventory (Stock is stored in bottles)
+            // Check Inventory
             const currentStock = appStore.get().inventory[sku];
             if(currentStock < totalBottles) {
-                if(!confirm(`Low Stock for ${sku}!\nRequested: ${boxes} Boxes (${totalBottles} btls)\nAvailable: ${Math.floor(currentStock/caseSize)} Boxes (${currentStock} btls)\n\nProceed anyway?`)) return;
+                if(!confirm(`Low Stock for ${sku}!\nRequested: ${boxes} Boxes (${totalBottles} btls)\nAvailable: ${Math.floor(currentStock/caseSize)} Boxes\n\nProceed anyway?`)) return;
             }
 
-            // Push Item
-            // We save 'qty' as total bottles to maintain consistency with Reports/Inventory
-            // We can add a 'boxes' property for reference if needed
-            items.push({ 
-                sku, 
-                qty: totalBottles, // SAVED AS BOTTLES
-                rate: rate,
-                boxes: boxes       // SAVED AS BOXES (Reference)
-            });
-            
+            items.push({ sku, qty: totalBottles, rate: rate });
             total += (totalBottles * rate);
         }
     }
@@ -1940,22 +1946,15 @@ calcOrderTotal: function() {
         if(!confirm(`Credit Limit Exceeded! Bal: ${cust.balance}. Proceed?`)) return;
     }
 
-    const initialPaid = (pay === 'Credit') ? 0 : total;
-
     const order = {
         id: Logic.generateNextOrderId(date), 
-        date, 
-        custId, 
-        items, 
-        total, 
-        paymentMode: pay, 
-        status: 'Ordered',     
-        trackingStep: 1,       
-        paidAmount: initialPaid 
+        date, custId, items, total, 
+        paymentMode: pay, status: 'Ordered', trackingStep: 1, 
+        paidAmount: (pay === 'Credit') ? 0 : total 
     };
 
     appStore.addOrder(order);
-    ToastManager.show("Order Created Successfully", "success");
+    ToastManager.show("Order Created", "success");
     Router.navigate('tracking');
 },
 
