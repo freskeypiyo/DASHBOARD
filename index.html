@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1232,71 +1230,91 @@
 
 
             
-           // CHANGE "newOrder" to "'new-order'" (with quotes)
-            'new-order': function() {
-                const customers = appStore.get().customers;
-                // Check if customers exist
-                if(customers.length === 0) return `<div class="card text-center"><h3>No Customers</h3><p style="margin:1rem 0; color:#666;">You must add customers before creating an order.</p><button class="btn btn-primary" onclick="Router.navigate('customers')">Go to Customers</button></div>`;
+          'new-order': function() {
+    const customers = appStore.get().customers;
+    if(customers.length === 0) return `<div class="card text-center"><h3>No Customers</h3><p style="margin:1rem 0; color:#666;">You must add customers before creating an order.</p><button class="btn btn-primary" onclick="Router.navigate('customers')">Go to Customers</button></div>`;
 
-                const custOptions = customers.map(c => `<option value="${c.id}">${c.company} (${c.name})</option>`).join('');
-                const skus = ['200ml', '500ml', '1L'];
-                const prices = appStore.get().settings.prices;
-                const inventory = appStore.get().inventory;
+    const custOptions = customers.map(c => `<option value="${c.id}">${c.company} (${c.name})</option>`).join('');
+    const skus = ['200ml', '500ml', '1L'];
+    const prices = appStore.get().settings.prices;
+    const inventory = appStore.get().inventory;
 
-                return `
-                    <div class="card" style="max-width: 800px; margin: 0 auto;">
-                        <div class="card-header"><h3 class="card-title">Create New Order</h3></div>
+    return `
+        <div class="card" style="max-width: 800px; margin: 0 auto;">
+            <div class="card-header"><h3 class="card-title">Create New Order (Box Wise)</h3></div>
+            
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label">Select Customer</label>
+                    <select id="ord-cust" class="form-control">${custOptions}</select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date</label>
+                    <input type="date" id="ord-date" class="form-control" value="${new Date().toISOString().split('T')[0]}">
+                </div>
+            </div>
+
+            <div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
+                <h4 class="form-label" style="margin-bottom: 1rem;">Order Items (Input Boxes Only)</h4>
+                
+                <!-- Updated Headers for Box Calculation -->
+                <div style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap:10px; font-weight:700; color:#64748b; font-size:0.8rem; margin-bottom:0.5rem;">
+                    <div>ITEM & AVAILABILITY</div>
+                    <div>RATE (₹/Btl)</div>
+                    <div>ENTER BOXES</div>
+                    <div style="text-align:right">TOTAL</div>
+                </div>
+
+                ${skus.map(sku => {
+                    // Calculate available full boxes
+                    const caseSize = CONFIG.CASE_SIZE[sku];
+                    const availBoxes = Math.floor(inventory[sku] / caseSize);
+                    
+                    return `
+                    <div style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap:10px; align-items: center; margin-bottom: 1rem; padding-bottom:1rem; border-bottom:1px dashed #e2e8f0;">
+                        <div>
+                            <strong style="font-size:1.1rem; color:var(--primary-900);">${sku}</strong>
+                            <div style="font-size: 0.75rem; color: #64748b;">
+                                1 Box = ${caseSize} Btls<br>
+                                <span style="color:${availBoxes < 5 ? 'var(--danger-500)' : 'var(--success-500)'}">
+                                    Avail: ${availBoxes} Boxes
+                                </span>
+                            </div>
+                        </div>
                         
-                        <div class="grid-2">
-                            <div class="form-group">
-                                <label class="form-label">Select Customer</label>
-                                <select id="ord-cust" class="form-control">${custOptions}</select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Date</label>
-                                <input type="date" id="ord-date" class="form-control" value="${new Date().toISOString().split('T')[0]}">
-                            </div>
-                        </div>
-
-                        <div style="background: #f8fafc; padding: 1.5rem; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 1.5rem;">
-                            <h4 class="form-label" style="margin-bottom: 1rem;">Order Items</h4>
-                            <div class="grid-3" style="font-weight:700; color:#64748b; font-size:0.8rem; margin-bottom:0.5rem;">
-                                <div>ITEM & STOCK</div>
-                                <div>RATE (₹)</div>
-                                <div>QUANTITY</div>
-                            </div>
-                            ${skus.map(sku => `
-                                <div class="grid-3" style="align-items: center; margin-bottom: 1rem;">
-                                    <div>
-                                        <strong>${sku}</strong>
-                                        <div style="font-size: 0.75rem; color: #64748b;">Avail: ${inventory[sku]}</div>
-                                    </div>
-                                    <input type="number" id="rate-${sku}" class="form-control" value="${prices[sku]}" oninput="Logic.calcOrderTotal()">
-                                    <input type="number" id="qty-${sku}" class="form-control" placeholder="0" oninput="Logic.calcOrderTotal()">
-                                </div>
-                            `).join('')}
-                        </div>
-
-                        <div class="grid-2" style="align-items: center;">
-                            <div class="form-group">
-                                <label class="form-label">Payment Mode</label>
-                                <select id="ord-pay" class="form-control">
-                                    <option value="Cash">Cash</option>
-                                    <option value="Online">Online / UPI</option>
-                                    <option value="Credit">Credit (Add to Balance)</option>
-                                </select>
-                            </div>
-                            <div style="text-align: right;">
-                                <div style="font-size: 0.9rem; color: #64748b;">Grand Total</div>
-                                <div id="ord-total-disp" style="font-size: 2rem; font-weight: 800; color: #0f172a;">₹0.00</div>
-                            </div>
-                        </div>
-
-                        <hr style="border:0; border-top: 1px solid #e2e8f0; margin: 1.5rem 0;">
-                        <button class="btn btn-success" style="width:100%; padding: 1rem;" onclick="Logic.submitOrder()">Confirm & Save Order</button>
+                        <!-- Rate per Bottle (Hidden logic applied later) -->
+                        <input type="number" id="rate-${sku}" class="form-control" value="${prices[sku]}" oninput="Logic.calcOrderTotal()" placeholder="Rate">
+                        
+                        <!-- INPUT IS NOW BOXES -->
+                        <input type="number" id="qty-box-${sku}" class="form-control" style="font-weight:bold; border-color:var(--accent-500);" placeholder="0" oninput="Logic.calcOrderTotal()">
+                        
+                        <!-- Display Row Total -->
+                        <div id="row-tot-${sku}" style="text-align:right; font-weight:700; color:var(--primary-800);">₹0</div>
                     </div>
-                `;
-            },
+                `}).join('')}
+            </div>
+
+            <div class="grid-2" style="align-items: center;">
+                <div class="form-group">
+                    <label class="form-label">Payment Mode</label>
+                    <select id="ord-pay" class="form-control">
+                        <option value="Cash">Cash</option>
+                        <option value="Online">Online / UPI</option>
+                        <option value="Credit">Credit (Add to Balance)</option>
+                    </select>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 0.9rem; color: #64748b;">Grand Total</div>
+                    <div id="ord-total-disp" style="font-size: 2rem; font-weight: 800; color: #0f172a;">₹0.00</div>
+                    <div id="ord-total-qty-disp" style="font-size: 0.85rem; color: #64748b; margin-top:5px;">0 Boxes | 0 Bottles</div>
+                </div>
+            </div>
+
+            <hr style="border:0; border-top: 1px solid #e2e8f0; margin: 1.5rem 0;">
+            <button class="btn btn-success" style="width:100%; padding: 1rem;" onclick="Logic.submitOrder()">Confirm & Save Order</button>
+        </div>
+    `;
+},
 
             
             orders: function() {
@@ -1846,67 +1864,102 @@
 
 
 calcOrderTotal: function() {
-        let total = 0;
-        ['200ml', '500ml', '1L'].forEach(sku => {
-            const r = parseFloat(document.getElementById(`rate-${sku}`).value) || 0;
-            const q = parseFloat(document.getElementById(`qty-${sku}`).value) || 0;
-            total += (r * q);
-        });
-        document.getElementById('ord-total-disp').innerText = '₹' + total.toFixed(2);
-    },
+    let totalAmount = 0;
+    let totalBoxes = 0;
+    let totalBottles = 0;
+
+    SKUS.forEach(sku => {
+        const ratePerBottle = parseFloat(document.getElementById(`rate-${sku}`).value) || 0;
+        
+        // GET INPUT FROM BOX FIELD
+        const boxesInput = parseFloat(document.getElementById(`qty-box-${sku}`).value) || 0;
+        
+        // CALCULATION: Boxes * Case Size * Rate
+        const caseSize = CONFIG.CASE_SIZE[sku];
+        const bottlesInRow = boxesInput * caseSize;
+        const rowTotal = bottlesInRow * ratePerBottle;
+
+        // Update Row Display
+        document.getElementById(`row-tot-${sku}`).innerText = Utils.formatCurrency(rowTotal);
+
+        // Add to Grand Totals
+        totalAmount += rowTotal;
+        totalBoxes += boxesInput;
+        totalBottles += bottlesInRow;
+    });
+
+    // Update Grand Total Display
+    document.getElementById('ord-total-disp').innerText = Utils.formatCurrency(totalAmount);
+    document.getElementById('ord-total-qty-disp').innerText = `${totalBoxes} Boxes | ${totalBottles} Total Bottles`;
+},
 
   // --- 2. SUBMIT ORDER (Replace existing function) ---
     submitOrder: function() {
-        const custId = document.getElementById('ord-cust').value;
-        const date = document.getElementById('ord-date').value;
-        const pay = document.getElementById('ord-pay').value;
+    const custId = document.getElementById('ord-cust').value;
+    const date = document.getElementById('ord-date').value;
+    const pay = document.getElementById('ord-pay').value;
 
-        // Validation & Calculation
-        const items = [];
-        let total = 0;
+    const items = [];
+    let total = 0;
 
-        // Loop through SKUS to get items
-        for(let sku of SKUS) {
-            const q = parseFloat(document.getElementById(`qty-${sku}`).value) || 0;
-            const r = parseFloat(document.getElementById(`rate-${sku}`).value) || 0;
+    // Loop through SKUS
+    for(let sku of SKUS) {
+        // GET BOXES INPUT
+        const boxes = parseFloat(document.getElementById(`qty-box-${sku}`).value) || 0;
+        const rate = parseFloat(document.getElementById(`rate-${sku}`).value) || 0;
+        
+        if(boxes > 0) {
+            const caseSize = CONFIG.CASE_SIZE[sku];
+            const totalBottles = boxes * caseSize; // Convert Boxes to Bottles for Inventory
             
-            if(q > 0) {
-                const currentStock = appStore.get().inventory[sku];
-                if(currentStock < q) {
-                    if(!confirm(`Low Inventory for ${sku}. Available: ${currentStock}. Proceed?`)) return;
-                }
-                items.push({ sku, qty: q, rate: r });
-                total += (q * r);
+            // Check Inventory (Stock is stored in bottles)
+            const currentStock = appStore.get().inventory[sku];
+            if(currentStock < totalBottles) {
+                if(!confirm(`Low Stock for ${sku}!\nRequested: ${boxes} Boxes (${totalBottles} btls)\nAvailable: ${Math.floor(currentStock/caseSize)} Boxes (${currentStock} btls)\n\nProceed anyway?`)) return;
             }
+
+            // Push Item
+            // We save 'qty' as total bottles to maintain consistency with Reports/Inventory
+            // We can add a 'boxes' property for reference if needed
+            items.push({ 
+                sku, 
+                qty: totalBottles, // SAVED AS BOTTLES
+                rate: rate,
+                boxes: boxes       // SAVED AS BOXES (Reference)
+            });
+            
+            total += (totalBottles * rate);
         }
+    }
 
-        if(items.length === 0) return ToastManager.show("Please add at least one item", "error");
+    if(items.length === 0) return ToastManager.show("Please enter at least 1 box", "error");
 
-        // Credit Check
-        const cust = appStore.get().customers.find(c => c.id === custId);
-        if(pay === 'Credit' && (cust.balance + total > cust.limit)) {
-            if(!confirm(`Credit Limit Exceeded! Bal: ${cust.balance}. Proceed?`)) return;
-        }
+    // Credit Check
+    const cust = appStore.get().customers.find(c => c.id === custId);
+    if(pay === 'Credit' && (cust.balance + total > cust.limit)) {
+        if(!confirm(`Credit Limit Exceeded! Bal: ${cust.balance}. Proceed?`)) return;
+    }
 
-        const initialPaid = (pay === 'Credit') ? 0 : total;
+    const initialPaid = (pay === 'Credit') ? 0 : total;
 
-        // --- KEY CHANGE HERE: Generates FRK-YYYYMMDD-XXXX ---
-        const order = {
-            id: Logic.generateNextOrderId(date), 
-            date, 
-            custId, 
-            items, 
-            total, 
-            paymentMode: pay, 
-            status: 'Ordered',     
-            trackingStep: 1,       
-            paidAmount: initialPaid 
-        };
+    const order = {
+        id: Logic.generateNextOrderId(date), 
+        date, 
+        custId, 
+        items, 
+        total, 
+        paymentMode: pay, 
+        status: 'Ordered',     
+        trackingStep: 1,       
+        paidAmount: initialPaid 
+    };
 
-        appStore.addOrder(order);
-        ToastManager.show("Order Created: " + order.id, "success");
-        Router.navigate('tracking');
-    },
+    appStore.addOrder(order);
+    ToastManager.show("Order Created Successfully", "success");
+    Router.navigate('tracking');
+},
+
+            
             
             calcOrderTotal: function() {
                 let total = 0;
