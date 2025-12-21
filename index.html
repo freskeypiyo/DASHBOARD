@@ -1271,7 +1271,7 @@
                 <!-- Updated Headers for Box Calculation -->
                 <div style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap:10px; font-weight:700; color:#64748b; font-size:0.8rem; margin-bottom:0.5rem;">
                     <div>ITEM & AVAILABILITY</div>
-                    <div>RATE (₹/Btl)</div>
+                    <div>RATE (Incl. 5% GST)</div> <!-- Changed Label -->
                     <div>ENTER BOXES</div>
                     <div style="text-align:right">TOTAL</div>
                 </div>
@@ -1400,7 +1400,7 @@
                 return `
                     <div class="card">
                         <div class="card-header">
-                            <h3 class="card-title">Delivery Challan Register</h3>
+                            <h3 class="card-title">Delivery Challan & Invoice Register</h3>
                         </div>
 
                         <!-- FILTER BAR FOR CHALLANS -->
@@ -1436,11 +1436,11 @@
                                         <th>State</th>
                                         <th>Items (Box Qty)</th>
                                         <th>Status</th>
-                                        <th style="text-align:center">Action</th>
+                                        <th style="text-align:center; min-width: 140px;">Print Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="challan-table-body">
-                                    <!-- Populated via Javascript -->
+                                    <!-- Populated via Javascript in Logic.filterChallans -->
                                 </tbody>
                             </table>
                         </div>
@@ -1632,6 +1632,110 @@
             // ============================================================
             // 1. CUSTOMER LOGIC
             // ============================================================
+
+            printInvoice: function(orderId) {
+                const order = appStore.get().orders.find(o => o.id === orderId);
+                if(!order) return ToastManager.show("Order not found", "error");
+
+                const cust = appStore.get().customers.find(c => c.id === order.custId) || {};
+                
+                const COMPANY = {
+                    name: "Freskey Piyo Beverages",
+                    address: "Plot 12, Ind. Area, Lucknow, UP",
+                    gst: "09ABCDE1234F1Z5", // Update with your GST
+                    contact: "+91 98765 43210"
+                };
+
+                const itemsHtml = order.items.map((item, index) => {
+                    return `
+                    <tr>
+                        <td style="text-align:center">${index + 1}</td>
+                        <td>${item.sku} Water<br><span style="font-size:9px">HSN: ${item.hsn}</span></td>
+                        <td style="text-align:center">${item.boxes} Box<br><span style="font-size:9px">(${item.qty} Btls)</span></td>
+                        <td style="text-align:right">${Utils.formatCurrency(item.rateInclusive)}</td>
+                        <td style="text-align:right">${Utils.formatCurrency(item.taxableValue)}</td>
+                        <td style="text-align:right">${Utils.formatCurrency(item.cgst)}<br><span style="font-size:9px">@2.5%</span></td>
+                        <td style="text-align:right">${Utils.formatCurrency(item.sgst)}<br><span style="font-size:9px">@2.5%</span></td>
+                        <td style="text-align:right">${Utils.formatCurrency(item.lineTotal)}</td>
+                    </tr>`;
+                }).join('');
+
+                const html = `
+                    <div class="dc-header">
+                        <div style="font-size: 20px; font-weight: bold; text-transform:uppercase">${COMPANY.name}</div>
+                        <div style="font-size: 11px;">${COMPANY.address}</div>
+                        <div style="font-size: 11px;"><strong>GSTIN: ${COMPANY.gst}</strong></div>
+                        <div class="dc-title" style="margin-top:10px;">TAX INVOICE</div>
+                    </div>
+
+                    <div class="dc-flex">
+                        <div class="dc-box">
+                            <div class="dc-label">Billed To:</div>
+                            <div style="font-size:12px;"><strong>${cust.company || 'Cash Customer'}</strong></div>
+                            <div>${cust.address || ''}</div>
+                            <div>State: ${cust.state || 'UP'}</div>
+                            <div style="margin-top:5px;"><strong>GSTIN: ${cust.gst || 'Unregistered'}</strong></div>
+                        </div>
+                        <div class="dc-box">
+                            <div style="display:flex; justify-content:space-between;"><span>Invoice No:</span> <strong>${order.id}</strong></div>
+                            <div style="display:flex; justify-content:space-between;"><span>Date:</span> <span>${Utils.formatDate(order.date)}</span></div>
+                            <div style="display:flex; justify-content:space-between;"><span>Challan Ref:</span> <span>${order.challanNo}</span></div>
+                            <div style="display:flex; justify-content:space-between;"><span>Place of Supply:</span> <span>${cust.state || 'UP'}</span></div>
+                        </div>
+                    </div>
+
+                    <table class="dc-table">
+                        <thead>
+                            <tr style="background:#eee;">
+                                <th style="width:5%">#</th>
+                                <th style="width:25%">Item</th>
+                                <th style="width:10%">Qty</th>
+                                <th style="width:10%">Rate (Inc)</th>
+                                <th style="width:15%">Taxable</th>
+                                <th style="width:10%">CGST</th>
+                                <th style="width:10%">SGST</th>
+                                <th style="width:15%">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemsHtml}
+                        </tbody>
+                        <tfoot>
+                            <tr style="font-weight:bold; border-top:2px solid #000;">
+                                <td colspan="4" style="text-align:right">Total</td>
+                                <td style="text-align:right">${Utils.formatCurrency(order.taxableTotal || 0)}</td>
+                                <td style="text-align:right">${Utils.formatCurrency((order.gstTotal || 0)/2)}</td>
+                                <td style="text-align:right">${Utils.formatCurrency((order.gstTotal || 0)/2)}</td>
+                                <td style="text-align:right">${Utils.formatCurrency(order.total)}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <div style="display:flex; justify-content:space-between; margin-top:5px;">
+                        <div style="font-size:10px;">
+                            <strong>Tax Summary:</strong><br>
+                            Taxable Value: ${Utils.formatCurrency(order.taxableTotal || 0)}<br>
+                            Total GST (5%): ${Utils.formatCurrency(order.gstTotal || 0)}
+                        </div>
+                        <div style="font-size:14px; font-weight:bold;">
+                            Grand Total: ${Utils.formatCurrency(order.total)}
+                        </div>
+                    </div>
+
+                    <div class="dc-footer">
+                        <div class="dc-sign-box">Customer Signature</div>
+                        <div class="dc-sign-box" style="border:none;"></div>
+                        <div class="dc-sign-box"><strong>For ${COMPANY.name}</strong><br><br>Auth. Signatory</div>
+                    </div>
+                `;
+
+                document.getElementById('print-area').innerHTML = html;
+                window.print();
+            },
+
+
+
+            
             openAddCustomerModal: function() {
                 ModalManager.show("Add New Customer", `
                     <div class="grid-2">
@@ -1840,7 +1944,8 @@
                 const fromEl = document.getElementById('ch-from');
                 const toEl = document.getElementById('ch-to');
                 
-                if(!searchEl) return; // Not on challan page
+                // Safety check to ensure we are on the right page
+                if(!searchEl) return; 
 
                 const search = searchEl.value.toLowerCase();
                 const fromDate = fromEl.value;
@@ -1854,8 +1959,9 @@
                     const c = customers.find(x => x.id === o.custId);
                     const cName = c ? (c.company + ' ' + c.name).toLowerCase() : '';
                     const chNo = (o.challanNo || '').toLowerCase();
+                    const orderId = o.id.toLowerCase();
                     
-                    const matchesSearch = chNo.includes(search) || cName.includes(search);
+                    const matchesSearch = chNo.includes(search) || cName.includes(search) || orderId.includes(search);
                     const matchesDate = (!fromDate || o.date >= fromDate) && (!toDate || o.date <= toDate);
                     return matchesSearch && matchesDate;
                 }).sort((a,b) => new Date(b.date) - new Date(a.date));
@@ -1876,17 +1982,21 @@
 
                     tbody.innerHTML += `
                         <tr>
-                            <td style="font-family:monospace; font-weight:700; color:var(--primary-800)">${o.challanNo}</td>
+                            <td style="font-family:monospace; font-weight:700; color:var(--primary-800)">${o.challanNo || '-'}</td>
                             <td>${Utils.formatDate(o.date)}</td>
                             <td style="font-size:0.8rem; color:#666;">${o.id}</td>
                             <td style="font-weight:600;">${c ? c.company : 'Unknown'}</td>
                             <td>${c ? c.state : '-'}</td>
                             <td>${items}</td>
                             <td><span class="badge badge-info">${o.status}</span></td>
-                            <td style="text-align:center;">
-                                <button class="btn btn-primary btn-sm" onclick="Logic.printChallan('${o.id}')">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-                                    Print
+                            <td style="text-align:center; white-space:nowrap;">
+                                <!-- DELIVERY CHALLAN BUTTON -->
+                                <button class="btn btn-outline btn-sm" onclick="Logic.printChallan('${o.id}')" title="Print Delivery Challan">
+                                    DC
+                                </button>
+                                <!-- TAX INVOICE BUTTON (Added Here) -->
+                                <button class="btn btn-primary btn-sm" onclick="Logic.printInvoice('${o.id}')" title="Print Tax Invoice" style="margin-left:5px;">
+                                    GST
                                 </button>
                             </td>
                         </tr>
@@ -1956,7 +2066,9 @@
                 const pay = document.getElementById('ord-pay').value;
 
                 const items = [];
-                let total = 0;
+                let orderTotal = 0;
+                let orderTaxable = 0;
+                let orderGST = 0;
 
                 for(let sku of SKUS) {
                     const boxEl = document.getElementById(`qty-box-${sku}`);
@@ -1964,45 +2076,85 @@
                     if(!boxEl || !rateEl) continue;
 
                     const boxes = parseFloat(boxEl.value) || 0;
-                    const rate = parseFloat(rateEl.value) || 0;
+                    const rateInclusive = parseFloat(rateEl.value) || 0;
                     
                     if(boxes > 0) {
                         const caseSize = CONFIG.CASE_SIZE[sku];
                         const totalBottles = boxes * caseSize; 
                         const currentStock = appStore.get().inventory[sku];
                         
+                        // 1. Stock Check
                         if(currentStock < totalBottles) {
                             const availBox = Math.floor(currentStock/caseSize);
                             if(!confirm(`Low Stock for ${sku}!\nRequested: ${boxes} Boxes\nAvailable: ${availBox} Boxes\nProceed?`)) return;
                         }
 
-                        items.push({ sku, qty: totalBottles, rate: rate, boxes: boxes });
-                        total += (totalBottles * rate);
+                        // 2. GST CORE LOGIC (Back Calculation)
+                        // Total Amount (Inclusive)
+                        const lineTotal = totalBottles * rateInclusive;
+                        
+                        // Taxable Value = Total / 1.05 (for 5% GST)
+                        const taxableValue = lineTotal / 1.05;
+                        
+                        // GST Amount
+                        const gstAmount = lineTotal - taxableValue;
+                        
+                        // Split GST (50% CGST, 50% SGST)
+                        const cgst = gstAmount / 2;
+                        const sgst = gstAmount / 2;
+
+                        // 3. Profit Logic (Internal)
+                        const transportCostPerBottle = 0.40; // Default from master
+                        const costBase = 0; // Populate this if you have a costing master
+                        // We store the logic even if not displayed on invoice
+                        const profitMargin = (taxableValue - (totalBottles * transportCostPerBottle));
+
+                        items.push({ 
+                            sku, 
+                            hsn: '2201',
+                            qty: totalBottles, // Total Bottles
+                            boxes: boxes,      // Box Input
+                            rateInclusive: rateInclusive,
+                            taxableValue: taxableValue,
+                            gstRate: 5,
+                            gstAmount: gstAmount,
+                            cgst: cgst,
+                            sgst: sgst,
+                            lineTotal: lineTotal
+                        });
+
+                        orderTotal += lineTotal;
+                        orderTaxable += taxableValue;
+                        orderGST += gstAmount;
                     }
                 }
 
                 if(items.length === 0) return ToastManager.show("Enter at least 1 box", "error");
 
+                // Check Customer Credit Limit
                 const cust = appStore.get().customers.find(c => c.id === custId);
-                if(pay === 'Credit' && (cust.balance + total > cust.limit)) {
+                if(pay === 'Credit' && (cust.balance + orderTotal > cust.limit)) {
                     if(!confirm(`Credit Limit Exceeded! Bal: ${cust.balance}. Proceed?`)) return;
                 }
 
-                const initialPaid = (pay === 'Credit') ? 0 : total;
+                const initialPaid = (pay === 'Credit') ? 0 : orderTotal;
 
-                // GENERATE BOTH IDs HERE
+                // Generate IDs
                 const orderId = Logic.generateNextOrderId(date);
                 const challanNo = Logic.generateChallanId(date);
 
                 const order = {
                     id: orderId,
-                    challanNo: challanNo, // Store distinct Challan No
-                    date, custId, items, total, 
+                    challanNo: challanNo,
+                    date, custId, items, 
+                    total: parseFloat(orderTotal.toFixed(2)), 
+                    taxableTotal: parseFloat(orderTaxable.toFixed(2)),
+                    gstTotal: parseFloat(orderGST.toFixed(2)),
                     paymentMode: pay, status: 'Ordered', trackingStep: 1, paidAmount: initialPaid 
                 };
 
                 appStore.addOrder(order);
-                ToastManager.show(`Order & Challan ${challanNo} Created`, "success");
+                ToastManager.show(`Order & Invoice Created`, "success");
                 Router.navigate('tracking');
             },
 
