@@ -1642,21 +1642,56 @@
                 const COMPANY = {
                     name: "Freskey Piyo Beverages",
                     address: "Plot 12, Ind. Area, Lucknow, UP",
-                    gst: "09ABCDE1234F1Z5", // Update with your GST
+                    gst: "09ABCDE1234F1Z5", 
                     contact: "+91 98765 43210"
                 };
 
+                // VARIABLES TO CALCULATE TOTALS ON THE FLY (Fixes 0.00 issue)
+                let runningTaxable = 0;
+                let runningGST = 0;
+                let runningTotal = 0;
+
                 const itemsHtml = order.items.map((item, index) => {
+                    // 1. DATA RECOVERY (Handle Old vs New Data)
+                    // If 'rateInclusive' is missing, use 'rate'. If 'hsn' is missing, use '2201'
+                    const rate = item.rateInclusive || item.rate || 0;
+                    const hsn = item.hsn || '2201';
+                    
+                    // 2. CALCULATION (If saved values are 0 or missing, calculate them now)
+                    let lineTotal = item.lineTotal;
+                    if(!lineTotal) lineTotal = item.qty * rate; // Fallback calculation
+
+                    let taxable = item.taxableValue;
+                    if(!taxable) taxable = lineTotal / 1.05; // Back calculation for old orders
+
+                    let gstAmt = item.gstAmount;
+                    if(!gstAmt) gstAmt = lineTotal - taxable;
+
+                    // 3. UPDATE RUNNING TOTALS
+                    runningTaxable += taxable;
+                    runningGST += gstAmt;
+                    runningTotal += lineTotal;
+
+                    // 4. DERIVE CGST/SGST
+                    const cgst = gstAmt / 2;
+                    const sgst = gstAmt / 2;
+
                     return `
                     <tr>
                         <td style="text-align:center">${index + 1}</td>
-                        <td>${item.sku} Water<br><span style="font-size:9px">HSN: ${item.hsn}</span></td>
-                        <td style="text-align:center">${item.boxes} Box<br><span style="font-size:9px">(${item.qty} Btls)</span></td>
-                        <td style="text-align:right">${Utils.formatCurrency(item.rateInclusive)}</td>
-                        <td style="text-align:right">${Utils.formatCurrency(item.taxableValue)}</td>
-                        <td style="text-align:right">${Utils.formatCurrency(item.cgst)}<br><span style="font-size:9px">@2.5%</span></td>
-                        <td style="text-align:right">${Utils.formatCurrency(item.sgst)}<br><span style="font-size:9px">@2.5%</span></td>
-                        <td style="text-align:right">${Utils.formatCurrency(item.lineTotal)}</td>
+                        <td>
+                            ${item.sku} Water
+                            <br><span style="font-size:9px">HSN: ${hsn}</span>
+                        </td>
+                        <td style="text-align:center">
+                            ${item.boxes || (item.qty / CONFIG.CASE_SIZE[item.sku]).toFixed(1)} Box
+                            <br><span style="font-size:9px">(${item.qty} Btls)</span>
+                        </td>
+                        <td style="text-align:right">${Utils.formatCurrency(rate)}</td>
+                        <td style="text-align:right">${Utils.formatCurrency(taxable)}</td>
+                        <td style="text-align:right">${Utils.formatCurrency(cgst)}<br><span style="font-size:9px">@2.5%</span></td>
+                        <td style="text-align:right">${Utils.formatCurrency(sgst)}<br><span style="font-size:9px">@2.5%</span></td>
+                        <td style="text-align:right">${Utils.formatCurrency(lineTotal)}</td>
                     </tr>`;
                 }).join('');
 
@@ -1679,7 +1714,7 @@
                         <div class="dc-box">
                             <div style="display:flex; justify-content:space-between;"><span>Invoice No:</span> <strong>${order.id}</strong></div>
                             <div style="display:flex; justify-content:space-between;"><span>Date:</span> <span>${Utils.formatDate(order.date)}</span></div>
-                            <div style="display:flex; justify-content:space-between;"><span>Challan Ref:</span> <span>${order.challanNo}</span></div>
+                            <div style="display:flex; justify-content:space-between;"><span>Challan Ref:</span> <span>${order.challanNo || '-'}</span></div>
                             <div style="display:flex; justify-content:space-between;"><span>Place of Supply:</span> <span>${cust.state || 'UP'}</span></div>
                         </div>
                     </div>
@@ -1703,10 +1738,10 @@
                         <tfoot>
                             <tr style="font-weight:bold; border-top:2px solid #000;">
                                 <td colspan="4" style="text-align:right">Total</td>
-                                <td style="text-align:right">${Utils.formatCurrency(order.taxableTotal || 0)}</td>
-                                <td style="text-align:right">${Utils.formatCurrency((order.gstTotal || 0)/2)}</td>
-                                <td style="text-align:right">${Utils.formatCurrency((order.gstTotal || 0)/2)}</td>
-                                <td style="text-align:right">${Utils.formatCurrency(order.total)}</td>
+                                <td style="text-align:right">${Utils.formatCurrency(runningTaxable)}</td>
+                                <td style="text-align:right">${Utils.formatCurrency(runningGST/2)}</td>
+                                <td style="text-align:right">${Utils.formatCurrency(runningGST/2)}</td>
+                                <td style="text-align:right">${Utils.formatCurrency(runningTotal)}</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -1714,11 +1749,11 @@
                     <div style="display:flex; justify-content:space-between; margin-top:5px;">
                         <div style="font-size:10px;">
                             <strong>Tax Summary:</strong><br>
-                            Taxable Value: ${Utils.formatCurrency(order.taxableTotal || 0)}<br>
-                            Total GST (5%): ${Utils.formatCurrency(order.gstTotal || 0)}
+                            Taxable Value: ${Utils.formatCurrency(runningTaxable)}<br>
+                            Total GST (5%): ${Utils.formatCurrency(runningGST)}
                         </div>
                         <div style="font-size:14px; font-weight:bold;">
-                            Grand Total: ${Utils.formatCurrency(order.total)}
+                            Grand Total: ${Utils.formatCurrency(runningTotal)}
                         </div>
                     </div>
 
@@ -1732,7 +1767,6 @@
                 document.getElementById('print-area').innerHTML = html;
                 window.print();
             },
-
 
 
             
